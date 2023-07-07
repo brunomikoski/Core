@@ -1,5 +1,6 @@
 using System;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
 namespace BrunoMikoski.Core
@@ -11,8 +12,21 @@ namespace BrunoMikoski.Core
         [InitializeOnLoadMethod]
         private static void Initialize()
         {
+            CheckStartSceneSetup();
+            
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        internal static void CheckStartSceneSetup()
+        {
+            if (!EditorBootstrapSettings.Instance.HasBootstrapSetup())
+                return;
+
+            SceneAsset sceneAsset =
+                AssetDatabase.LoadAssetAtPath<SceneAsset>(EditorBootstrapSettings.Instance.BootstrapScenePath);
+            
+            EditorSceneManager.playModeStartScene = sceneAsset == null ? null : sceneAsset;
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange stateChange)
@@ -58,9 +72,23 @@ namespace BrunoMikoski.Core
                 {
                     string sceneToOpen = scenesToOpen[i];
 
+                    if (IsSceneAlreadyOpen(sceneToOpen))
+                        continue;
+                    
                     SceneManager.LoadScene(sceneToOpen, LoadSceneMode.Additive);
                 }
             }
+        }
+
+        private static bool IsSceneAlreadyOpen(string targetSceneName)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (string.Equals(scene.name, targetSceneName, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
         }
 
         private static void OnSceneLoaded(Scene targetScene, LoadSceneMode sceneMode)

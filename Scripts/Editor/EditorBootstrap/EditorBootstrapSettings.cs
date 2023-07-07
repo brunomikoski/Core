@@ -93,7 +93,12 @@ namespace BrunoMikoski.Core
 
         public void SetBootstrapScene(SceneAsset newScene)
         {
-            EditorSceneManager.playModeStartScene = newScene == null ? null : newScene;
+            if (newScene != null)
+                BootstrapScenePath = AssetDatabase.GetAssetPath(newScene);
+            else
+                BootstrapScenePath = string.Empty;
+            
+            EditorBootstrap.CheckStartSceneSetup();
         }
     }
 }
