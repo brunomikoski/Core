@@ -1,0 +1,23 @@
+{
+  "name": "com.brunomikoski.core",
+  "displayName": "Core",
+  "version": "0.1.0",
+  "unity": "2022.4",
+  "description": "Core Framework",
+  "keywords": [
+    "editor"
+  ],
+  "homepage": "https://github.com/brunomikoski/Core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brunomikoski/Core.git"
+  },
+  "bugs": "https://github.com/brunomikoski/Core/issues",
+  "author": {
+    "name": "Bruno Mikoski",
+    "url": "https://www.brunomikoski.com"
+  },
+  "dependencies": {
+    "com.vertx.debugging": "2.1.4"
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "name": "BrunoMikoski.Core.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3259f3ac02c2e4fce887cd5798ae0fa6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
