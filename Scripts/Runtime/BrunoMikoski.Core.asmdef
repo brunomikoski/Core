@@ -2,7 +2,9 @@
     "name": "BrunoMikoski.Core",
     "rootNamespace": "",
     "references": [
-        "Vertx.Debugging.Runtime"
+        "Vertx.Debugging.Runtime",
+        "Vertx.Attributes.Runtime",
+        "BrunoMikoski.AnimationSequencer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -11,6 +13,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.brunomikoski.animationsequencer",
+            "expression": "",
+            "define": "SEQUENCER_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }
