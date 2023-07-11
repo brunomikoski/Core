@@ -18,6 +18,7 @@
     "url": "https://www.brunomikoski.com"
   },
   "dependencies": {
-    "com.vertx.debugging": "2.1.4"
+    "com.vertx.debugging": "2.1.4",
+    "com.brunomikoski.scriptableobjectcollection": "2.0.3"
   }
 }

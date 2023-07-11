@@ -3,7 +3,6 @@
     "rootNamespace": "",
     "references": [
         "Vertx.Debugging.Runtime",
-        "Vertx.Attributes.Runtime",
         "BrunoMikoski.AnimationSequencer",
         "BrunoMikoski.ScriptableObjectCollection"
     ],
