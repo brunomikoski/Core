@@ -97,8 +97,6 @@ namespace BrunoMikoski.Core
                 BootstrapScenePath = AssetDatabase.GetAssetPath(newScene);
             else
                 BootstrapScenePath = string.Empty;
-            
-            EditorBootstrap.CheckStartSceneSetup();
         }
     }
 }

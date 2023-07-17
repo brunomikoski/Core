@@ -6,7 +6,9 @@
         "BrunoMikoski.ScriptableObjectCollection.Editor",
         "BrunoMikoski.ScriptableObjectCollection"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

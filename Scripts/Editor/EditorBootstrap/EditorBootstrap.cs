@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace BrunoMikoski.Core
@@ -12,38 +14,37 @@ namespace BrunoMikoski.Core
         [InitializeOnLoadMethod]
         private static void Initialize()
         {
-            CheckStartSceneSetup();
-            
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        internal static void CheckStartSceneSetup()
-        {
-            if (!EditorBootstrapSettings.Instance.HasBootstrapSetup())
-                return;
-
-            SceneAsset sceneAsset =
-                AssetDatabase.LoadAssetAtPath<SceneAsset>(EditorBootstrapSettings.Instance.BootstrapScenePath);
-            
-            EditorSceneManager.playModeStartScene = sceneAsset == null ? null : sceneAsset;
-        }
-
         private static void OnPlayModeStateChanged(PlayModeStateChange stateChange)
         {
-            if(!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap)
+            if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap || !EditorBootstrapSettings.Instance.HasBootstrapSetup())
+            {
+                EditorSceneManager.playModeStartScene = null;
                 return;
+            }
 
             SceneAsset bootstrapScene =
                 AssetDatabase.LoadAssetAtPath<SceneAsset>(EditorBootstrapSettings.Instance.BootstrapScenePath);
-            
+
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
+                if (EditorBuildSettings.scenes.Length > 0 &&
+                    IsSceneAlreadyOpen(Path.GetFileNameWithoutExtension(EditorBuildSettings.scenes[0].path)))
+                {
+                    EditorSceneManager.playModeStartScene = null;
+                    return;
+                }
+
+                EditorSceneManager.playModeStartScene = bootstrapScene == null ? null : bootstrapScene;
+                
                 string storageStringOpenScenes = "";
                 Scene activeScene = SceneManager.GetActiveScene();
                 if (!activeScene.name.Equals(bootstrapScene.name, StringComparison.Ordinal))
                     storageStringOpenScenes = $"{activeScene.name}";
-                
+
                 for (int i = 0; i < SceneManager.sceneCount; i++)
                 {
                     Scene scene = SceneManager.GetSceneAt(i);
@@ -52,7 +53,7 @@ namespace BrunoMikoski.Core
 
                     if (scene.name.Equals(bootstrapScene.name, StringComparison.Ordinal))
                         continue;
-                    
+
                     storageStringOpenScenes += $", {scene.name}";
                 }
 
@@ -63,9 +64,10 @@ namespace BrunoMikoski.Core
                 string scenes = SessionState.GetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, "");
                 if (string.IsNullOrEmpty(scenes))
                     return;
-                
+
+                SceneManager.sceneLoaded -= OnSceneLoaded;
                 SceneManager.sceneLoaded += OnSceneLoaded;
-    
+
                 string[] scenesToOpen = scenes.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
                 for (int i = scenesToOpen.Length - 1; i >= 0; i--)
@@ -74,7 +76,7 @@ namespace BrunoMikoski.Core
 
                     if (IsSceneAlreadyOpen(sceneToOpen))
                         continue;
-                    
+
                     SceneManager.LoadScene(sceneToOpen, LoadSceneMode.Additive);
                 }
             }
@@ -85,20 +87,24 @@ namespace BrunoMikoski.Core
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene scene = SceneManager.GetSceneAt(i);
-                if (string.Equals(scene.name, targetSceneName, StringComparison.Ordinal))
+                if (scene.name.IndexOf(targetSceneName, StringComparison.Ordinal) > -1)
                     return true;
             }
+
             return false;
         }
 
         private static void OnSceneLoaded(Scene targetScene, LoadSceneMode sceneMode)
         {
-            string scenes = SessionState.GetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, "");
-            
-            string expectedActiveSceneName = scenes.Split(',', StringSplitOptions.RemoveEmptyEntries)[0];
-            if (!string.Equals(expectedActiveSceneName, targetScene.name, StringComparison.Ordinal)) 
+            if (!Application.isPlaying)
                 return;
-            
+
+            string scenes = SessionState.GetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, "");
+
+            string expectedActiveSceneName = scenes.Split(',', StringSplitOptions.RemoveEmptyEntries)[0];
+            if (!string.Equals(expectedActiveSceneName, targetScene.name, StringComparison.Ordinal))
+                return;
+
             SceneManager.SetActiveScene(targetScene);
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
