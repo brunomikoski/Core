@@ -4,7 +4,9 @@
     "references": [
         "Vertx.Debugging.Runtime",
         "BrunoMikoski.AnimationSequencer",
-        "BrunoMikoski.ScriptableObjectCollection"
+        "BrunoMikoski.ScriptableObjectCollection",
+        "BrunoMikoski.ServiceLocator",
+        "BrunoMikoski.UIManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -18,6 +20,11 @@
             "name": "com.brunomikoski.animationsequencer",
             "expression": "",
             "define": "SEQUENCER_AVAILABLE"
+        },
+        {
+            "name": "com.brunomikoski.uimanager",
+            "expression": "",
+            "define": "UI_MANAGER_AVAILABLE"
         }
     ],
     "noEngineReferences": false

@@ -6,7 +6,7 @@ using Vertx.Debugging;
 using Physics = Vertx.Debugging.DrawPhysics;
 #endif
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.PhysX
 {
     /// <summary>
     /// Mirror of Physics Cast and Overlap methods. Use the results only for one frame, since

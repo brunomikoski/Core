@@ -5,43 +5,43 @@ namespace BrunoMikoski.Core
 {
     public static class TagSystemExtensions
     {
-        private static Dictionary<object, TagManager> objectToTagManagerCache = new Dictionary<object, TagManager>();
+        private static Dictionary<object, TagController> objectToTagManagerCache = new Dictionary<object, TagController>();
 
-        public static TagManager GetTagManager(this Component target)
+        public static TagController GetTagManager(this Component target)
         {
             return GetTagManager(target.gameObject);
         }
 
-        public static TagManager GetTagManager(this GameObject target)
+        public static TagController GetTagManager(this GameObject target)
         {
-            if (objectToTagManagerCache.TryGetValue(target, out TagManager tagManager))
+            if (objectToTagManagerCache.TryGetValue(target, out TagController tagManager))
                 return tagManager;
 
-            tagManager = target.GetOrAddComponent<TagManager>();
+            tagManager = target.GetOrAddComponent<TagController>();
             objectToTagManagerCache.Add(target, tagManager);
             return tagManager;
         }
 
-        public static bool AddTag(this GameObject target, TagID tag, bool dontAllowDuplicates = true)
+        public static bool AddTag(this GameObject target, Tag tag, bool dontAllowDuplicates = true)
         {
-            TagManager tagManager = target.GetTagManager();
-            if (dontAllowDuplicates && tagManager.Contains(tag))
+            TagController tagController = target.GetTagManager();
+            if (dontAllowDuplicates && tagController.Contains(tag))
                 return false;
             
-            tagManager.Add(tag);
+            tagController.Add(tag);
             return true;
         }
 
-        public static bool RemoveTag(this GameObject target, TagID tag)
+        public static bool RemoveTag(this GameObject target, Tag tag)
         {
-            TagManager tagManager = target.GetTagManager();
-            return tagManager.Remove(tag);
+            TagController tagController = target.GetTagManager();
+            return tagController.Remove(tag);
         }
 
-        public static bool ContainsTag(this GameObject target, TagID tag)
+        public static bool ContainsTag(this GameObject target, Tag tag)
         {
-            TagManager tagManager = target.GetTagManager();
-            return tagManager.Contains(tag);
+            TagController tagController = target.GetTagManager();
+            return tagController.Contains(tag);
         }
     }
 }

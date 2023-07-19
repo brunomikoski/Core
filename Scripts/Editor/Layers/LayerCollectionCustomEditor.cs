@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.Editor.Layers
 {
-    [CustomEditor(typeof(LayerCollection), true)]
+    [CustomEditor(typeof(UnityLayerCollection), true)]
     public class LayerCollectionCustomEditor : CollectionCustomEditor
     {
         protected override bool DisplayAddButton => false;
@@ -41,9 +41,9 @@ namespace BrunoMikoski.Core.Editor.Layers
                 if (collection.Items.Any(item => string.Equals(item.name, layer, StringComparison.Ordinal)))
                     continue;
 
-                Layer layerSOCItem = (Layer) collection.AddNew(collection.GetItemType(), layer);
+                UnityLayer unityLayerSocItem = (UnityLayer) collection.AddNew(collection.GetItemType(), layer);
 
-                SerializedObject so = new SerializedObject(layerSOCItem);
+                SerializedObject so = new SerializedObject(unityLayerSocItem);
                 so.FindProperty("layerIndex").intValue = LayerMask.NameToLayer(layer);
                 so.ApplyModifiedProperties();
                 changed = true;

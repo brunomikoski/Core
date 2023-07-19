@@ -185,8 +185,7 @@ namespace BrunoMikoski.Core
 #endif
                 if (index < 0 || index >= usedCount)
                 {
-                    throw new IndexOutOfRangeException(string.Format("Index {0} is out of range "
-                                                                     + "0 - {1}", index, usedCount - 1));
+                    throw new IndexOutOfRangeException($"Index {index} is out of range " + $"0 - {usedCount - 1}");
                 }
                 return data[index];
             }
