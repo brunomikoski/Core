@@ -6,7 +6,8 @@
         "BrunoMikoski.AnimationSequencer",
         "BrunoMikoski.ScriptableObjectCollection",
         "BrunoMikoski.ServiceLocator",
-        "BrunoMikoski.UIManager"
+        "BrunoMikoski.UIManager",
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

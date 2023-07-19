@@ -1,4 +1,6 @@
+#if DOTWEEN_ENABLED
 using System.Collections;
+
 using DG.Tweening;
 
 namespace Extensions
@@ -18,3 +20,4 @@ namespace Extensions
         }
     }
 }
+#endif

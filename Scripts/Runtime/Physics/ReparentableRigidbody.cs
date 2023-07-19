@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using BrunoMikoski.AnimationSequencer;
+#if DOTWEEN_ENABLED
 using DG.Tweening;
+#endif
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -46,10 +48,10 @@ namespace BrunoMikoski.Core.PhysX
         private bool isEnabledBeforeReparenting;
         private bool isKinematicBeforeReparenting;
         private Vector3 initialScale;
-
+#if DOTWEEN_ENABLED
         private Tween reparentPositionTween;
         private Tween reparentRotationTween;
-
+#endif
         public bool IsAnimatingReparent =>
             reparentPositionTween != null && reparentRotationTween != null
                                           && ((reparentPositionTween.IsActive() && reparentPositionTween.IsPlaying())
@@ -222,7 +224,9 @@ namespace BrunoMikoski.Core.PhysX
             Quaternion fromRotation = default;
             if (animateReparenting)
             {
+#if DOTWEEN_ENABLED
                 Transform.DOKill();
+#endif
                 fromPosition = Transform.position;
                 fromRotation = Transform.rotation;
             }
@@ -263,10 +267,15 @@ namespace BrunoMikoski.Core.PhysX
                 Quaternion toRotation = Transform.localRotation;
                 Transform.position = fromPosition;
                 Transform.rotation = fromRotation;
+#if DOTWEEN_ENABLED
                 reparentPositionTween = Transform.DOLocalMove(toPosition, REPARENT_ANIMATION_DURATION)
                     .SetEase(animationEase);
                 reparentRotationTween = Transform.DOLocalRotate(toRotation.eulerAngles, REPARENT_ANIMATION_DURATION)
                     .SetEase(animationEase);
+#else
+                Transform.localPosition = toPosition;
+                Transform.localRotation = toRotation;
+#endif
             }
 
             OnReparentedEvent?.Invoke(this);
@@ -358,7 +367,11 @@ namespace BrunoMikoski.Core.PhysX
         public void Unparent(bool forceKillTweens = false)
         {
             if (animateReparenting || forceKillTweens)
+            {
+#if DOTWEEN_ENABLED
                 Transform.DOKill();
+#endif
+            }
 
             if (isDestroying)
                 return;
