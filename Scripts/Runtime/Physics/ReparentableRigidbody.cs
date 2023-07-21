@@ -25,12 +25,12 @@ namespace BrunoMikoski.Core.PhysX
         }
 
         public IList<Collider> Colliders => RigidbodyWrapper.Colliders;
-
+#if DOTWEEN_ENABLED
         [SerializeField] 
         private bool animateReparenting;
         [SerializeField]
         private CustomEase animationEase = CustomEase.OutQuad;
-
+#endif
         [SerializeField] private bool turnOffCollidersOnReparent;
         private bool originalColliderBehaviour;
         public bool TurnOffCollidersOnReparent
