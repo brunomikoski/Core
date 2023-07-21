@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "com.vertx.debugging": "2.1.4",
-    "com.brunomikoski.scriptableobjectcollection": "2.0.3",
+    "com.brunomikoski.scriptableobjectcollection": "2.0.4",
     "com.brunomikoski.servicelocator": "1.0.0",
     "com.brunomikoski.simplepool": "1.0.0"
   }
