@@ -1,0 +1,46 @@
+using UnityEngine;
+
+namespace BrunoMikoski.Core.PhysX
+{
+    [AddComponentMenu("Triggers/Sphere Trigger Volume")]
+    public sealed class SphereTriggerVolume : TriggerVolumeBase
+    {
+        [Header("Sphere")]
+        [Range(0f, 50)]
+        [SerializeField]
+        private float size = 1f;
+
+        public float Size => size;
+
+        protected override void CreateTriggerCollider()
+        {
+            CreateCollider<SphereCollider>();
+            UpdateSphereDimensions();
+        }
+
+        private void UpdateSphereDimensions()
+        {
+            SphereCollider collider = (SphereCollider) TriggerCollider;
+            float newRadius = size * 0.5f;
+            if (!Mathf.Approximately(newRadius, collider.radius))
+                collider.radius = newRadius;
+        }
+
+        public override Vector3 GetTriggerOrigin()
+        {
+            return transform.position;
+        }
+
+        public override Bounds GetTriggerBounds()
+        {
+            SphereCollider sphereCollider = (SphereCollider) TriggerCollider;
+            return new Bounds(sphereCollider.center, Vector3.one * sphereCollider.radius);
+        }
+
+        public void SetSize(float targetSize)
+        {
+            this.size = targetSize;
+            UpdateSphereDimensions();
+        }
+    }
+}

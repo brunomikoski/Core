@@ -7,13 +7,6 @@ namespace BrunoMikoski.Core.PhysX
     [ServiceImplementation(DependsOn = new []{typeof(MonoBehaviourService)})]
     public sealed class PhysicsService : IFixedUpdate
     {
-        [Header("Gizmos")]
-        [SerializeField] 
-        private Color sleepingGizmosColor = Color.magenta;
-        [SerializeField] 
-        private float sleepingGizmosRadius = 0.5f;
-
-
         private readonly Dictionary<Rigidbody, RigidbodyWrapper> rigidbodyToWrapper = new();
 
         private List<RigidbodyWrapper> rigidbodyWrappers = new();
@@ -112,19 +105,6 @@ namespace BrunoMikoski.Core.PhysX
         public void UnregisterCollider(Collider collider)
         {
             colliderToWrapper.Remove(collider);
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = sleepingGizmosColor;
-            for (int i = 0; i < rigidbodyWrappers.Count; i++)
-            {
-                RigidbodyWrapper rigidbodyWrapper = rigidbodyWrappers[i];
-                if (!rigidbodyWrapper.IsSleeping())
-                    Gizmos.DrawSphere(rigidbodyWrapper.transform.position, sleepingGizmosRadius);
-            }
-
-            Gizmos.color = Color.white;
         }
 
         public void OnFixedUpdate()
