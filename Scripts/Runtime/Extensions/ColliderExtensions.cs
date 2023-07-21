@@ -1,9 +1,25 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace BrunoMikoski.Core
 {
     public static partial class ColliderExtensions
     {
+        private static readonly ColliderDistanceFromPointComparer COLLIDER_DISTANCE_FROM_POINT_COMPARER = new();
+
+        public static void SortByClosest(this Collider[] colliders, Vector3 worldPosition)
+        {
+            COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition);
+            Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
+        }
+        
+        public static void SortByFurthest(this Collider[] colliders, Vector3 worldPosition)
+        {
+            COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition, false);
+            Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
+        }
+        
         public static Vector3 GetRandomPositionInVolume(this Collider collider)
         {
             if (collider is BoxCollider box)
@@ -32,7 +48,8 @@ namespace BrunoMikoski.Core
         {
             if (collider is BoxCollider boxCollider)
             {
-                return boxCollider.size.x * boxCollider.size.y * boxCollider.size.z;
+                Vector3 boxColliderSize = boxCollider.size;
+                return boxColliderSize.x * boxColliderSize.y * boxColliderSize.z;
             }
             if (collider is SphereCollider sphereCollider)
             {
