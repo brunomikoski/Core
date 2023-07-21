@@ -8,13 +8,13 @@ namespace BrunoMikoski.Core
     {
         private static readonly ColliderDistanceFromPointComparer COLLIDER_DISTANCE_FROM_POINT_COMPARER = new();
 
-        public static void SortByClosest(this Collider[] colliders, Vector3 worldPosition)
+        public static void SortByClosestTo(this Collider[] colliders, Vector3 worldPosition)
         {
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
         }
         
-        public static void SortByFurthest(this Collider[] colliders, Vector3 worldPosition)
+        public static void SortByFurthestFrom(this Collider[] colliders, Vector3 worldPosition)
         {
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition, false);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
