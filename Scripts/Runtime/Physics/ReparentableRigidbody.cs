@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using BrunoMikoski.AnimationSequencer;
 #if DOTWEEN_ENABLED
+using BrunoMikoski.Core.CustomEasing;
 using DG.Tweening;
 #endif
 using UnityEngine;
@@ -268,8 +268,8 @@ namespace BrunoMikoski.Core.PhysX
                 Transform.position = fromPosition;
                 Transform.rotation = fromRotation;
 #if DOTWEEN_ENABLED
-                reparentPositionTween = Transform.DOLocalMove(toPosition, REPARENT_ANIMATION_DURATION)
-                    .SetEase(animationEase);
+                reparentPositionTween = Transform.DOLocalMove(toPosition, REPARENT_ANIMATION_DURATION);
+                reparentPositionTween.SetEase(animationEase);
                 reparentRotationTween = Transform.DOLocalRotate(toRotation.eulerAngles, REPARENT_ANIMATION_DURATION)
                     .SetEase(animationEase);
 #else
