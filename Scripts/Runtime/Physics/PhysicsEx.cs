@@ -92,7 +92,7 @@ namespace BrunoMikoski.Core.PhysX
             }
         }
 
-        internal sealed class FurthestRaycastHitComparer : IComparer<RaycastHit>
+        private sealed class FurthestRaycastHitComparer : IComparer<RaycastHit>
         {
             public int Compare(RaycastHit raycastHitA, RaycastHit raycastHitB)
             {
@@ -104,7 +104,7 @@ namespace BrunoMikoski.Core.PhysX
             }
         }
 
-        internal sealed class ClosestColliderComparer : IComparer<Collider>
+        private sealed class ClosestColliderComparer : IComparer<Collider>
         {
             public int Compare(Collider colliderA, Collider colliderB)
             {
@@ -150,38 +150,9 @@ namespace BrunoMikoski.Core.PhysX
             bool drawGizmos = false)
         {
             PoolArray<RaycastHit> raycastHits = raycastHitPool.ObtainArray();
-            Raycast(ray, raycastHits, maxDistance, layerMask, queryTriggerInteraction, sortMethod,
+            Raycast(ray.origin, ray.direction, raycastHits, maxDistance, layerMask, queryTriggerInteraction, sortMethod,
                 drawGizmos);
             return raycastHits;
-        }
-
-        public static void Raycast(
-            Ray ray,
-            PoolArray<RaycastHit> array,
-            float maxDistance = Mathf.Infinity,
-            int layerMask = DEFAULT_RAYCAST_LAYERS,
-            QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
-            SortType sortMethod = SortType.None,
-            bool drawGizmos = false)
-        {
-            Raycast(ray.origin, ray.direction, array, maxDistance, layerMask,
-                queryTriggerInteraction, sortMethod, drawGizmos);
-        }
-
-
-        public static PoolArray<RaycastHit> Raycast(
-            Vector3 origin,
-            Vector3 direction,
-            float maxDistance = Mathf.Infinity,
-            int layerMask = DEFAULT_RAYCAST_LAYERS,
-            QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
-            SortType sortMethod = SortType.None,
-            bool drawGizmos = false)
-        {
-            PoolArray<RaycastHit> array = raycastHitPool.ObtainArray();
-            Raycast(origin, direction, array, maxDistance, layerMask, queryTriggerInteraction,
-                sortMethod, drawGizmos);
-            return array;
         }
 
         public static void Raycast(

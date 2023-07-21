@@ -20,7 +20,9 @@ namespace BrunoMikoski.Core
 
         private static void OnPlayModeStateChanged(PlayModeStateChange stateChange)
         {
-            if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap || !EditorBootstrapSettings.Instance.HasBootstrapSetup())
+            if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap 
+                || !EditorBootstrapSettings.Instance.HasBootstrapSetup()
+                || IsCurrentlyAtUntitledScene())
             {
                 EditorSceneManager.playModeStartScene = null;
                 return;
@@ -37,6 +39,9 @@ namespace BrunoMikoski.Core
                     EditorSceneManager.playModeStartScene = null;
                     return;
                 }
+
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                    return;
 
                 EditorSceneManager.playModeStartScene = bootstrapScene == null ? null : bootstrapScene;
                 
@@ -80,6 +85,18 @@ namespace BrunoMikoski.Core
                     SceneManager.LoadScene(sceneToOpen, LoadSceneMode.Additive);
                 }
             }
+        }
+
+        private static bool IsCurrentlyAtUntitledScene()
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                string sceneName = SceneManager.GetSceneAt(i).name;
+                if (string.IsNullOrEmpty(sceneName) || sceneName.IndexOf("Untitled", StringComparison.Ordinal) > -1)
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool IsSceneAlreadyOpen(string targetSceneName)

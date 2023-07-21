@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 
 namespace BrunoMikoski.Playground.ScenesReferences
@@ -14,7 +15,7 @@ namespace BrunoMikoski.Playground.ScenesReferences
         {
             sceneID = (UnityScene) target;
             guidProperty = serializedObject.FindProperty("sceneGuid");
-            
+
             if (!string.IsNullOrEmpty(sceneID.SceneGuid))
             {
                 string path = AssetDatabase.GUIDToAssetPath(sceneID.SceneGuid);
@@ -38,10 +39,11 @@ namespace BrunoMikoski.Playground.ScenesReferences
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-            
+
             serializedObject.Update();
             EditorGUI.BeginChangeCheck();
-            SceneAsset newSceneAsset = EditorGUILayout.ObjectField("Scene", sceneAsset, typeof(SceneAsset), false) as SceneAsset;
+            SceneAsset newSceneAsset =
+                EditorGUILayout.ObjectField("Scene", sceneAsset, typeof(SceneAsset), false) as SceneAsset;
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -54,16 +56,33 @@ namespace BrunoMikoski.Playground.ScenesReferences
                         guidProperty.stringValue = AssetDatabase.AssetPathToGUID(path);
                         serializedObject.FindProperty("sceneName").stringValue = sceneAsset.name;
                         serializedObject.FindProperty("scenePath").stringValue = path;
+                        serializedObject.FindProperty("buildIndex").intValue =
+                            GetBuildIndexForSceneAtPath(guidProperty.stringValue);
                     }
                     else
                     {
                         guidProperty.stringValue = string.Empty;
                         serializedObject.FindProperty("sceneName").stringValue = string.Empty;
                         serializedObject.FindProperty("scenePath").stringValue = string.Empty;
+                        serializedObject.FindProperty("buildIndex").intValue = -1;
                     }
+
                     serializedObject.ApplyModifiedProperties();
                 }
             }
+        }
+
+        private int GetBuildIndexForSceneAtPath(string targetPath)
+        {
+            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+            for (int i = 0; i < scenes.Length; ++i)
+            {
+                EditorBuildSettingsScene entry = scenes[i];
+                if (entry.path.Equals(targetPath, StringComparison.Ordinal))
+                    return i;
+            }
+
+            return -1;
         }
     }
 }
