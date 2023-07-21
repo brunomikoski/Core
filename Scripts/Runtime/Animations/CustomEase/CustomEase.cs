@@ -1,6 +1,5 @@
 ﻿#if DOTWEEN_ENABLED
 using System;
-using BrunoMikoski.AnimationSequencer;
 using DG.Tweening;
 using DG.Tweening.Core.Easing;
 using JetBrains.Annotations;
