@@ -51,11 +51,14 @@ namespace BrunoMikoski.Core.PhysX
 #if DOTWEEN_ENABLED
         private Tween reparentPositionTween;
         private Tween reparentRotationTween;
-#endif
+
         public bool IsAnimatingReparent =>
             reparentPositionTween != null && reparentRotationTween != null
                                           && ((reparentPositionTween.IsActive() && reparentPositionTween.IsPlaying())
                                               || (reparentRotationTween.IsActive() && reparentRotationTween.IsPlaying()));
+#else
+        public bool IsAnimatingReparent => false;
+#endif
 
         private RigidbodyInterpolation interpolationBeforeReparenting;
 
