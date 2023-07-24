@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 #if UNITASK_ENABLED
 using Cysharp.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace BrunoMikoski.Core.Routines
     {
         public readonly IEnumerator Enumerator;
         private readonly MonoBehaviour monoBehaviour;
+        public MonoBehaviour MonoBehaviour => monoBehaviour;
 
         private bool isRunning;
         public bool IsRunning => isRunning;
@@ -26,6 +28,9 @@ namespace BrunoMikoski.Core.Routines
 
 
         public override bool keepWaiting => isRunning;
+        
+        private DateTime finishedTime;
+        public DateTime FinishedTime => finishedTime;
 
         public Routine(IEnumerator enumerator, MonoBehaviour monoBehaviour, bool usingGameObjectLifetime)
         {
@@ -43,6 +48,9 @@ namespace BrunoMikoski.Core.Routines
         {
             isRunning = false;
             isCompleted = true;
+#if UNITY_EDITOR && DEBUG
+            finishedTime = DateTime.UtcNow;
+#endif
         }
 
         public void Pause()

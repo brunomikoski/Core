@@ -5,18 +5,6 @@ using Object = UnityEngine.Object;
 
 namespace BrunoMikoski.Core.Routines
 {
-    public class CoroutineRunnerMonoBehaviour : MonoBehaviour
-    {
-        private void OnApplicationQuit()
-        {
-            CoroutineRunner.StopAll();
-        }
-
-        private void OnDestroy()
-        {
-            CoroutineRunner.StopAll();
-        }
-    }
     public sealed class CoroutineRunner 
     {
         private static bool initialized;
@@ -49,11 +37,6 @@ namespace BrunoMikoski.Core.Routines
             }
 
             initialized = true;
-        }
-        
-        private void OnApplicationQuit()
-        {
-            isQuitting = true;
         }
 
         public static void StartIfNotRunning(ref Routine routine)
@@ -132,19 +115,33 @@ namespace BrunoMikoski.Core.Routines
                 }
 
                 if (enumerator != null && routine.IsValid() && enumerator.MoveNext())
+                {
                     yield return enumerator.Current;
+                }
                 else
+                {
                     routine.Finished();
+                }
             }
         }
         
         public static void StopAll()
         {
-            if (isQuitting)
+            if (ROUTINE_RUNNER == null)
                 return;
             
             ROUTINE_RUNNER.StopAllCoroutines();
         }
 
+        public static void OnApplicationQuit()
+        {
+            StopAll();
+            isQuitting = true;
+        }
+
+        public static void OnRunnerDestroyed()
+        {
+            StopAll();
+        }
     }
 }
