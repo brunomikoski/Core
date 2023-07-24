@@ -106,7 +106,7 @@ namespace BrunoMikoski.Core.Routines
         {
             routine.Start();
             IEnumerator enumerator = routine.Enumerator;
-            while (routine.IsRunning && !routine.IsStopped)
+            while (routine.IsRunning)
             {
                 if (routine.IsPaused)
                 {
