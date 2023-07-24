@@ -9,6 +9,7 @@ namespace BrunoMikoski.Core.Git
     {
         private static SceneAsset bootstrapScene;
         private static string displayResult;
+        private static Object selectedObjectField;
 
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
@@ -51,12 +52,26 @@ namespace BrunoMikoski.Core.Git
                     }
 
 
-                    EditorGUILayout.TextArea(displayResult);
-                    
+                    EditorGUILayout.BeginHorizontal();
                     if (GUILayout.Button("Get Current Branch", GUILayout.Width(200)))
                     {
                         displayResult = GitUtility.GetCurrentBranch();
                     }
+
+                    selectedObjectField = EditorGUILayout.ObjectField("File", selectedObjectField, typeof(TextAsset), false);
+                    
+                    if (GUILayout.Button("Check file first commit", GUILayout.Width(200)))
+                    {
+                        displayResult = GitUtility.GetFirstCommit(AssetDatabase.GetAssetPath(selectedObjectField)).ToString();
+                    }
+                    
+                    if (GUILayout.Button("Check file last commit", GUILayout.Width(200)))
+                    {
+                        displayResult = GitUtility.GetFirstCommit(AssetDatabase.GetAssetPath(selectedObjectField)).ToString();
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    
+                    EditorGUILayout.TextArea(displayResult, new[]{GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)});
                 },
 
                 // Populate the search keywords to enable smart search filtering and label highlighting:

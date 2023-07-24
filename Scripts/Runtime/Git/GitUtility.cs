@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace BrunoMikoski.Core.Git
 {
@@ -21,6 +24,7 @@ namespace BrunoMikoski.Core.Git
         private static bool isInstalledCached;
         private static string isInstalledCachedExecutable = "hs7822ekhk8sdhdsa"; // random string
         private static string gitExecutable;
+
         public static string GitExecutable
         {
             get
@@ -33,6 +37,7 @@ namespace BrunoMikoski.Core.Git
                         FindGitExecutable();
 #endif
                 }
+
                 return gitExecutable;
             }
             set
@@ -55,8 +60,10 @@ namespace BrunoMikoski.Core.Git
 #if UNITY_EDITOR
         public static void FindGitExecutable()
         {
-            bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
-            
+            bool isMacOS =
+                System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform
+                    .OSX);
+
             if (isMacOS)
             {
                 string gitPath = GetGitPathThroughShell();
@@ -69,7 +76,8 @@ namespace BrunoMikoski.Core.Git
             }
             else
             {
-                string[] possiblePaths = {
+                string[] possiblePaths =
+                {
                     "git",
                     "%programfiles(x86)%\\SmartGit\\git\\mingw64\\bin\\git.exe",
                     "%programfiles%\\SmartGit\\git\\mingw64\\bin\\git.exe",
@@ -83,14 +91,14 @@ namespace BrunoMikoski.Core.Git
                     "%localappdata%\\Atlassian\\SourceTree\\git_local\\mingw64\\bin\\git.exe",
                     "git",
                 };
-                
+
                 for (int i = 0; i < possiblePaths.Length; i++)
                 {
                     string possiblePath = Environment.ExpandEnvironmentVariables(possiblePaths[i]);
 
-                    if (!File.Exists(possiblePath)) 
+                    if (!File.Exists(possiblePath))
                         continue;
-                
+
                     GitExecutable = possiblePath;
                     if (IsGitInstalled())
                         return;
@@ -103,14 +111,17 @@ namespace BrunoMikoski.Core.Git
         {
             try
             {
-                bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+                bool isMacOS =
+                    System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices
+                        .OSPlatform.OSX);
 
                 ProcessStartInfo processStartInfo;
 
                 // For macOS, run the command through the shell.
                 if (isMacOS)
                 {
-                    processStartInfo = new ProcessStartInfo("/bin/sh", "-c \"" + GitExecutable + " " + arguments + "\"");
+                    processStartInfo =
+                        new ProcessStartInfo("/bin/sh", "-c \"" + GitExecutable + " " + arguments + "\"");
                 }
                 else
                 {
@@ -177,6 +188,7 @@ namespace BrunoMikoski.Core.Git
                 {
                     return gitPath;
                 }
+
                 return null;
             }
             catch
@@ -218,37 +230,6 @@ namespace BrunoMikoski.Core.Git
             }
         }
 
-        private static List<GitCommitInfo> GetCommit(string query, string fileName)
-        {
-            RunGitCommand("log " + query + " --follow --format=\"%an|%aD|%s\" -- \"" + fileName + "\"", out string commandOutput);
-
-            if (commandOutput == null)
-                return null;
-
-            string[] lines = commandOutput.Split('\n');
-
-            List<GitCommitInfo> result = new List<GitCommitInfo>();
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                string[] parts = line.Split('|');
-
-                if (parts.Length < 3)
-                    continue;
-
-                string name = parts[0];
-                DateTime dateTime;
-
-                DateTime.TryParse(parts[1], out dateTime);
-
-                string title = parts[2];
-
-                result.Add(new GitCommitInfo(name, dateTime, title));
-            }
-            return result;
-        }
-
         public static string GetCurrentBranch()
         {
             // Command: git rev-parse --abbrev-ref HEAD
@@ -259,19 +240,18 @@ namespace BrunoMikoski.Core.Git
 
             result = result.Trim();
 
-            // If the result is not HEAD, then it's likely the branch name directly.
-            if (result != "HEAD")
-                return ExtractBranchName(result);
-
             // If the result is "HEAD", then it means the repository is in a detached state.
             // We need to find out the branch it's tracking.
-            RunGitCommand("log -n 1 --pretty=%d HEAD", out result);
+            if (result == "HEAD")
+            {
+                RunGitCommand("log -n 1 --pretty=%d HEAD", out result);
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+            }
 
-            if (string.IsNullOrEmpty(result))
-                return string.Empty;
-
-            // Use regex to extract the branch name from results like: (HEAD, origin/development)
-            var match = Regex.Match(result, @"origin\/([a-zA-Z0-9_-]+)");
+            // Use regex to extract the branch name.
+            // This regex will match both direct branch names and names prefixed with 'origin/'
+            var match = Regex.Match(result, @"(?:origin\/)?([a-zA-Z0-9_-]+)");
 
             if (match.Success)
             {
@@ -280,26 +260,103 @@ namespace BrunoMikoski.Core.Git
 
             return string.Empty;
         }
-        
-        private static string ExtractBranchName(string branch)
+
+
+        public static GitCommitInfo GetLastCommit(Object asset)
         {
-            // Here, we'll remove 'origin/' prefix and return the branch name.
-            return branch.Replace("origin/", "").Trim();
+            return GetLastCommit(AssetDatabase.GetAssetPath(asset));
         }
 
-        public static GitCommitInfo GetFirstCommit(string fileName)
+        public static GitCommitInfo GetLastCommit(string assetPath)
         {
-            return GetCommit("--diff-filter=A", fileName).FirstOrDefault();
+            string gitRoot = GetGitRootDirectory();
+            string relativeFilePath = MakeRelativePath(gitRoot, assetPath);
+
+            return GetCommit("-n 1", relativeFilePath).FirstOrDefault();
         }
 
-        public static GitCommitInfo GetLastCommit(string fileName)
+        public static GitCommitInfo GetFirstCommit(Object asset)
         {
-            return GetCommit("-n 1", fileName).FirstOrDefault();
+            return GetFirstCommit(AssetDatabase.GetAssetPath(asset));
         }
 
-        public static List<GitCommitInfo> GetLastCommits(string fileName, int count)
+        public static GitCommitInfo GetFirstCommit(string assetPath)
         {
-            return GetCommit("-n " + count, fileName);
+            string gitRoot = GetGitRootDirectory();
+            string relativeFilePath = MakeRelativePath(gitRoot, assetPath);
+
+            return GetCommit("--diff-filter=A", relativeFilePath).FirstOrDefault();
+        }
+
+        private static string GetGitRootDirectory()
+        {
+            // This command gets the root directory of the git repository
+            RunGitCommand("rev-parse --show-toplevel", out string gitRoot);
+            return gitRoot?.TrimEnd('\n');
+        }
+
+        private static string MakeRelativePath(string fromPath, string toPath)
+        {
+            if (string.IsNullOrEmpty(fromPath))
+                throw new ArgumentNullException(nameof(fromPath));
+            if (string.IsNullOrEmpty(toPath))
+                throw new ArgumentNullException(nameof(toPath));
+
+            fromPath = Path.GetFullPath(fromPath); // Normalize paths
+            toPath = Path.GetFullPath(toPath);
+
+            // Convert to URI format
+            Uri fromUri = new Uri(fromPath + Path.DirectorySeparatorChar);
+            Uri toUri = new Uri(toPath);
+
+            if (fromUri.Scheme != toUri.Scheme)
+            {
+                return toPath;
+            } // path can't be made relative.
+
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            // Convert URI directory separators to OS-specific separators
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
+        }
+
+        private static List<GitCommitInfo> GetCommit(string query, string fileName)
+        {
+            string commandFormat = SystemInfo.operatingSystemFamily == OperatingSystemFamily.Windows
+                ? "log {0} --follow --format=\"%an|%aD|%s\" -- \"{1}\""
+                : "log {0} --follow --format='%an|%aD|%s' -- '{1}'";
+
+            string gitCommand = string.Format(commandFormat, query, fileName);
+
+            RunGitCommand(gitCommand, out string commandOutput);
+
+            if (commandOutput == null)
+                return null;
+
+            string[] lines = commandOutput.Split('\n');
+
+            List<GitCommitInfo> result = new List<GitCommitInfo>();
+
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('|');
+                if (parts.Length < 3)
+                    continue;
+
+                string name = parts[0];
+                DateTime dateTime;
+
+                // This is just an example date format. You should adjust this if Git's date format is different.
+                DateTime.TryParseExact(parts[1], "ddd MMM dd HH:mm:ss yyyy zzz",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
+
+                string title = parts[2];
+
+                result.Add(new GitCommitInfo(name, dateTime, title));
+            }
+
+            return result;
         }
     }
 }
