@@ -18,31 +18,32 @@ namespace BrunoMikoski.Core.Git
     {
         private const string GIT_EXECUTABLE_KEY = "GitUtility/Executable";
 
-        private static string lastError;
-        public static string LastError => lastError;
+        private static string LAST_ERROR;
+        public static string LastError => LAST_ERROR;
 
-        private static bool isInstalledCached;
-        private static string isInstalledCachedExecutable = "hs7822ekhk8sdhdsa"; // random string
-        private static string gitExecutable;
+        private static bool IS_INSTALLED_CACHED;
+        private static string IS_INSTALLED_CACHED_EXECUTABLE = "hs7822ekhk8sdhdsa"; // random string
+        private static string GIT_EXECUTABLE;
+        private static string GIT_ROOT_DIRECTORY;
 
         public static string GitExecutable
         {
             get
             {
-                if (gitExecutable == null)
+                if (GIT_EXECUTABLE == null)
                 {
 #if UNITY_EDITOR
-                    gitExecutable = EditorPrefs.GetString(GIT_EXECUTABLE_KEY, null);
+                    GIT_EXECUTABLE = EditorPrefs.GetString(GIT_EXECUTABLE_KEY, null);
                     if (!IsGitInstalled())
                         FindGitExecutable();
 #endif
                 }
 
-                return gitExecutable;
+                return GIT_EXECUTABLE;
             }
             set
             {
-                if (gitExecutable == value)
+                if (GIT_EXECUTABLE == value)
                     return;
 
                 SetGitExecutable(value);
@@ -51,9 +52,9 @@ namespace BrunoMikoski.Core.Git
 
         private static void SetGitExecutable(string value)
         {
-            gitExecutable = value;
+            GIT_EXECUTABLE = value;
 #if UNITY_EDITOR
-            EditorPrefs.SetString(GIT_EXECUTABLE_KEY, gitExecutable);
+            EditorPrefs.SetString(GIT_EXECUTABLE_KEY, GIT_EXECUTABLE);
 #endif
         }
 
@@ -76,7 +77,7 @@ namespace BrunoMikoski.Core.Git
             }
             else
             {
-                string[] possiblePaths =
+                string[] windowsPossibleGitPaths =
                 {
                     "git",
                     "%programfiles(x86)%\\SmartGit\\git\\mingw64\\bin\\git.exe",
@@ -92,9 +93,9 @@ namespace BrunoMikoski.Core.Git
                     "git",
                 };
 
-                for (int i = 0; i < possiblePaths.Length; i++)
+                for (int i = 0; i < windowsPossibleGitPaths.Length; i++)
                 {
-                    string possiblePath = Environment.ExpandEnvironmentVariables(possiblePaths[i]);
+                    string possiblePath = Environment.ExpandEnvironmentVariables(windowsPossibleGitPaths[i]);
 
                     if (!File.Exists(possiblePath))
                         continue;
@@ -145,7 +146,7 @@ namespace BrunoMikoski.Core.Git
                 if (!process.WaitForExit(20000)) // Wait for 20 seconds
                 {
                     process.Kill();
-                    lastError = "Timeout reached";
+                    LAST_ERROR = "Timeout reached";
                     result = null;
                     return null;
                 }
@@ -153,8 +154,8 @@ namespace BrunoMikoski.Core.Git
                 // Read error first, if any.
                 if (process.ExitCode != 0)
                 {
-                    lastError = process.StandardError.ReadToEnd();
-                    Debug.LogError("Git Error: " + lastError);
+                    LAST_ERROR = process.StandardError.ReadToEnd();
+                    Debug.LogError("Git Error: " + LAST_ERROR);
                     result = null;
                     return null;
                 }
@@ -199,35 +200,28 @@ namespace BrunoMikoski.Core.Git
 
         public static bool IsGitInstalled()
         {
-            isInstalledCachedExecutable = "";
-            if (isInstalledCachedExecutable == gitExecutable)
+            if (string.Equals(IS_INSTALLED_CACHED_EXECUTABLE, GIT_EXECUTABLE, StringComparison.Ordinal))
             {
-                return isInstalledCached;
+                return IS_INSTALLED_CACHED;
             }
 
             int? exitCode = RunGitCommand("--version");
 
-            isInstalledCachedExecutable = GitExecutable;
-            isInstalledCached = exitCode.HasValue && exitCode.Value == 0;
+            IS_INSTALLED_CACHED_EXECUTABLE = GitExecutable;
+            IS_INSTALLED_CACHED = exitCode == 0;
 
-            return isInstalledCached;
+            return IS_INSTALLED_CACHED;
         }
 
         public static int? RunGitCommand(string arguments)
         {
             return RunGitCommand(arguments, out string _);
         }
-
-        public static string CurrentBranch => GetCurrentBranch();
-
-        public static string CurrentCommitID
+        
+        public static string GetCurrentCommitID()
         {
-            get
-            {
-                string result;
-                RunGitCommand("rev-parse HEAD", out result);
-                return result?.Trim();
-            }
+            RunGitCommand("rev-parse HEAD", out string result);
+            return result?.Trim();
         }
 
         public static string GetCurrentBranch()
@@ -290,9 +284,13 @@ namespace BrunoMikoski.Core.Git
 
         private static string GetGitRootDirectory()
         {
-            // This command gets the root directory of the git repository
-            RunGitCommand("rev-parse --show-toplevel", out string gitRoot);
-            return gitRoot?.TrimEnd('\n');
+            if (string.IsNullOrEmpty(GIT_ROOT_DIRECTORY))
+            {
+                RunGitCommand("rev-parse --show-toplevel", out string gitRoot);
+                GIT_ROOT_DIRECTORY =  gitRoot?.TrimEnd('\n');
+            }
+
+            return GIT_ROOT_DIRECTORY;
         }
 
         private static string MakeRelativePath(string fromPath, string toPath)
