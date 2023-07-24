@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Text.RegularExpressions;
+#if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
+#endif
+using Debug = UnityEngine.Debug;
 
 namespace BrunoMikoski.Core.Git
 {
@@ -27,7 +29,7 @@ namespace BrunoMikoski.Core.Git
                 {
 #if UNITY_EDITOR
                     gitExecutable = EditorPrefs.GetString(GIT_EXECUTABLE_KEY, null);
-                    if (!IsGitInstalled)
+                    if (!IsGitInstalled())
                         FindGitExecutable();
 #endif
                 }
@@ -53,30 +55,45 @@ namespace BrunoMikoski.Core.Git
 #if UNITY_EDITOR
         public static void FindGitExecutable()
         {
-            string[] possiblePaths = new[]
+            bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+            
+            if (isMacOS)
             {
-                "git",
-                "%programfiles(x86)%\\SmartGit\\git\\mingw64\\bin\\git.exe",
-                "%programfiles%\\SmartGit\\git\\mingw64\\bin\\git.exe",
-                "%programfiles(x86)%\\SmartGit\\git\\mingw32\\bin\\git.exe",
-                "%programfiles%\\SmartGit\\git\\mingw32\\bin\\git.exe",
-                "%programfiles(x86)%\\Git\\mingw64\\bin\\git.exe",
-                "%programfiles%\\Git\\mingw64\\bin\\git.exe",
-                "%programfiles(x86)%\\Git\\mingw32\\bin\\git.exe",
-                "%programfiles%\\Git\\mingw32\\bin\\git.exe",
-                "%localappdata%\\Atlassian\\SourceTree\\git_local\\mingw32\\bin\\git.exe",
-                "%localappdata%\\Atlassian\\SourceTree\\git_local\\mingw64\\bin\\git.exe",
-                "git",
-            };
-
-            for (int i = 0; i < possiblePaths.Length; i++)
-            {
-                string possiblePath = Environment.ExpandEnvironmentVariables(possiblePaths[i]);
-                gitExecutable = possiblePath;
-                if (IsGitInstalled)
+                string gitPath = GetGitPathThroughShell();
+                if (!string.IsNullOrEmpty(gitPath))
                 {
-                    SetGitExecutable(possiblePath);
-                    return;
+                    GitExecutable = gitPath;
+                    if (IsGitInstalled())
+                        return;
+                }
+            }
+            else
+            {
+                string[] possiblePaths = {
+                    "git",
+                    "%programfiles(x86)%\\SmartGit\\git\\mingw64\\bin\\git.exe",
+                    "%programfiles%\\SmartGit\\git\\mingw64\\bin\\git.exe",
+                    "%programfiles(x86)%\\SmartGit\\git\\mingw32\\bin\\git.exe",
+                    "%programfiles%\\SmartGit\\git\\mingw32\\bin\\git.exe",
+                    "%programfiles(x86)%\\Git\\mingw64\\bin\\git.exe",
+                    "%programfiles%\\Git\\mingw64\\bin\\git.exe",
+                    "%programfiles(x86)%\\Git\\mingw32\\bin\\git.exe",
+                    "%programfiles%\\Git\\mingw32\\bin\\git.exe",
+                    "%localappdata%\\Atlassian\\SourceTree\\git_local\\mingw32\\bin\\git.exe",
+                    "%localappdata%\\Atlassian\\SourceTree\\git_local\\mingw64\\bin\\git.exe",
+                    "git",
+                };
+                
+                for (int i = 0; i < possiblePaths.Length; i++)
+                {
+                    string possiblePath = Environment.ExpandEnvironmentVariables(possiblePaths[i]);
+
+                    if (!File.Exists(possiblePath)) 
+                        continue;
+                
+                    GitExecutable = possiblePath;
+                    if (IsGitInstalled())
+                        return;
                 }
             }
         }
@@ -86,67 +103,102 @@ namespace BrunoMikoski.Core.Git
         {
             try
             {
-                ProcessStartInfo processStartInfo = new ProcessStartInfo("\"" + GitExecutable + "\"", arguments);
+                bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+
+                ProcessStartInfo processStartInfo;
+
+                // For macOS, run the command through the shell.
+                if (isMacOS)
+                {
+                    processStartInfo = new ProcessStartInfo("/bin/sh", "-c \"" + GitExecutable + " " + arguments + "\"");
+                }
+                else
+                {
+                    // For Windows, keep the original approach.
+                    processStartInfo = new ProcessStartInfo(GitExecutable, arguments);
+                }
+
                 processStartInfo.UseShellExecute = false;
                 processStartInfo.RedirectStandardOutput = true;
                 processStartInfo.RedirectStandardError = true;
                 processStartInfo.CreateNoWindow = true;
+
                 Process process = Process.Start(processStartInfo);
 
-                result = null;
-
                 if (process == null)
+                {
+                    result = null;
                     return null;
-
-                try
-                {
-                    if (!process.WaitForExit(20000))
-                    {
-                        process.Kill();
-                        lastError = "Timeout reached";
-                        return null;
-                    }
-                }
-                catch (ThreadAbortException)
-                {
-                    if (!process.HasExited)
-                        process.Kill();
-                    throw;
                 }
 
+                if (!process.WaitForExit(20000)) // Wait for 20 seconds
+                {
+                    process.Kill();
+                    lastError = "Timeout reached";
+                    result = null;
+                    return null;
+                }
+
+                // Read error first, if any.
                 if (process.ExitCode != 0)
                 {
-                    lastError = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+                    lastError = process.StandardError.ReadToEnd();
+                    Debug.LogError("Git Error: " + lastError);
+                    result = null;
                     return null;
                 }
 
+                // If no errors, get the standard output.
                 result = process.StandardOutput.ReadToEnd();
-
                 return process.ExitCode;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.LogError("Error running git command: " + ex.Message);
                 result = null;
                 return null;
             }
         }
 
-        public static bool IsGitInstalled
+        private static string GetGitPathThroughShell()
         {
-            get
+            try
             {
-                if (isInstalledCachedExecutable == gitExecutable)
+                ProcessStartInfo psi = new ProcessStartInfo("which", "git");
+                psi.RedirectStandardOutput = true;
+                psi.UseShellExecute = false;
+                psi.CreateNoWindow = true;
+
+                Process p = Process.Start(psi);
+                string gitPath = p.StandardOutput.ReadToEnd().Trim();
+                p.WaitForExit();
+
+                if (!string.IsNullOrEmpty(gitPath) && File.Exists(gitPath))
                 {
-                    return isInstalledCached;
+                    return gitPath;
                 }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
-                int? exitCode = RunGitCommand("help");
-
-                isInstalledCachedExecutable = GitExecutable;
-                isInstalledCached = exitCode.HasValue && exitCode.Value == 0;
-
+        public static bool IsGitInstalled()
+        {
+            isInstalledCachedExecutable = "";
+            if (isInstalledCachedExecutable == gitExecutable)
+            {
                 return isInstalledCached;
             }
+
+            int? exitCode = RunGitCommand("--version");
+
+            isInstalledCachedExecutable = GitExecutable;
+            isInstalledCached = exitCode.HasValue && exitCode.Value == 0;
+
+            return isInstalledCached;
         }
 
         public static int? RunGitCommand(string arguments)
@@ -197,49 +249,42 @@ namespace BrunoMikoski.Core.Git
             return result;
         }
 
-        private static string GetCurrentBranch()
+        public static string GetCurrentBranch()
         {
             // Command: git rev-parse --abbrev-ref HEAD
-            string result;
-            RunGitCommand("rev-parse --abbrev-ref HEAD", out result);
-            if (result == null)
+            RunGitCommand("rev-parse --abbrev-ref HEAD", out string result);
+
+            if (string.IsNullOrEmpty(result))
                 return string.Empty;
 
             result = result.Trim();
-            if (result != "HEAD")
-                return result;
 
+            // If the result is not HEAD, then it's likely the branch name directly.
+            if (result != "HEAD")
+                return ExtractBranchName(result);
+
+            // If the result is "HEAD", then it means the repository is in a detached state.
+            // We need to find out the branch it's tracking.
             RunGitCommand("log -n 1 --pretty=%d HEAD", out result);
 
-            // Result will be in format: (HEAD -> feature/Control_type_mapping, origin/feature/Control_type_mapping)
-            // or: (HEAD, origin/development)
+            if (string.IsNullOrEmpty(result))
+                return string.Empty;
 
-            result = result.Trim();
+            // Use regex to extract the branch name from results like: (HEAD, origin/development)
+            var match = Regex.Match(result, @"origin\/([a-zA-Z0-9_-]+)");
 
-            // Remove brackets
-            result = result.Substring(1, result.Length - 2);
-
-            string[] parts = result.Split(',');
-            for (int i = 0; i < parts.Length; i++)
+            if (match.Success)
             {
-                string part = parts[i].Trim();
-                if (part.Length == 0)
-                    continue;
-
-                if (part == "HEAD")
-                    continue;
-
-                part = part.Replace("HEAD", "")
-                    .Replace("->", "").Trim();
-
-                part = part.Replace("origin/", "").Trim();
-
-                if (part.Length == 0)
-                    continue;
-
-                return part;
+                return match.Groups[1].Value;
             }
+
             return string.Empty;
+        }
+        
+        private static string ExtractBranchName(string branch)
+        {
+            // Here, we'll remove 'origin/' prefix and return the branch name.
+            return branch.Replace("origin/", "").Trim();
         }
 
         public static GitCommitInfo GetFirstCommit(string fileName)
@@ -256,46 +301,5 @@ namespace BrunoMikoski.Core.Git
         {
             return GetCommit("-n " + count, fileName);
         }
-        
-        
-        
-        
-
-#if UNITY_EDITOR
-        [PreferenceItem("Git")]
-        private static void OnSettingsGUI()
-        {
-            if (IsGitInstalled)
-            {
-                EditorGUILayout.HelpBox("Git is installed", MessageType.Info);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("Git cannot be found. Please select the git executable below",
-                    MessageType.Error);
-            }
-
-            EditorGUILayout.BeginHorizontal();
-
-            GitExecutable = EditorGUILayout.DelayedTextField("Git executable path", GitExecutable);
-
-            if (GUILayout.Button("Browse", GUILayout.Width(100)))
-            {
-                string result =
-                    EditorUtility.OpenFilePanel("Git executable", Path.GetDirectoryName(GitExecutable), "exe");
-                if (!string.IsNullOrEmpty(result))
-                    GitExecutable = result;
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
-
-            if (GUILayout.Button("Auto detect git executable", GUILayout.Width(200)))
-            {
-                FindGitExecutable();
-            }
-        }
-#endif
     }
 }
