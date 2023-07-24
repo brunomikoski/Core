@@ -14,7 +14,7 @@ namespace BrunoMikoski.Core
 
 #if DEBUG
         private static bool isInitialized;
-        private static ServiceReference<MonoBehaviourService> MonoBehaviourService;
+        private static ServiceReference<MonoBehaviourService> MonoBehaviourService = new();
         private static void Initialize()
         {
             if (isInitialized)

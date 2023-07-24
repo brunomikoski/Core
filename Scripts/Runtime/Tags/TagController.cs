@@ -32,7 +32,7 @@ namespace BrunoMikoski.Core
         private CollectionItemPicker<Tag> tags = new CollectionItemPicker<Tag>();
 
 
-        private ServiceReference<TagRegistryService> tagRegistryService;
+        private ServiceReference<TagRegistryService> tagRegistryService= new();
 
         private void Awake()
         {

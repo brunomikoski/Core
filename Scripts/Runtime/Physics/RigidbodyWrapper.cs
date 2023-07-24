@@ -303,7 +303,7 @@ namespace BrunoMikoski.Core.PhysX
 
         private bool isInitialized;
         
-        private ServiceReference<PhysicsService> physicsService;
+        private ServiceReference<PhysicsService> physicsService = new();
 
 
         private void Awake()

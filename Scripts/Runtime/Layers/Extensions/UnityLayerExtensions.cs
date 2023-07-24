@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core
 {
-    public static class LayerIDExtensions
+    public static class UnityLayerExtensions
     {
         public static LayerMask ToLayerMask(this UnityLayer unityLayer)
         {
@@ -13,7 +13,7 @@ namespace BrunoMikoski.Core
 
         public static LayerMask ToLayerMask(this CollectionItemPicker<UnityLayer> layers)
         {
-            LayerMask layerMask = new LayerMask
+            LayerMask layerMask = new()
             {
                 value = 0
             };

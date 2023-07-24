@@ -25,7 +25,10 @@ namespace BrunoMikoski.Core
                 || IsCurrentlyAtUntitledScene())
             {
                 EditorSceneManager.playModeStartScene = null;
-                return;
+                {
+                    SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
+                    return;
+                }
             }
 
             SceneAsset bootstrapScene =
@@ -33,6 +36,8 @@ namespace BrunoMikoski.Core
 
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
+                SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
+
                 if (EditorBuildSettings.scenes.Length > 0 &&
                     IsSceneAlreadyOpen(Path.GetFileNameWithoutExtension(EditorBuildSettings.scenes[0].path)))
                 {
