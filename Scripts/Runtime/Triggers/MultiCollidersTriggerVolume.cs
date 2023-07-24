@@ -33,34 +33,35 @@ namespace BrunoMikoski.Core.PhysX
             bool hasFirstBounds = false;
             for (int i = colliders.Length - 1; i >= 0; i--)
             {
-                Collider collider = colliders[i];
+                Collider targetCollider = colliders[i];
 
-                if (collider == null)
+                if (targetCollider == null)
                     continue;
 
-                if (!collider.enabled)
+                if (!targetCollider.enabled)
                     continue;
 
                 if (!hasFirstBounds)
                 {
-                    triggerBounds = collider.bounds;
+                    triggerBounds = targetCollider.bounds;
                     hasFirstBounds = true;
                 }
                 else
                 {
-                    triggerBounds.Encapsulate(collider.bounds);
+                    triggerBounds.Encapsulate(targetCollider.bounds);
                 }
             }
 
-            lastPosition = transform.position;
-            lastRotation = transform.rotation;
+            Transform boundsTranform = transform;
+            lastPosition = boundsTranform.position;
+            lastRotation = boundsTranform.rotation;
         }
 
         protected override void CreateTriggerCollider()
         {
-            Rigidbody rigidbody = gameObject.GetOrAddComponent<Rigidbody>();
-            rigidbody.useGravity = false;
-            rigidbody.isKinematic = true;
+            Rigidbody targetRigidbody = gameObject.GetOrAddComponent<Rigidbody>();
+            targetRigidbody.useGravity = false;
+            targetRigidbody.isKinematic = true;
             for (int i = 0; i < colliders.Length; i++)
             {
                 Collider collider = colliders[i];
@@ -79,6 +80,17 @@ namespace BrunoMikoski.Core.PhysX
             if (lastRotation != transform.rotation)
                 return true;
             return false;
+        }
+        
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = gizmoColor;
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Collider targetCollider = colliders[i];
+                Gizmos.matrix = targetCollider.transform.localToWorldMatrix;
+                GizmoUtility.DrawCollider(targetCollider);
+            }
         }
     }
 }

@@ -140,5 +140,12 @@ namespace BrunoMikoski.Core.PhysX
             this.center = center;
             UpdateMeshDimensions();
         }
+        
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = gizmoColor;
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawMesh(mesh);
+        }
     }
 }

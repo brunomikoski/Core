@@ -9,28 +9,12 @@ namespace BrunoMikoski.Core.PhysX
     {
         private const string TRIGGER_HELPER_NAME = "TriggerHelper";
 
+        [Header("Gizmos")]
+        [SerializeField]
+        protected Color gizmoColor = new Color(0f, 1f, 0f, 0.3f);
         [Header("Trigger Volume")]
         [SerializeField] 
-        private Color gizmoColor = Color.cyan;
-        [SerializeField] 
-        private bool debug;
-
-        [SerializeField] 
         private bool allowKinematics = true;
-
-        [SerializeField]
-        [Tooltip("Only adds objects to the volume if they are below a certain velocity")]
-        private bool triggerIfBelowVelocity;
-
-        [SerializeField, HideIf("triggerIfBelowVelocity", false)]
-        private float velocityThreshold = 2.0f;
-
-        [SerializeField, HideIf("triggerIfBelowVelocity", false)]
-        private float angularVelocityThreshold = 2.0f;
-
-        [SerializeField]
-        private bool includeOtherTriggerColliders;
-
 
         protected GameObject triggerChild;
         private Collider triggerCollider;
@@ -55,28 +39,21 @@ namespace BrunoMikoski.Core.PhysX
         /// <summary>
         /// Contains all physics objects inside trigger field
         /// </summary>
-        private List<ObjectInTriggerVolumeData> objectsInTrigger =
-            new List<ObjectInTriggerVolumeData>();
+        private List<ObjectInTriggerVolumeData> objectsInTrigger = new();
 
         public List<ObjectInTriggerVolumeData> ObjectsInTrigger => objectsInTrigger;
 
         /// <summary>
         /// Contains all physics objects inside the volume
         /// </summary>
-        private List<Rigidbody> objectsInVolume = new List<Rigidbody>();
+        private List<Rigidbody> objectsInVolume = new();
 
         public List<Rigidbody> ObjectsInVolume => objectsInVolume;
 
         //Used for quick lookup if the objects is already in the volume list (list.contains is to slow for every frame)
-        private readonly HashSet<Rigidbody> objectsInVolumeSet =
-            new HashSet<Rigidbody>();
+        private readonly HashSet<Rigidbody> objectsInVolumeSet = new();
 
-        private readonly List<Transform> ignoredObjects = new List<Transform>();
-
-        private ColliderFilterDelegate colliderFilter;
-        public ColliderFilterDelegate ColliderFilter => colliderFilter;
-
-        public delegate bool ColliderFilterDelegate(Collider collider);
+        private readonly List<Transform> ignoredObjects = new();
 
         public Action<Rigidbody> OnObjectEnterVolumeEvent;
         public Action<Rigidbody> OnObjectExitVolumeEvent;
@@ -123,7 +100,7 @@ namespace BrunoMikoski.Core.PhysX
             ClearAllObjectsInVolume();
         }
 
-        private bool ShouldIgnore(Transform transform)
+        private bool ShouldIgnore(Transform targetTransform)
         {
             for (int i = ignoredObjects.Count - 1; i >= 0; i--)
             {
@@ -133,7 +110,7 @@ namespace BrunoMikoski.Core.PhysX
                     continue;
                 }
 
-                if (transform.IsChildOf(ignoredObjects[i]))
+                if (targetTransform.IsChildOf(ignoredObjects[i]))
                     return true;
             }
             return false;
@@ -151,8 +128,8 @@ namespace BrunoMikoski.Core.PhysX
                     return;
                 }
 
-                Rigidbody rigidbody = objectsInTrigger[i];
-                if (rigidbody == null) // We cannot use .IsNull(), since we want
+                Rigidbody targetRigidbody = objectsInTrigger[i];
+                if (targetRigidbody == null) // We cannot use .IsNull(), since we want
                     // to check if the object has been destroyed
                 {
                     objectsInTrigger[i].Dispose();
@@ -166,51 +143,46 @@ namespace BrunoMikoski.Core.PhysX
                     if (colliders[j].enabled && colliders[j].gameObject.activeInHierarchy)
                         continue;
 
-                    OnColliderExit(colliders[j], rigidbody);
+                    OnColliderExit(colliders[j], targetRigidbody);
                 }
             }
 
             for (int i = objectsInVolume.Count - 1; i >= 0; i--)
             {
-                Rigidbody rigidbody = objectsInVolume[i];
-                if (rigidbody == null) // We cannot use .IsNull(), since we want
+                Rigidbody targetRigidbody = objectsInVolume[i];
+                if (targetRigidbody == null) // We cannot use .IsNull(), since we want
                     // to check if the object has been destroyed
                 {
-                    OnObjectDestroyedInVolumeEvent?.Invoke(rigidbody);
+                    OnObjectDestroyedInVolumeEvent?.Invoke(targetRigidbody);
                     objectsInVolume.RemoveAt(i);
 
                     continue;
                 }
 
-                if (!rigidbody.gameObject.activeInHierarchy)
-                    OnRigidbodyExit(null, rigidbody);
+                if (!targetRigidbody.gameObject.activeInHierarchy)
+                    OnRigidbodyExit(targetRigidbody);
             }
         }
 
-        public void SetIgnored(Transform transform, bool ignore)
+        public void SetIgnored(Transform targetTransform, bool ignore)
         {
             if (ignore)
             {
-                if (!ignoredObjects.Contains(transform))
-                    ignoredObjects.Add(transform);
+                if (!ignoredObjects.Contains(targetTransform))
+                    ignoredObjects.Add(targetTransform);
             }
             else
             {
-                ignoredObjects.Remove(transform);
+                ignoredObjects.Remove(targetTransform);
             }
         }
 
-        private bool CheckConditions(Rigidbody rigidbody)
+        private bool CheckConditions(Rigidbody targetRigidbody)
         {
-            if (triggerIfBelowVelocity &&
-                (rigidbody.velocity.magnitude > velocityThreshold ||
-                 rigidbody.angularVelocity.magnitude > angularVelocityThreshold))
+            if (!allowKinematics && targetRigidbody.isKinematic)
                 return false;
 
-            if (!allowKinematics && rigidbody.isKinematic)
-                return false;
-
-            if (ShouldIgnore(rigidbody.transform))
+            if (ShouldIgnore(targetRigidbody.transform))
                 return false;
 
             return true;
@@ -220,25 +192,14 @@ namespace BrunoMikoski.Core.PhysX
 
         protected void OnTriggerEnter(Collider targetCollider)
         {
-            if (targetCollider.isTrigger && !includeOtherTriggerColliders)
+            if (targetCollider.isTrigger)
                 return;
 
             OnColliderEnter(targetCollider);
         }
 
-        private bool IsColliderValid(Collider targetCollider)
-        {
-            if (colliderFilter == null)
-                return true;
-
-            return colliderFilter(targetCollider);
-        }
-
         private void OnColliderEnter(Collider targetCollider)
         {
-            if (!IsColliderValid(targetCollider))
-                return;
-
             Rigidbody rootRigidbody = targetCollider.attachedRigidbody;
             if (rootRigidbody == null)
                 return;
@@ -249,112 +210,110 @@ namespace BrunoMikoski.Core.PhysX
             if (AddColliderToEntry(rootRigidbody, targetCollider).HasValue)
                 return;
 
-            OnRigidbodyEnter(targetCollider, rootRigidbody);
+            OnRigidbodyEnter(rootRigidbody);
 
             AddColliderToEntry(rootRigidbody, targetCollider);
         }
 
-        private void OnRigidbodyEnter(Collider collider, Rigidbody rigidbody)
+        private void OnRigidbodyEnter(Rigidbody targetRigidbody)
         {
-            if (objectsInTrigger.Contains(rigidbody))
+            if (objectsInTrigger.Contains(targetRigidbody))
                 return;
 
-            if (!CheckConditions(rigidbody))
+            if (!CheckConditions(targetRigidbody))
                 return;
 
-            objectsInTrigger.Add(new ObjectInTriggerVolumeData(rigidbody));
+            objectsInTrigger.Add(new ObjectInTriggerVolumeData(targetRigidbody));
 
-            EnterVolume(rigidbody);
+            EnterVolume(targetRigidbody);
         }
 
         #endregion On Enter
 
-        private int? AddColliderToEntry(Rigidbody rigidbody, Collider collider)
+        private int? AddColliderToEntry(Rigidbody targetRigidbody, Collider targetCollider)
         {
-            int index = objectsInTrigger.IndexOf(rigidbody);
-            if (index >= 0)
-            {
-                ObjectInTriggerVolumeData entry = objectsInTrigger[index];
-                entry.collidersInVolume.Add(collider);
-                objectsInTrigger[index] = entry;
-                return entry.collidersInVolume.Count;
-            }
-            return null;
+            int index = objectsInTrigger.IndexOf(targetRigidbody);
+            if (index < 0) 
+                return null;
+            
+            ObjectInTriggerVolumeData entry = objectsInTrigger[index];
+            entry.collidersInVolume.Add(targetCollider);
+            objectsInTrigger[index] = entry;
+            return entry.collidersInVolume.Count;
         }
 
-        private int? RemoveColliderFromEntry(Rigidbody rigidbody, Collider collider)
+        private int? RemoveColliderFromEntry(Rigidbody targetRigidbody, Collider targetCollider)
         {
-            int index = objectsInTrigger.IndexOf(rigidbody);
-            if (index >= 0)
-            {
-                ObjectInTriggerVolumeData entry = objectsInTrigger[index];
-                entry.collidersInVolume.Remove(collider);
-                objectsInTrigger[index] = entry;
-                return entry.collidersInVolume.Count;
-            }
-            return null;
+            int index = objectsInTrigger.IndexOf(targetRigidbody);
+            if (index < 0)
+                return null;
+            
+            ObjectInTriggerVolumeData entry = objectsInTrigger[index];
+            entry.collidersInVolume.Remove(targetCollider);
+            objectsInTrigger[index] = entry;
+            return entry.collidersInVolume.Count;
         }
 
-        private static Rigidbody GetRigidbodyParent(Rigidbody rigidbody)
+        private static Rigidbody GetRigidbodyParent(Rigidbody targetRigidbody)
         {
-            if (rigidbody.transform.parent == null)
+            if (targetRigidbody.transform.parent == null)
                 return null;
 
-            return rigidbody.transform.parent.GetComponentInParent<Rigidbody>();
+            return targetRigidbody.transform.parent.GetComponentInParent<Rigidbody>();
         }
 
-        protected void OnTriggerExit(Collider collider)
+        protected void OnTriggerExit(Collider targetCollider)
         {
-            if (collider.isTrigger && !includeOtherTriggerColliders)
+            if (targetCollider.isTrigger)
                 return;
 
-            OnColliderExit(collider);
+            OnColliderExit(targetCollider);
         }
 
-        private void OnColliderExit(Collider targetCollider, Rigidbody rigidbody = null)
+        private void OnColliderExit(Collider targetCollider, Rigidbody targetRigidbody = null)
         {
             // ReSharper disable once Unity.NoNullCoalescing
-            if (rigidbody == null)
-                rigidbody = targetCollider.attachedRigidbody;
+            if (targetRigidbody == null)
+                targetRigidbody = targetCollider.attachedRigidbody;
             
-            if (rigidbody == null)
+            if (targetRigidbody == null)
             {
                 objectsInVolumeSet.Remove(null);
                 objectsInVolume.Remove(null);
                 return;
             }
 
-            if (!IsTransformEligible(rigidbody.transform))
+            if (!IsTransformEligible(targetRigidbody.transform))
                 return;
 
-            int? result = RemoveColliderFromEntry(rigidbody, targetCollider);
+            int? result = RemoveColliderFromEntry(targetRigidbody, targetCollider);
             if (result.HasValue)
             {
                 if (result > 0)
                     return;
             }
 
-            RemoveRigidbodyAndChildrenFromTrigger(rigidbody, targetCollider);
+            RemoveRigidbodyAndChildrenFromTrigger(targetRigidbody);
         }
 
-        private void RemoveRigidbodyAndChildrenFromTrigger(Rigidbody rigidbody, Collider collider = null)
+        private void RemoveRigidbodyAndChildrenFromTrigger(Rigidbody targetRigidbody)
         {
-            Rigidbody RigidbodyParent = GetRigidbodyParent(rigidbody);
-            if (RigidbodyParent.IsNotNull())
+            Rigidbody rigidbodyParent = GetRigidbodyParent(targetRigidbody);
+            if (rigidbodyParent.IsNotNull())
             {
-                if (objectsInTrigger.Contains(RigidbodyParent))
+                if (objectsInTrigger.Contains(rigidbodyParent))
                     return;
             }
 
-            OnRigidbodyExit(collider, rigidbody);
+            OnRigidbodyExit(targetRigidbody);
         }
 
-        private void OnRigidbodyExit(Collider collider, Rigidbody Rigidbody)
+        private void OnRigidbodyExit(Rigidbody targetRigidbody)
         {
             // Double check if object is removed from volume list
-            ExitVolume(Rigidbody);
+            ExitVolume(targetRigidbody);
 
-            int index = objectsInTrigger.IndexOf(Rigidbody);
+            int index = objectsInTrigger.IndexOf(targetRigidbody);
             if (index < 0)
             {
                 return;
@@ -363,7 +322,7 @@ namespace BrunoMikoski.Core.PhysX
             objectsInTrigger[index].Dispose();
             objectsInTrigger.RemoveAt(index);
 
-            ExitVolume(Rigidbody);
+            ExitVolume(targetRigidbody);
         }
 
         /// <summary>
@@ -386,31 +345,31 @@ namespace BrunoMikoski.Core.PhysX
             return true;
         }
 
-        private void EnterVolume(Rigidbody rigidbody)
+        private void EnterVolume(Rigidbody targetRigidbody)
         {
-            if (!CheckConditions(rigidbody))
+            if (!CheckConditions(targetRigidbody))
                 return;
 
-            if (objectsInVolumeSet.Contains(rigidbody))
+            if (objectsInVolumeSet.Contains(targetRigidbody))
                 return;
 
-            objectsInVolume.Add(rigidbody);
-            objectsInVolumeSet.Add(rigidbody);
+            objectsInVolume.Add(targetRigidbody);
+            objectsInVolumeSet.Add(targetRigidbody);
 
-            OnObjectEnterVolumeEvent?.Invoke(rigidbody);
+            OnObjectEnterVolumeEvent?.Invoke(targetRigidbody);
 
         }
 
-        private void ExitVolume(Rigidbody rigidbody)
+        private void ExitVolume(Rigidbody targetRigidbody)
         {
-            if (!objectsInVolume.Contains(rigidbody))
+            if (!objectsInVolume.Contains(targetRigidbody))
                 return;
 
-            objectsInVolume.Remove(rigidbody);
-            objectsInVolumeSet.Remove(rigidbody);
+            objectsInVolume.Remove(targetRigidbody);
+            objectsInVolumeSet.Remove(targetRigidbody);
 
-            if (!rigidbody.IsNull())
-                OnObjectExitVolumeEvent?.Invoke(rigidbody);
+            if (!targetRigidbody.IsNull())
+                OnObjectExitVolumeEvent?.Invoke(targetRigidbody);
         }
 
         public void ClearAllObjectsInVolume()
@@ -437,17 +396,19 @@ namespace BrunoMikoski.Core.PhysX
                 if (triggerHelper == null)
                 {
                     // Create new empty game object
-                    triggerChild = new GameObject();
-
-                    // Set some transform values for easy use later...
-                    triggerChild.transform.parent = transform;
-                    triggerChild.transform.localPosition = Vector3.zero;
-                    triggerChild.transform.localRotation = Quaternion.identity;
-                    triggerChild.transform.localScale = Vector3.one;
-
-                    triggerChild.name = TRIGGER_HELPER_NAME;
-
-                    triggerChild.layer = gameObject.layer;
+                    triggerChild = new GameObject
+                    {
+                        transform =
+                        {
+                            // Set some transform values for easy use later...
+                            parent = transform,
+                            localPosition = Vector3.zero,
+                            localRotation = Quaternion.identity,
+                            localScale = Vector3.one
+                        },
+                        name = TRIGGER_HELPER_NAME,
+                        layer = gameObject.layer
+                    };
                 }
                 else
                 {
@@ -466,14 +427,10 @@ namespace BrunoMikoski.Core.PhysX
             triggerCollider.enabled = enabled;
             return result;
         }
-
-        #region Gizmos
-
-        protected void SetTriggerCollider(Collider collider)
+        
+        protected void SetTriggerCollider(Collider targetCollider)
         {
-            triggerCollider = collider;
+            triggerCollider = targetCollider;
         }
-
-        #endregion Gizmos
    }
 }

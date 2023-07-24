@@ -20,10 +20,10 @@ namespace BrunoMikoski.Core.PhysX
 
         private void UpdateSphereDimensions()
         {
-            SphereCollider collider = (SphereCollider) TriggerCollider;
+            SphereCollider sphereCollider = (SphereCollider) TriggerCollider;
             float newRadius = size * 0.5f;
-            if (!Mathf.Approximately(newRadius, collider.radius))
-                collider.radius = newRadius;
+            if (!Mathf.Approximately(newRadius, sphereCollider.radius))
+                sphereCollider.radius = newRadius;
         }
 
         public override Vector3 GetTriggerOrigin()
@@ -41,6 +41,13 @@ namespace BrunoMikoski.Core.PhysX
         {
             this.size = targetSize;
             UpdateSphereDimensions();
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = gizmoColor;
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawSphere(Vector3.zero, size);
         }
     }
 }

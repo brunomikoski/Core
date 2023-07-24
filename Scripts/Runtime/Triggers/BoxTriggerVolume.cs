@@ -60,5 +60,12 @@ namespace BrunoMikoski.Core.PhysX
             this.center = targetCenter;
             UpdateBoxCollider();
         }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = gizmoColor;
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawCube(center, size);
+        }
     }
 }
