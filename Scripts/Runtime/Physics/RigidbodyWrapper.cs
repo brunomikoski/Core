@@ -310,7 +310,6 @@ namespace BrunoMikoski.Core.PhysX
         {
             if (Rigidbody == null)
             {
-                // ROY: Sometimes prefab instances have their RigidBody removed ;(
                 // In that case this component isn't needed and is best off removing itself.
                 DestroyImmediate(this);
                 return;
