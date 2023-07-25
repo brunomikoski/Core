@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.PhysX
 {
+#if RIGIDBODYWRAPPER_ENABLED
     [ServiceImplementation(DependsOn = new []{typeof(MonoBehaviourService)})]
+#endif
     public sealed class PhysicsService : IFixedUpdate
     {
         private readonly Dictionary<Rigidbody, RigidbodyWrapper> rigidbodyToWrapper = new();
