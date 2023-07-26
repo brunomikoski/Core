@@ -14,7 +14,7 @@ namespace BrunoMikoski.Core
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
         {
-            SettingsProvider provider = new("Project/Core/Editor Bootstrap", SettingsScope.Project)
+            SettingsProvider provider = new("Project/Editor Bootstrap", SettingsScope.Project)
             {
                 label = "Editor Bootstrap",
                 guiHandler = (searchContext) =>
