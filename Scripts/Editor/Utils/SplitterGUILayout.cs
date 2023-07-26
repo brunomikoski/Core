@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Routines
+namespace BrunoMikoski.Core
 {
     internal static class SplitterGUILayout
     {

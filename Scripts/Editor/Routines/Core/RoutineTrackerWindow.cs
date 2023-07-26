@@ -321,7 +321,7 @@ namespace BrunoMikoski.Core.Routines
                 if (Application.isPlaying)
                     LastUpdate = DateTime.UtcNow;
                 treeView.ReloadAndSort();
-                Repaint();
+                Repaint(); 
             }
         }
 

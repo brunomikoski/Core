@@ -1,10 +1,9 @@
 using System.Collections.Generic;
+using BrunoMikoski.ServicesLocation;
 
 namespace BrunoMikoski.Core
 {
-#if TAGMANAGER_ENABLED
     [ServiceImplementation]
-#endif
     public class TagRegistryService
     {
         private const int INITIAL_SIZE = 100;
