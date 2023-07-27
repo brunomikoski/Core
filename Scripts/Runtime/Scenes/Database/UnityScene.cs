@@ -1,6 +1,10 @@
+using System;
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
+#endif
 
 namespace BrunoMikoski.Playground.ScenesReferences
 {
@@ -24,12 +28,53 @@ namespace BrunoMikoski.Playground.ScenesReferences
 
         public void Load(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
         {
-            SceneManager.LoadScene(sceneName, loadSceneMode);
+            if (Application.isPlaying)
+            {
+                SceneManager.LoadScene(sceneName, loadSceneMode);
+            }
+#if UNITY_EDITOR
+            else
+            {
+                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive ? OpenSceneMode.Additive
+                    : OpenSceneMode.Single;
+                EditorSceneManager.OpenScene(scenePath, openSceneMode);
+            }
+#endif
         }
 
         public void Unload()
         {
-            SceneManager.UnloadSceneAsync(sceneName);
+            if (Application.isPlaying)
+            {
+                SceneManager.UnloadSceneAsync(sceneName);
+            }
+#if UNITY_EDITOR
+            else
+            {
+                for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                {
+                    Scene scene = EditorSceneManager.GetSceneAt(i);
+                    if (scene.path.Equals(scenePath, StringComparison.Ordinal))
+                    {
+                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] {scene});
+                        EditorSceneManager.CloseScene(scene, true);
+                        return;
+                    }
+                }
+            }
+#endif
+        }
+
+        public bool IsLoaded()
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.name.Equals(sceneName, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
         }
     }
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace BrunoMikoski.Core.Editor.Layers
 {
     [CustomEditor(typeof(UnityLayerCollection), true)]
-    public class LayerCollectionCustomEditor : CollectionCustomEditor
+    public class UnityLayerCollectionCustomEditor : CollectionCustomEditor
     {
         protected override bool DisplayAddButton => false;
         protected override bool DisplayRemoveButton => false;

@@ -6,19 +6,23 @@ namespace BrunoMikoski.Playground.ScenesReferences
     [CustomEditor(typeof(UnityScene), true)]
     public class UnitySceneCustomEditor : Editor
     {
-        private UnityScene sceneID;
-        private SerializedProperty guidProperty;
-
         private SceneAsset sceneAsset;
 
         private void OnEnable()
         {
-            sceneID = (UnityScene) target;
-            guidProperty = serializedObject.FindProperty("sceneGuid");
+            
+        }
 
-            if (!string.IsNullOrEmpty(sceneID.SceneGuid))
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+            serializedObject.Update();
+            
+            SerializedProperty guidProperty = serializedObject.FindProperty("sceneGuid");
+
+            if (!string.IsNullOrEmpty(guidProperty.stringValue))
             {
-                string path = AssetDatabase.GUIDToAssetPath(sceneID.SceneGuid);
+                string path = AssetDatabase.GUIDToAssetPath(guidProperty.stringValue);
                 if (!string.IsNullOrEmpty(path))
                     sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(path);
 
@@ -34,13 +38,7 @@ namespace BrunoMikoski.Playground.ScenesReferences
                     serializedObject.ApplyModifiedProperties();
                 }
             }
-        }
-
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-
-            serializedObject.Update();
+            
             EditorGUI.BeginChangeCheck();
             SceneAsset newSceneAsset =
                 EditorGUILayout.ObjectField("Scene", sceneAsset, typeof(SceneAsset), false) as SceneAsset;
