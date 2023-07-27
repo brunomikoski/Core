@@ -11,22 +11,20 @@ namespace BrunoMikoski.Playground.ScenesReferences
     [InitializeOnLoad]
     public class ScenePickerToolbar
     {
+        private static UnityScenesCollection SCENES_COLLECTION;
+        private static readonly GUIContent SCENE_ICON;
+        private static GUIStyle GUI_STYLE;
+
         static ScenePickerToolbar()
         {
+            SCENE_ICON = EditorGUIUtility.IconContent("d_SceneAsset Icon");
+            SCENE_ICON.text = "Scenes";
+            
             EditorApplication.delayCall += Initialize;
         }
         
         private static void Initialize()
         {
-            GUI_STYLE = new GUIStyle(EditorStyles.toolbarPopup)
-            {
-                fixedHeight = 19,
-                fixedWidth = 100,
-            };
-            
-            sceneIcon = EditorGUIUtility.IconContent("d_SceneAsset Icon");
-            sceneIcon.text = "Scenes";
-            
             VisualElement parent = new VisualElement()
             {
                 style =
@@ -49,19 +47,29 @@ namespace BrunoMikoski.Playground.ScenesReferences
 
             UnityMainToolbarUtility.AddCustom(UnityMainToolbarUtility.TargetContainer.Left,
                 UnityMainToolbarUtility.Side.Right, parent);
+            
+            
+            
+            
+            
         }
-
-        private static UnityScenesCollection scenesCollection;
-        private static GUIContent sceneIcon;
-        private static GUIStyle GUI_STYLE;
 
         private static void DropDownIMGUI()
         {
-            if (!CollectionsRegistry.Instance.TryGetCollectionOfType(out scenesCollection))
+            if (!CollectionsRegistry.Instance.TryGetCollectionOfType(out SCENES_COLLECTION))
                 return;
 
+            if (GUI_STYLE == null && EditorStyles.toolbarPopup != null)
+            {
+                GUI_STYLE = new GUIStyle(EditorStyles.toolbarPopup)
+                {
+                    fixedHeight = 19,
+                    fixedWidth = 100,
+                };
+            }
             
-            if (!EditorGUILayout.DropdownButton(sceneIcon, FocusType.Passive, GUI_STYLE))
+            
+            if (!EditorGUILayout.DropdownButton(SCENE_ICON, FocusType.Passive, GUI_STYLE))
             {
                 return;
             }
@@ -79,9 +87,9 @@ namespace BrunoMikoski.Playground.ScenesReferences
             }
  
             GenericMenu menu = new();
-            for (int i = 0; i < scenesCollection.Count; i++)
+            for (int i = 0; i < SCENES_COLLECTION.Count; i++)
             {
-                UnityScene unityScene = scenesCollection[i];
+                UnityScene unityScene = SCENES_COLLECTION[i];
                 menu.AddItem(new GUIContent(unityScene.name), unityScene.IsLoaded(), HandleItemClicked, unityScene);
             }
 
