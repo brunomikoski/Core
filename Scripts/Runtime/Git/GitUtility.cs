@@ -255,11 +255,12 @@ namespace BrunoMikoski.Core.Git
             return string.Empty;
         }
 
-
+#if UNITY_EDITOR
         public static GitCommitInfo GetLastCommit(Object asset)
         {
             return GetLastCommit(AssetDatabase.GetAssetPath(asset));
         }
+#endif
 
         public static GitCommitInfo GetLastCommit(string assetPath)
         {
@@ -268,11 +269,13 @@ namespace BrunoMikoski.Core.Git
 
             return GetCommit("-n 1", relativeFilePath).FirstOrDefault();
         }
-
+        
+#if UNITY_EDITOR
         public static GitCommitInfo GetFirstCommit(Object asset)
         {
             return GetFirstCommit(AssetDatabase.GetAssetPath(asset));
         }
+#endif
 
         public static GitCommitInfo GetFirstCommit(string assetPath)
         {

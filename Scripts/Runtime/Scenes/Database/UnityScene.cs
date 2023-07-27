@@ -1,5 +1,6 @@
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BrunoMikoski.Playground.ScenesReferences
 {
@@ -20,5 +21,15 @@ namespace BrunoMikoski.Playground.ScenesReferences
         [SerializeField, HideInInspector]
         private int buildIndex;
         public int BuildIndex => buildIndex;
+
+        public void Load(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+            SceneManager.LoadScene(sceneName, loadSceneMode);
+        }
+
+        public void Unload()
+        {
+            SceneManager.UnloadSceneAsync(sceneName);
+        }
     }
 }
