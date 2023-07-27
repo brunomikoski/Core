@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -6,6 +7,10 @@ namespace BrunoMikoski.Core
 {
     public static class ObjectExtensions
     {
+        private const string IS_NATIVE_OBJECT_ALIVE = "IsNativeObjectAlive";
+        private static Dictionary<string, MethodInfo> nameToMethodInfoCache = new ();
+
+        
         /// <summary>
         /// This method checks if the Unity Object is null. It casts it first to a generic
         /// C# object, to prevent the operator== of UnityEngine.Object to be called, which
@@ -49,18 +54,26 @@ namespace BrunoMikoski.Core
         
         public static bool IsNativeObjectAlive(this UnityEngine.Object obj)
         {
-            return obj.InvokeMethod<bool>("IsNativeObjectAlive");
+            return obj.InvokeMethod<bool>(IS_NATIVE_OBJECT_ALIVE);
         }
         
-        public static T InvokeMethod<T>(this object obj, string name, params object[] list)
+        public static T InvokeMethod<T>(this object obj, string methodName, params object[] list)
         {
             try
             {
-                MethodInfo method = obj.GetType().GetInstanceMethod(name, list.Select(o => o.GetType()).ToArray());
+                Type type = obj.GetType();
+                string key = $"{type.FullName}.{methodName}";
 
-                if (method == null) return default;
+                if (!nameToMethodInfoCache.TryGetValue(key, out MethodInfo method))
+                {
+                    method = type.GetInstanceMethod(methodName, list.Select(o => o.GetType()).ToArray());
+                    if (method == null)
+                        return default;
+                    
+                    nameToMethodInfoCache.Add(key, method);
+                }
 
-                return (T)method?.Invoke(obj, list);
+                return (T)method.Invoke(obj, list);
             }
             catch
             {
