@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BrunoMikoski.Core
 {
@@ -21,8 +22,8 @@ namespace BrunoMikoski.Core
                 {
                     EditorBootstrapSettings settings = EditorBootstrapSettings.Instance;
 
-                    if (bootstrapScene == null && !string.IsNullOrEmpty(settings.BootstrapScenePath))
-                        bootstrapScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(settings.BootstrapScenePath);
+                    if (bootstrapScene == null && !string.IsNullOrEmpty(settings.BootStrapSceneGuid))
+                        bootstrapScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(settings.BootStrapSceneGuid));
                     
                     EditorGUI.BeginChangeCheck();
 
@@ -77,12 +78,12 @@ namespace BrunoMikoski.Core
         }
 
 
-        public string BootstrapScenePath;
+        public string BootStrapSceneGuid;
         public bool LoadOpenScenesAfterBootstrap = true;
 
         public bool HasBootstrapSetup()
         {
-            return !string.IsNullOrEmpty(BootstrapScenePath);
+            return !string.IsNullOrEmpty(BootStrapSceneGuid);
         }
 
         public void Save()
@@ -94,9 +95,13 @@ namespace BrunoMikoski.Core
         public void SetBootstrapScene(SceneAsset newScene)
         {
             if (newScene != null)
-                BootstrapScenePath = AssetDatabase.GetAssetPath(newScene);
+            {
+                BootStrapSceneGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(newScene));
+            }
             else
-                BootstrapScenePath = string.Empty;
+            {
+                BootStrapSceneGuid = string.Empty;
+            }
         }
     }
 }

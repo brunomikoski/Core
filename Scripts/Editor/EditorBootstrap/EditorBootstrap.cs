@@ -32,7 +32,7 @@ namespace BrunoMikoski.Core
             }
 
             SceneAsset bootstrapScene =
-                AssetDatabase.LoadAssetAtPath<SceneAsset>(EditorBootstrapSettings.Instance.BootstrapScenePath);
+                AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(EditorBootstrapSettings.Instance.BootStrapSceneGuid));
 
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
