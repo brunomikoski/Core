@@ -23,7 +23,7 @@ namespace BrunoMikoski.Core
         private void OnDestroy()
         {
             if (tagRegistryService.Exists)
-                tagRegistryService.CachedReference.UnregisterTagController(this);
+                tagRegistryService.Reference.UnregisterTagController(this);
         }
 
         public IEnumerator<Tag> GetEnumerator()

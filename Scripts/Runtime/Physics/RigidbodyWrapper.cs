@@ -350,7 +350,7 @@ namespace BrunoMikoski.Core.PhysX
         private void OnDestroy()
         {
             if (physicsService.Exists)
-                physicsService.CachedReference.UnregisterPhysicsObject(this);
+                physicsService.Reference.UnregisterPhysicsObject(this);
         }
 
         public void PhysicsUpdate()
