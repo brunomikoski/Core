@@ -1,17 +1,12 @@
 using System;
 using UnityEditor;
 
-namespace BrunoMikoski.Playground.ScenesReferences
+namespace BrunoMikoski.Core.ScenesReferences
 {
     [CustomEditor(typeof(UnityScene), true)]
-    public class UnitySceneCustomEditor : Editor
+    public class UnitySceneCustomEditor : UnityEditor.Editor
     {
         private SceneAsset sceneAsset;
-
-        private void OnEnable()
-        {
-            
-        }
 
         public override void OnInspectorGUI()
         {

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace BrunoMikoski.Playground.ScenesReferences
+namespace BrunoMikoski.Core.ScenesReferences
 {
     [InitializeOnLoad]
     public class ScenePickerToolbar

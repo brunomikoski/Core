@@ -4,7 +4,7 @@
 using BrunoMikoski.ScriptableObjectCollections;
 using System;
 
-namespace BrunoMikoski.Playground.ScenesReferences
+namespace BrunoMikoski.Core.ScenesReferences
 {
     [Serializable]
     public sealed class UnitySceneIndirectReference : CollectionItemIndirectReference<UnityScene>

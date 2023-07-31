@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 #endif
 
-namespace BrunoMikoski.Playground.ScenesReferences
+namespace BrunoMikoski.Core.ScenesReferences
 {
     public partial class UnityScene : ScriptableObjectCollectionItem
     {

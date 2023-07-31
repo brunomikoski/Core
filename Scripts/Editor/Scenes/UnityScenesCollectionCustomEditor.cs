@@ -4,7 +4,7 @@ using BrunoMikoski.ScriptableObjectCollections;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Playground.ScenesReferences
+namespace BrunoMikoski.Core.ScenesReferences
 {
     [CustomEditor(typeof(UnityScenesCollection), true)]
     public class UnityScenesCollectionCustomEditor : CollectionCustomEditor
