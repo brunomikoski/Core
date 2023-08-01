@@ -6,17 +6,17 @@ namespace BrunoMikoski.Core.StateMachines
 {
     public class StateMachineBase : MonoBehaviour
     {
-        protected List<State> availableStates = new();
-        public List<State> AvailableStates => availableStates;
+        protected List<StateBase> availableStates = new();
+        public List<StateBase> AvailableStates => availableStates;
         
         protected List<TransitionBase> availableTransitions = new();
         public List<TransitionBase> AvailableTransitions => availableTransitions;
 
-        protected State previousState;
-        public State PreviousState => previousState;
+        protected StateBase previousState;
+        public StateBase PreviousState => previousState;
 
-        protected State currentState;
-        public State CurrentState => currentState;
+        protected StateBase currentState;
+        public StateBase CurrentState => currentState;
 
         public event Action<StateID, StateID> OnStateChangedEvent;
 

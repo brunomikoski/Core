@@ -2,39 +2,42 @@ using System;
 
 namespace BrunoMikoski.Core.StateMachines
 {
-    [Serializable]
-    public class State
+    public class StateBase
     {
-        protected StateMachineBase StateMachine;
-
-        private StateID stateID;
+        protected StateID stateID;
         public StateID StateID => stateID;
 
-
-        public State(StateID targetStateID)
+        protected StateBase(StateID targetStateID)
         {
             stateID = targetStateID;
         }
-
-        public void SetStateMachine(StateMachineBase targetStateMachine)
-        {
-            StateMachine = targetStateMachine;
-        }
-
+        
         public virtual void Enter()
         {
-            
         }
-        
+
         public virtual void Exit()
         {
-            
         }
 
         public virtual void Update()
         {
-            
+        }
+    }
+
+    [Serializable]
+    public class State<TStateID> : StateBase where TStateID : StateID
+    {
+        protected StateMachine<TStateID> StateMachine;
+        public new TStateID StateID => (TStateID) stateID;
+
+        public State(TStateID targetStateID) : base(targetStateID)
+        {
         }
 
+        public void SetStateMachine(StateMachine<TStateID> targetStateMachine)
+        {
+            StateMachine = targetStateMachine;
+        }
     }
 }

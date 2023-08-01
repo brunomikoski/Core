@@ -147,7 +147,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             for (int i = 0; i < stateMachine.AvailableStates.Count; i++)
             {
-                State availableState = stateMachine.AvailableStates[i];
+                StateBase availableState = stateMachine.AvailableStates[i];
                 if (availableState.StateID.FromAnyState)
                 {
                     if (availableNextStates.Contains(availableState.StateID))

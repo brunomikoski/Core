@@ -41,7 +41,13 @@ namespace BrunoMikoski.Core.StateMachines
                 return;
             }
 
-            BeginEnterState(InitialState);
+            if (currentState != null && currentState.StateID == targetStateID)
+            {
+                Debug.LogError($"Cannot transit to the same state {targetStateID}");
+                return;
+            }
+
+            BeginEnterState(targetStateID);
         }
 
         private bool CanTransitTo(TStateID targetStateID)
@@ -51,7 +57,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             if (currentState == null && targetStateID == InitialState)
                 return true;
-
+            
             if (currentState != null)
             {
                 for (int i = 0; i < availableTransitions.Count; i++)
@@ -68,7 +74,7 @@ namespace BrunoMikoski.Core.StateMachines
 
         private void BeginEnterState(TStateID nextStateID)
         {
-            if (!TryGetStateWithID(nextStateID, out State _))
+            if (!TryGetStateWithID(nextStateID, out State<TStateID> _))
             {
                 Debug.LogError($"Cannot find state implementation for {nextStateID}");
                 return;
@@ -89,7 +95,7 @@ namespace BrunoMikoski.Core.StateMachines
         private void FinishEnterState(TStateID toState)
         {
             currentTransition = null;
-            if (!TryGetStateWithID(toState, out State newState))
+            if (!TryGetStateWithID(toState, out State<TStateID> newState))
             {
                 Debug.LogError($"Cannot find state implementation for {toState}");
                 return;
@@ -107,7 +113,7 @@ namespace BrunoMikoski.Core.StateMachines
             DispatchStateChangedEvent(previousStateID, toState);
         }
 
-        public void AddState(State state)
+        public void AddState(State<TStateID> state)
         {
             if (AlreadyContainState(state))
             {
@@ -121,7 +127,7 @@ namespace BrunoMikoski.Core.StateMachines
             if (state.StateID.InitialState)
             {
                 if (defaultInitialState == null)
-                    defaultInitialState = (TStateID) state.StateID;
+                    defaultInitialState = state.StateID;
                 else
                     Debug.LogError(
                         $"Initial state already exist ({InitialState}), ignoring the new one ({state.StateID})");
@@ -174,14 +180,14 @@ namespace BrunoMikoski.Core.StateMachines
             return false;
         }
 
-        private bool TryGetStateWithID(StateID targetStaID, out State resultState)
+        private bool TryGetStateWithID(StateID targetStaID, out State<TStateID> resultState)
         {
             for (int i = 0; i < availableStates.Count; i++)
             {
-                State availableState = availableStates[i];
+                StateBase availableState = availableStates[i];
                 if (availableState.StateID == targetStaID)
                 {
-                    resultState = availableState;
+                    resultState = (State<TStateID>) availableState;
                     return true;
                 }
             }
@@ -195,7 +201,7 @@ namespace BrunoMikoski.Core.StateMachines
             currentState?.Update();
         }
 
-        private bool AlreadyContainState(State state)
+        private bool AlreadyContainState(State<TStateID> state)
         {
             return TryGetStateWithID(state.StateID, out _);
         }
