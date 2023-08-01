@@ -7,9 +7,10 @@ using UnityEngine.SceneManagement;
 
 namespace BrunoMikoski.Core
 {
-    public static class EditorBootstrap
+    public static class EditorBootstrapUtility
     {
         private const string EDITOR_BOOTSTRAP_OPEN_SCENES_KEY = "EditorBootstrap_OpenScenes";
+        private const string EDITOR_BOOT_SKIP_KEY = "EDITOR_SCENE_SKIP";
 
         [InitializeOnLoadMethod]
         private static void Initialize()
@@ -25,10 +26,9 @@ namespace BrunoMikoski.Core
                 || IsCurrentlyAtUntitledScene())
             {
                 EditorSceneManager.playModeStartScene = null;
-                {
-                    SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
-                    return;
-                }
+                SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+                SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
+                return;
             }
 
             SceneAsset bootstrapScene =
@@ -37,16 +37,23 @@ namespace BrunoMikoski.Core
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
                 SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
+                SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+
 
                 if (EditorBuildSettings.scenes.Length > 0 &&
                     IsSceneAlreadyOpen(Path.GetFileNameWithoutExtension(EditorBuildSettings.scenes[0].path)))
                 {
                     EditorSceneManager.playModeStartScene = null;
+                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+
                     return;
                 }
 
                 if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
                     return;
+                }
 
                 EditorSceneManager.playModeStartScene = bootstrapScene == null ? null : bootstrapScene;
                 
@@ -68,18 +75,23 @@ namespace BrunoMikoski.Core
                 }
 
                 SessionState.SetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, storageStringOpenScenes);
+                SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, true);
             }
             else if (stateChange == PlayModeStateChange.EnteredPlayMode)
             {
                 string scenes = SessionState.GetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, "");
                 if (string.IsNullOrEmpty(scenes))
+                {
+                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
                     return;
-
+                }
+                
                 SceneManager.sceneLoaded -= OnSceneLoaded;
                 SceneManager.sceneLoaded += OnSceneLoaded;
 
                 string[] scenesToOpen = scenes.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
+                bool dispatchedCompleteEvent = false;
                 for (int i = scenesToOpen.Length - 1; i >= 0; i--)
                 {
                     string sceneToOpen = scenesToOpen[i];
@@ -88,9 +100,28 @@ namespace BrunoMikoski.Core
                         continue;
 
                     SceneManager.LoadScene(sceneToOpen, LoadSceneMode.Additive);
+
+                    if (i == 0)
+                    {
+                        void SceneManagerOnSceneLoaded(Scene arg0, LoadSceneMode arg1)
+                        {
+                            if (arg0.name.Equals(sceneToOpen, StringComparison.Ordinal))
+                            {
+                                SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
+                                EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
+                            }
+                        }
+
+                        SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
+                        SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
+                        dispatchedCompleteEvent = true;
+                    }
                 }
+                if(!dispatchedCompleteEvent)
+                    EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
             }
         }
+
 
         private static bool IsCurrentlyAtUntitledScene()
         {

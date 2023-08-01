@@ -1,27 +1,31 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BrunoMikoski.Core.Routines;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
 {
-    [CustomEditor( typeof(StateMachine), true)]
-    public class StateMachineEditor : UnityEditor.Editor
+    [CustomEditor( typeof(StateMachineBase), true)]
+    public class StateMachineBaseCustomEditor : UnityEditor.Editor
     {
-        private StateMachine stateMachine;
+        private StateMachineBase stateMachine;
 
         private float changeColorAnimation;
-        private Routine animationRoutine;
+        private EditorCoroutine animationRoutine;
 
-        private List<StateHistory> stateHistory = new List<StateHistory>();
+        private List<StateHistory> stateHistory = new();
+        private List<StateID> availableNextStates = new();
 
         private void OnEnable()
         {
-            stateMachine = (StateMachine)target;
+            stateMachine = (StateMachineBase) target;
 
             if (Application.isPlaying)
             {
+                stateMachine.OnStateChangedEvent -= OnStateChange;
                 stateMachine.OnStateChangedEvent += OnStateChange;
             }
 
@@ -73,12 +77,9 @@ namespace BrunoMikoski.Core.StateMachines
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(
-                            String.Format("[{0}]\t{1}", stateHistory[i].FrameNumber, stateHistory[i].StateName));
+                            $"[{stateHistory[i].FrameNumber}]\t{stateHistory[i].StateName}");
                         if (GUILayout.Button("Print StackTrace", GUILayout.Width(130)))
-                            Debug.Log(
-                                String.Format("{0}\n\n{1}",
-                                    stateHistory[i].StateName,
-                                    stateHistory[i].StackTrace ));
+                            Debug.Log($"{stateHistory[i].StateName}\n\n{stateHistory[i].StackTrace}");
                         GUILayout.EndHorizontal();
                     }
                 }
@@ -94,7 +95,7 @@ namespace BrunoMikoski.Core.StateMachines
                 GUILayout.EndHorizontal();
 
                 if ( stateMachine.CurrentState != null )
-                    GUILayout.Label( stateMachine.CurrentState.StateType.ToString() );
+                    GUILayout.Label( stateMachine.CurrentState.StateID.ToString() );
                 else
                     GUILayout.Label( "Null" );
             }
@@ -109,17 +110,12 @@ namespace BrunoMikoski.Core.StateMachines
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
 
-                if (stateMachine.AvailableNextStates != null)
-                {
-                    foreach (Enum availableNextState in stateMachine.AvailableNextStates)
-                    {
-                        GUILayout.Label( availableNextState.ToString() );
-                    }
+                UpdateAvailableNextStates();
 
-                    foreach (Enum availableNextState in stateMachine.FromAnyTransitions)
-                    {
-                        GUILayout.Label(availableNextState.ToString());
-                    }
+                for (int i = 0; i < availableNextStates.Count; i++)
+                {
+                    StateID availableNextState = availableNextStates[i];
+                    GUILayout.Label(availableNextState.ToString());
                 }
             }
             EditorGUILayout.EndVertical();
@@ -134,19 +130,64 @@ namespace BrunoMikoski.Core.StateMachines
             GUI.color = originalColor;
         }
 
-        private void OnStateChange(State current, State previous)
+        private void UpdateAvailableNextStates()
+        {
+            availableNextStates.Clear();
+            for (int i = 0; i < stateMachine.AvailableTransitions.Count; i++)
+            {
+                TransitionBase availableTransition = stateMachine.AvailableTransitions[i];
+                if (availableTransition.FromState == stateMachine.CurrentState.StateID)
+                {
+                    if (availableNextStates.Contains(availableTransition.ToState))
+                        continue;
+                    
+                    availableNextStates.Add(availableTransition.ToState);
+                }
+            }
+
+            for (int i = 0; i < stateMachine.AvailableStates.Count; i++)
+            {
+                State availableState = stateMachine.AvailableStates[i];
+                if (availableState.StateID.FromAnyState)
+                {
+                    if (availableNextStates.Contains(availableState.StateID))
+                        continue;
+                    
+                    availableNextStates.Add(availableState.StateID);
+                }
+            }
+        }
+
+        private void OnStateChange(StateID previousState, StateID currentState)
         {
             stateHistory.Add(new StateHistory(
-                previous.StateType.ToString(),
-                UnityEngine.Time.frameCount.ToString(),
+                previousState.name,
+                Time.frameCount.ToString(),
                 StackTraceUtility.ExtractStackTrace()));
 
             if (stateHistory.Count > 9)
                 stateHistory.RemoveAt(0);
 
-            CoroutineRunner.StopAndClear(ref animationRoutine);
 
+            if (animationRoutine != null)
+                EditorCoroutineUtility.StopCoroutine(animationRoutine);
+
+            animationRoutine = EditorCoroutineUtility.StartCoroutine(FadeOutEnumerator(), this);
+        }
+
+        private IEnumerator FadeOutEnumerator(float duration = 0.2f)
+        {
             changeColorAnimation = 1;
+            double startTime = EditorApplication.timeSinceStartup;
+            float timer = 0;
+            while (timer < duration)
+            {
+                double editorDeltaTime = EditorApplication.timeSinceStartup - startTime;
+                timer += (float)editorDeltaTime;
+                Repaint();
+                changeColorAnimation = 1 - timer;
+                yield return null;
+            }
         }
 
         private class StateHistory

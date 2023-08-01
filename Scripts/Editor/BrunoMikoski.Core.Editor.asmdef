@@ -4,7 +4,8 @@
     "references": [
         "BrunoMikoski.Core",
         "BrunoMikoski.ScriptableObjectCollection.Editor",
-        "BrunoMikoski.ScriptableObjectCollection"
+        "BrunoMikoski.ScriptableObjectCollection",
+        "Unity.EditorCoroutines.Editor"
     ],
     "includePlatforms": [
         "Editor"

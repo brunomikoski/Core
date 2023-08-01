@@ -1,6 +1,5 @@
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace BrunoMikoski.Core.Layers
 {

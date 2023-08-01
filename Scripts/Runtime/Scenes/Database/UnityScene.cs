@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,6 +28,54 @@ namespace BrunoMikoski.Core.ScenesReferences
         private int buildIndex;
         public int BuildIndex => buildIndex;
 
+
+        private Scene cachedScene;
+        public Scene Scene
+        {
+            get
+            {
+                
+                if (!cachedScene.IsValid())
+                {
+                    for (int i = 0; i < SceneManager.sceneCount; i++)
+                    {
+                        Scene scene = SceneManager.GetSceneAt(i);
+                        if (scene.name.Equals(sceneName, StringComparison.Ordinal))
+                        {
+                            cachedScene = scene;
+                            break;
+                        }
+                    }
+                }
+
+                return cachedScene;
+            }
+        }
+
+        public IEnumerator LoadEnumerator(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+            if (Application.isPlaying)
+            {
+                bool isSceneLoaded = false;
+                SceneManager.LoadSceneAsync(sceneName, loadSceneMode).completed += _ => isSceneLoaded = true;
+
+                while (!isSceneLoaded)
+                {
+                    yield return null;
+                }
+            }
+#if UNITY_EDITOR
+            else
+            {
+                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive ? OpenSceneMode.Additive
+                    : OpenSceneMode.Single;
+
+                ValidateSceneAsset();
+                
+                EditorSceneManager.OpenScene(scenePath, openSceneMode);
+            }
+#endif
+        }
         public void Load(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
         {
             if (Application.isPlaying)
@@ -82,6 +131,37 @@ namespace BrunoMikoski.Core.ScenesReferences
             throw new Exception($"Invalid scene data {this.name}");
         }
 
+
+        public IEnumerator UnloadEnumerator()
+        {
+            bool sceneUnloaded = false;
+            if (Application.isPlaying)
+            {
+                SceneManager.UnloadSceneAsync(sceneName).completed += _ => sceneUnloaded = true;
+
+                while (!sceneUnloaded)
+                {
+                    yield return null;
+                }
+            }
+#if UNITY_EDITOR
+            else
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    Scene scene = SceneManager.GetSceneAt(i);
+                    if (scene.path.Equals(scenePath, StringComparison.Ordinal))
+                    {
+                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] {scene});
+                        EditorSceneManager.CloseScene(scene, true);
+                        yield break;
+                    }
+                }
+            }
+#endif
+        }
+
+
         public void Unload()
         {
             if (Application.isPlaying)
@@ -107,14 +187,12 @@ namespace BrunoMikoski.Core.ScenesReferences
 
         public bool IsLoaded()
         {
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                Scene scene = SceneManager.GetSceneAt(i);
-                if (scene.name.Equals(sceneName, StringComparison.Ordinal))
-                    return true;
-            }
+            return Scene.isLoaded;
+        }
 
-            return false;
+        public bool IsActive()
+        {
+            return SceneManager.GetActiveScene() == Scene;
         }
     }
 }
