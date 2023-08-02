@@ -17,7 +17,7 @@ using Cysharp.Threading.Tasks;
 
 namespace BrunoMikoski.Core.Routines
 {
-    internal static class DiagnosticsExtensions
+    public static class DiagnosticsExtensions
     {
         static bool displayFilenames = true;
 
@@ -48,18 +48,70 @@ namespace BrunoMikoski.Core.Routines
 #endif
         };
 
-        public static string CleanupAsyncStackTrace(this StackTrace stackTrace)
+        public static string GetFirstFileHyperLink(this StackTrace stackTrace)
         {
-            if (stackTrace == null) return "";
+            if (stackTrace == null) 
+                return "";
 
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < stackTrace.FrameCount; i++)
+            int usableFrames = stackTrace.FrameCount;
+            
+            for (int i = 0; i < usableFrames; i++)
             {
                 StackFrame sf = stackTrace.GetFrame(i);
 
                 MethodBase mb = sf.GetMethod();
 
-                if (IgnoreLine(mb)) continue;
+                if (IgnoreLine(mb)) 
+                    continue;
+                
+                // file name
+                if (displayFilenames && (sf.GetILOffset() != -1))
+                {
+                    String fileName = null;
+
+                    try
+                    {
+                        fileName = sf.GetFileName();
+                    }
+                    catch (NotSupportedException)
+                    {
+                        displayFilenames = false;
+                    }
+                    catch (SecurityException)
+                    {
+                        displayFilenames = false;
+                    }
+
+                    if (fileName != null)
+                    {
+                        sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", AppendHyperLink(fileName, sf.GetFileLineNumber().ToString()));
+                        return sb.ToString();
+                    }
+                }
+                sb.AppendLine();
+            }
+            return "";
+        }
+        public static string CleanupAsyncStackTrace(this StackTrace stackTrace, int maxFrames = -1)
+        {
+            if (stackTrace == null) 
+                return "";
+
+            StringBuilder sb = new StringBuilder();
+            int usableFrames = stackTrace.FrameCount;
+            if (maxFrames != -1)
+                usableFrames = Mathf.Min(maxFrames, usableFrames);
+            
+            for (int i = 0; i < usableFrames; i++)
+            {
+                StackFrame sf = stackTrace.GetFrame(i);
+
+                MethodBase mb = sf.GetMethod();
+
+                if (IgnoreLine(mb)) 
+                    continue;
+                
                 if (IsAsync(mb))
                 {
                     sb.Append("async ");
@@ -256,7 +308,11 @@ namespace BrunoMikoski.Core.Routines
                 return true;
             if (declareType.StartsWith("Cysharp.Threading.Tasks.AwaiterActions"))
                 return true;
-            if (declareType.StartsWith("BrunoMikoski.Coroutines.CoroutineRunner"))
+            if (declareType.StartsWith("BrunoMikoski.Core.Routines"))
+                return true; 
+            if (declareType.StartsWith("Cysharp.Threading.Tasks.UniTask+"))
+                return true;
+            if (declareType.StartsWith("Cysharp.Threading.Tasks.Internal.PlayerLoopRunner"))
                 return true;
 
             return false;
@@ -269,10 +325,8 @@ namespace BrunoMikoski.Core.Routines
             {
                 return fi.Name;
             }
-
-            string fname = fi.FullName.Replace(Path.DirectorySeparatorChar, '/').Replace(Application.dataPath, "");
-            string withAssetsPath = "Assets/" + fname;
-            return "<a href=\"" + withAssetsPath + "\" line=\"" + line + "\">" + withAssetsPath + ":" + line + "</a>";
+            
+            return "<a href=\"" + fi.FullName + "\" line=\"" + line + "\">" + path + ":" + line + "</a>";
         }
     }
 }

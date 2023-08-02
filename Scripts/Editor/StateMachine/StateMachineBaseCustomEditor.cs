@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using BrunoMikoski.Core.Routines;
 using Unity.EditorCoroutines.Editor;
@@ -8,7 +7,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
 {
-    [CustomEditor( typeof(StateMachineBase), true)]
+    [CustomEditor(typeof(StateMachineBase), true)]
     public class StateMachineBaseCustomEditor : UnityEditor.Editor
     {
         private StateMachineBase stateMachine;
@@ -16,18 +15,13 @@ namespace BrunoMikoski.Core.StateMachines
         private float changeColorAnimation;
         private EditorCoroutine animationRoutine;
 
-        private List<StateHistory> stateHistory = new();
-        private List<StateID> availableNextStates = new();
+        private GUIStyle labelStyle;
+
+        private Dictionary<int, bool> expandedStatus = new();
 
         private void OnEnable()
         {
             stateMachine = (StateMachineBase) target;
-
-            if (Application.isPlaying)
-            {
-                stateMachine.OnStateChangedEvent -= OnStateChange;
-                stateMachine.OnStateChangedEvent += OnStateChange;
-            }
 
             if (!PrefabUtility.IsPartOfAnyPrefab(target))
             {
@@ -39,169 +33,183 @@ namespace BrunoMikoski.Core.StateMachines
             }
         }
 
-        private void OnDisable()
-        {
-            stateMachine.OnStateChangedEvent -= OnStateChange;
-        }
-
-        private void OnDestroy()
-        {
-            stateMachine.OnStateChangedEvent -= OnStateChange;
-        }
-
         public override void OnInspectorGUI()
         {
-            if ( !Application.isPlaying )
+            if (!Application.isPlaying)
             {
                 base.OnInspectorGUI();
                 return;
             }
 
-            EditorUtility.SetDirty( target );
+            EditorUtility.SetDirty(target);
             EditorGUILayout.Space();
+
+            if (labelStyle == null)
+            {
+                labelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    richText = true
+                };
+            }
+
+            if (!StateMachineTracker.TryGetStateMachineState(stateMachine, out StateMachineState stateMachineState))
+            {
+                base.OnInspectorGUI();
+                return;
+            }
+
 
             Color originalColor = GUI.color;
             GUI.color = Color.Lerp(originalColor, Color.red, changeColorAnimation);
 
-            if ( stateMachine.PreviousState != null )
+
+            EditorGUILayout.BeginVertical("box");
             {
-                EditorGUILayout.BeginVertical( "box" );
+                GUILayout.BeginHorizontal(EditorStyles.toolbar);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("State History");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                for (int i = 0; i < stateMachineState.History.Count; i++)
                 {
-                    GUILayout.BeginHorizontal( EditorStyles.toolbar );
+                    StepData historyData = stateMachineState.History[i];
+                    DrawStepData(historyData);
+                    EditorGUILayout.Separator();
+                }
+            }
+            EditorGUILayout.EndVertical();
+
+
+            if (stateMachineState.CurrentTransition == null)
+            {
+                EditorGUILayout.BeginVertical("box");
+                {
+                    GUILayout.BeginHorizontal(EditorStyles.toolbar);
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label( "State History" );
+                    GUILayout.Label("Current State");
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
 
-                    for (int i = 0; i < stateHistory.Count; i++)
-                    {
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label(
-                            $"[{stateHistory[i].FrameNumber}]\t{stateHistory[i].StateName}");
-                        if (GUILayout.Button("Print StackTrace", GUILayout.Width(130)))
-                            Debug.Log($"{stateHistory[i].StateName}\n\n{stateHistory[i].StackTrace}");
-                        GUILayout.EndHorizontal();
-                    }
+                    DrawStepData(stateMachineState.CurrentState);
+                }
+                EditorGUILayout.EndVertical();
+            }
+            else
+            {
+                EditorGUILayout.BeginVertical("box");
+                {
+                    GUILayout.BeginHorizontal(EditorStyles.toolbar);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label("Current Transition");
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndHorizontal();
+                    
+                    DrawStepData(stateMachineState.CurrentTransition);
                 }
                 EditorGUILayout.EndVertical();
             }
 
-            EditorGUILayout.BeginVertical( "box" );
+
+            EditorGUILayout.BeginVertical("box");
             {
-                GUILayout.BeginHorizontal( EditorStyles.toolbar );
+                GUILayout.BeginHorizontal(EditorStyles.toolbar);
                 GUILayout.FlexibleSpace();
-                GUILayout.Label( "Current State" );
+                GUILayout.Label("Possible Next States ");
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
 
-                if ( stateMachine.CurrentState != null )
-                    GUILayout.Label( stateMachine.CurrentState.StateID.ToString() );
-                else
-                    GUILayout.Label( "Null" );
-            }
-            EditorGUILayout.EndVertical();
-
-
-            EditorGUILayout.BeginVertical( "box" );
-            {
-                GUILayout.BeginHorizontal( EditorStyles.toolbar );
-                GUILayout.FlexibleSpace();
-                GUILayout.Label( "Possible Next States " );
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-
-                UpdateAvailableNextStates();
-
-                for (int i = 0; i < availableNextStates.Count; i++)
+                foreach (string availableNextState in stateMachineState.AvailableNextStates)
                 {
-                    StateID availableNextState = availableNextStates[i];
-                    GUILayout.Label(availableNextState.ToString());
+                    GUILayout.Label(availableNextState);
                 }
             }
             EditorGUILayout.EndVertical();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Slow Motion"))
-                UnityEngine.Time.timeScale = 0.1f;
-            if (GUILayout.Button("Normal Speed"))
-                UnityEngine.Time.timeScale = 1f;
-            GUILayout.EndHorizontal();
 
             GUI.color = originalColor;
         }
 
-        private void UpdateAvailableNextStates()
+
+        
+        private void DrawStepData(StepData stepData)
         {
-            availableNextStates.Clear();
-            for (int i = 0; i < stateMachine.AvailableTransitions.Count; i++)
+            string displayName;
+            if (stepData is StateData)
             {
-                TransitionBase availableTransition = stateMachine.AvailableTransitions[i];
-                if (availableTransition.FromState == stateMachine.CurrentState.StateID)
+                displayName = $"[State] - {stepData.DisplayName}";
+            }
+            else
+            {
+                displayName = $"[Transition] - {stepData.DisplayName}";
+            }
+
+            GUILayout.BeginVertical();
+            EditorGUI.indentLevel++;
+            SetExpanded(stepData, EditorGUILayout.Foldout(IsExpanded(stepData), displayName));
+            EditorGUI.indentLevel--;
+
+
+            if (IsExpanded(stepData))
+            {
+                EditorGUI.indentLevel++;
+                string elapsed = "";
+                if (stepData.ExitTime != default)
                 {
-                    if (availableNextStates.Contains(availableTransition.ToState))
-                        continue;
-                    
-                    availableNextStates.Add(availableTransition.ToState);
+                    elapsed =  (stepData.ExitTime - stepData.EnterTime).TotalSeconds.ToString("00.00");
                 }
-            }
-
-            for (int i = 0; i < stateMachine.AvailableStates.Count; i++)
-            {
-                StateBase availableState = stateMachine.AvailableStates[i];
-                if (availableState.StateID.FromAnyState)
+                else
                 {
-                    if (availableNextStates.Contains(availableState.StateID))
-                        continue;
-                    
-                    availableNextStates.Add(availableState.StateID);
+                    elapsed =  (DateTime.Now - stepData.EnterTime).TotalSeconds.ToString("00.00");
                 }
+                
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel("Duration");
+                EditorGUILayout.TextField(elapsed);
+                EditorGUILayout.EndHorizontal();
+
+
+                EditorGUILayout.BeginHorizontal();
+                {
+                    bool hasExitData  = stepData.ExitStackTrace != null;
+                    GUIStyle leftButtonStyle = EditorStyles.miniButtonLeft;
+                    if (!hasExitData)
+                        leftButtonStyle = EditorStyles.miniButton;
+                    
+                    EditorGUI.indentLevel++;
+
+                    if (GUILayout.Button("Log Enter Stack Trace", leftButtonStyle))
+                    {
+                        Debug.Log(stepData.EnterStackTrace.CleanupAsyncStackTrace());
+                    }
+
+                    if (hasExitData)
+                    {
+                        if(GUILayout.Button("Log Exit Stack Trace", EditorStyles.miniButtonRight))
+                        {
+                            Debug.Log(stepData.ExitStackTrace.CleanupAsyncStackTrace());
+                        }
+                    }
+                    EditorGUI.indentLevel--;
+
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUI.indentLevel--;
             }
+            GUILayout.EndVertical();
         }
 
-        private void OnStateChange(StateID previousState, StateID currentState)
+        private bool IsExpanded(object targetObject)
         {
-            stateHistory.Add(new StateHistory(
-                previousState.name,
-                Time.frameCount.ToString(),
-                StackTraceUtility.ExtractStackTrace()));
-
-            if (stateHistory.Count > 9)
-                stateHistory.RemoveAt(0);
-
-
-            if (animationRoutine != null)
-                EditorCoroutineUtility.StopCoroutine(animationRoutine);
-
-            animationRoutine = EditorCoroutineUtility.StartCoroutine(FadeOutEnumerator(), this);
+            if (!expandedStatus.TryGetValue(targetObject.GetHashCode(), out bool expanded))
+                return false;
+            
+            return expanded;
         }
 
-        private IEnumerator FadeOutEnumerator(float duration = 0.2f)
+        private void SetExpanded(object targetObject, bool foldout)
         {
-            changeColorAnimation = 1;
-            double startTime = EditorApplication.timeSinceStartup;
-            float timer = 0;
-            while (timer < duration)
-            {
-                double editorDeltaTime = EditorApplication.timeSinceStartup - startTime;
-                timer += (float)editorDeltaTime;
-                Repaint();
-                changeColorAnimation = 1 - timer;
-                yield return null;
-            }
-        }
-
-        private class StateHistory
-        {
-            public string StateName;
-            public string FrameNumber;
-            public string StackTrace;
-
-            public StateHistory(string stateName, string frameNumber, string stackTrace)
-            {
-                StateName = stateName;
-                FrameNumber = frameNumber;
-                StackTrace = stackTrace;
-            }
+            expandedStatus[targetObject.GetHashCode()] = foldout;
         }
     }
 }

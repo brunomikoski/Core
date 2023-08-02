@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
@@ -17,7 +19,6 @@ namespace BrunoMikoski.Core.StateMachines
             }
         }
 
-        private Transition<TStateID> currentTransition;
 
         public void StartStateMachine()
         {
@@ -82,9 +83,10 @@ namespace BrunoMikoski.Core.StateMachines
 
             if (currentState != null)
             {
-                currentState.Exit();
+                currentState.Internal_Exit();
                 currentTransition = GetOrCreateTransition(currentState.StateID, nextStateID);
-                currentTransition.Start();
+                currentTransition.Internal_Start();
+                
             }
             else
             {
@@ -103,7 +105,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             previousState = currentState;
             currentState = newState;
-            currentState.Enter();
+            currentState.Internal_Enter();
             
             TStateID previousStateID = null;
 
@@ -127,10 +129,14 @@ namespace BrunoMikoski.Core.StateMachines
             if (state.StateID.InitialState)
             {
                 if (defaultInitialState == null)
+                {
                     defaultInitialState = state.StateID;
+                }
                 else
+                {
                     Debug.LogError(
                         $"Initial state already exist ({InitialState}), ignoring the new one ({state.StateID})");
+                }
             }
         }
 
@@ -206,7 +212,7 @@ namespace BrunoMikoski.Core.StateMachines
             return TryGetStateWithID(state.StateID, out _);
         }
 
-        public override void TransitionFinished(StateID toState)
+        internal override void TransitionFinished(StateID toState)
         {
             FinishEnterState((TStateID) toState);
         }
@@ -214,6 +220,37 @@ namespace BrunoMikoski.Core.StateMachines
         public void OverrideInitialState(TStateID targetStateID)
         {
             overrideInitialState = targetStateID;
+        }
+    }
+    
+    public class StateMachineBase : MonoBehaviour
+    {
+        protected List<StateBase> availableStates = new();
+        public List<StateBase> AvailableStates => availableStates;
+        
+        protected List<TransitionBase> availableTransitions = new();
+        public List<TransitionBase> AvailableTransitions => availableTransitions;
+
+        protected StateBase previousState;
+        public StateBase PreviousState => previousState;
+
+        protected StateBase currentState;
+        public StateBase CurrentState => currentState;
+
+        protected TransitionBase currentTransition;
+        public TransitionBase CurrentTransition => currentTransition;
+
+
+        public event Action<StateID, StateID> OnStateChangedEvent;
+
+
+        internal virtual void TransitionFinished(StateID toState)
+        {
+        }
+        
+        protected void DispatchStateChangedEvent(StateID fromState, StateID toState)
+        {
+            OnStateChangedEvent?.Invoke(fromState, toState);
         }
     }
 }

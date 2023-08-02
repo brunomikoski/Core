@@ -1,27 +1,7 @@
-using System;
-
 namespace BrunoMikoski.Core.StateMachines
 {
-    public class TransitionBase
-    {
-        protected readonly StateID fromState;
-        public StateID FromState => fromState;
-
-        protected readonly StateID toState;
-        public StateID ToState => toState;
-        
-        protected TransitionBase(StateID fromState, StateID toState)
-        {
-            this.fromState = fromState;
-            this.toState = toState;
-        }
-
-    }
-    [Serializable]
     public class Transition<TStateID> : TransitionBase where TStateID : StateID
     {
-        protected StateMachineBase StateMachine;
-
         public new TStateID FromState => (TStateID)fromState;
         public new TStateID ToState => (TStateID)toState;
 
@@ -33,6 +13,32 @@ namespace BrunoMikoski.Core.StateMachines
         {
             StateMachine = targetStateMachine;
         }
+    }
+    
+    
+    public class TransitionBase
+    {
+        protected StateMachineBase StateMachine;
+
+        protected readonly StateID fromState;
+        public StateID FromState => fromState;
+
+        protected readonly StateID toState;
+        public StateID ToState => toState;
+        
+        protected TransitionBase(StateID fromState, StateID toState)
+        {
+            this.fromState = fromState;
+            this.toState = toState;
+        }
+        
+        internal void Internal_Start()
+        {
+            Start();
+#if UNITY_EDITOR
+            StateMachineTracker.TrackTransitionBegin(StateMachine, this);
+#endif
+        }
 
         public virtual void Start()
         {
@@ -42,6 +48,12 @@ namespace BrunoMikoski.Core.StateMachines
         protected void ReportFinished()
         {
             StateMachine.TransitionFinished(toState);
+            
+#if UNITY_EDITOR
+            StateMachineTracker.TrackTransitionEnd(StateMachine, this);
+#endif
         }
+
     }
+
 }
