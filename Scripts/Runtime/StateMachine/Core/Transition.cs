@@ -11,14 +11,14 @@ namespace BrunoMikoski.Core.StateMachines
 
         public void SetStateMachine(StateMachineBase targetStateMachine)
         {
-            StateMachine = targetStateMachine;
+            stateMachine = targetStateMachine;
         }
     }
     
     
     public class TransitionBase
     {
-        protected StateMachineBase StateMachine;
+        protected StateMachineBase stateMachine;
 
         protected readonly StateID fromState;
         public StateID FromState => fromState;
@@ -34,10 +34,13 @@ namespace BrunoMikoski.Core.StateMachines
         
         internal void Internal_Start()
         {
-            Start();
 #if UNITY_EDITOR
-            StateMachineTracker.TrackTransitionBegin(StateMachine, this);
+            StateMachineTracker.TrackTransitionBegin(stateMachine, this);
 #endif
+            Start();
+            
+            stateMachine.DispatchEvent(StateMachineEvent.BeginTransitionFrom, fromState);
+            stateMachine.DispatchEvent(StateMachineEvent.BeginTransitionTo, toState);
         }
 
         public virtual void Start()
@@ -47,13 +50,11 @@ namespace BrunoMikoski.Core.StateMachines
 
         protected void ReportFinished()
         {
-            StateMachine.TransitionFinished(toState);
-            
 #if UNITY_EDITOR
-            StateMachineTracker.TrackTransitionEnd(StateMachine, this);
+            StateMachineTracker.TrackTransitionEnd(stateMachine, this);
 #endif
+            stateMachine.TransitionFinished(toState);
         }
-
     }
 
 }

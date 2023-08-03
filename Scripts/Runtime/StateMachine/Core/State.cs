@@ -2,24 +2,16 @@ namespace BrunoMikoski.Core.StateMachines
 {
     public class State<TStateID> : StateBase where TStateID : StateID
     {
-        protected StateMachine<TStateID> StateMachine;
         public new TStateID StateID => (TStateID) stateID;
 
         public State(TStateID targetStateID) : base(targetStateID)
         {
         }
-
-        public override void SetStateMachine(StateMachineBase targetStateMachine)
-        {
-            base.SetStateMachine(targetStateMachine);
-            StateMachine = (StateMachine<TStateID>) targetStateMachine;
-        }
     }
-    
     
     public class StateBase
     {
-        private StateMachineBase stateMachineBase;
+        private StateMachineBase stateMachine;
         
         protected StateID stateID;
         public StateID StateID => stateID;
@@ -32,16 +24,18 @@ namespace BrunoMikoski.Core.StateMachines
         internal void Internal_Enter()
         {
             Enter();
+            stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
 #if UNITY_EDITOR
-            StateMachineTracker.TrackEnterState(stateMachineBase, this);
+            StateMachineTracker.TrackEnterState(stateMachine, this);
 #endif
         }
         
         internal void Internal_Exit()
         {
             Exit();
+            stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
 #if UNITY_EDITOR
-            StateMachineTracker.TrackExitState(stateMachineBase, this);
+            StateMachineTracker.TrackExitState(stateMachine, this);
 #endif
         }
         
@@ -58,9 +52,9 @@ namespace BrunoMikoski.Core.StateMachines
         {
         }
 
-        public virtual void SetStateMachine(StateMachineBase targetStateMachine)
+        internal virtual void SetStateMachine(StateMachineBase targetStateMachine)
         {
-            stateMachineBase = targetStateMachine;
+            stateMachine = targetStateMachine;
         }
     }
 }

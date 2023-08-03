@@ -142,5 +142,10 @@ namespace BrunoMikoski.Core.StateMachines
         {
             return stateMachineToState.TryGetValue(stateMachine, out stateMachineState);
         }
+
+        public static void Forget(StateMachineBase stateMachineBase)
+        {
+            stateMachineToState.Remove(stateMachineBase);
+        }
     }
 }

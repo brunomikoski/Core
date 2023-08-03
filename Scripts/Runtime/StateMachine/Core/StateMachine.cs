@@ -151,7 +151,6 @@ namespace BrunoMikoski.Core.StateMachines
 
             transition.SetStateMachine(this);
             availableTransitions.Add(transition);
-            base.AvailableTransitions.Add(transition);
         }
 
         private bool AlreadyContainTransition(Transition<TStateID> transition)
@@ -222,8 +221,9 @@ namespace BrunoMikoski.Core.StateMachines
             overrideInitialState = targetStateID;
         }
     }
-    
-    public class StateMachineBase : MonoBehaviour
+
+
+    public partial class StateMachineBase : MonoBehaviour
     {
         protected List<StateBase> availableStates = new();
         public List<StateBase> AvailableStates => availableStates;
@@ -242,7 +242,7 @@ namespace BrunoMikoski.Core.StateMachines
 
 
         public event Action<StateID, StateID> OnStateChangedEvent;
-
+        
 
         internal virtual void TransitionFinished(StateID toState)
         {
@@ -252,5 +252,13 @@ namespace BrunoMikoski.Core.StateMachines
         {
             OnStateChangedEvent?.Invoke(fromState, toState);
         }
+        
+        protected virtual void OnDestroy()
+        {
+#if UNITY_EDITOR
+            StateMachineTracker.Forget(this);
+#endif
+        }
+
     }
 }
