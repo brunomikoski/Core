@@ -7,6 +7,7 @@ namespace BrunoMikoski.Core.StateMachines
 {
     public class StateID : ScriptableObjectCollectionItem
     {
+        [Header("Settings")]
         [SerializeField]
         private bool initialState;
         public bool InitialState => initialState;

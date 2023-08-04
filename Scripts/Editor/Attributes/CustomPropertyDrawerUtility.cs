@@ -285,13 +285,19 @@ namespace BrunoMikoski.Core.Attributes
                         Type baseType = subType;
                         while (baseType != useForType)
                         {
-                            baseType = baseType.BaseType;
-                            ++distance;
+                            if (baseType != null)
+                            {
+                                baseType = baseType.BaseType;
+                                ++distance;
+                            }
+                            else
+                            {
+                                baseType = useForType;
+                            }
                         }
 
-                        if (TYPES_TO_PROPERTY_DRAWERS.ContainsKey(subType))
+                        if (TYPES_TO_PROPERTY_DRAWERS.TryGetValue(subType, out PropertyDrawerData existingData))
                         {
-                            PropertyDrawerData existingData = TYPES_TO_PROPERTY_DRAWERS[subType];
                             if (distance >= existingData.DistanceToTarget)
                                 continue;
                         }
