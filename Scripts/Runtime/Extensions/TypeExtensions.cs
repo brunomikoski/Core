@@ -39,6 +39,15 @@ namespace BrunoMikoski.Core
             }
             return true;
         }
+
+        public static bool IsTypeOrSubclassOfType(this Type type, Type targetType)
+        {
+            return type == targetType || type.IsSubclassOf(targetType); 
+        }
         
+        public static bool IsNotTypeOrSubclassOfType(this Type type, Type targetType)
+        {
+            return !IsTypeOrSubclassOfType(type, targetType); 
+        }
     }
 }

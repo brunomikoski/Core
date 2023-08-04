@@ -20,6 +20,8 @@ namespace BrunoMikoski.Core.StateMachines
         }
 
 
+        public override Type StateIDType => typeof(TStateID);
+
         public void StartStateMachine()
         {
             if (InitialState == null)
@@ -241,6 +243,8 @@ namespace BrunoMikoski.Core.StateMachines
         public TransitionBase CurrentTransition => currentTransition;
 
 
+        public virtual Type StateIDType => typeof(StateID);
+        
         public event Action<StateID, StateID> OnStateChangedEvent;
         
 
@@ -252,9 +256,15 @@ namespace BrunoMikoski.Core.StateMachines
         {
             OnStateChangedEvent?.Invoke(fromState, toState);
         }
-        
+
+        protected virtual void Awake()
+        {
+            StateMachineRegistry.Register(this);
+        }
+
         protected virtual void OnDestroy()
         {
+            StateMachineRegistry.Unregister(this);
 #if UNITY_EDITOR
             StateMachineTracker.Forget(this);
 #endif
@@ -262,3 +272,4 @@ namespace BrunoMikoski.Core.StateMachines
 
     }
 }
+
