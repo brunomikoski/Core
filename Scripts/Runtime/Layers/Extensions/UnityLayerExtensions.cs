@@ -8,10 +8,15 @@ namespace BrunoMikoski.Core
     {
         public static LayerMask ToLayerMask(this UnityLayer unityLayer)
         {
-            return 1 << unityLayer.LayerIndex;
+            if (unityLayer is SingleUnityLayer singleUnityLayer)
+                return 1 << singleUnityLayer.LayerIndex;
+            if (unityLayer is GroupUnityLayer unityLayerGroup)
+                return unityLayerGroup.Layers.ToLayerMask();
+            
+            return 0;
         }
 
-        public static LayerMask ToLayerMask(this CollectionItemPicker<UnityLayer> layers)
+        public static LayerMask ToLayerMask(this CollectionItemPicker<SingleUnityLayer> layers)
         {
             LayerMask layerMask = new()
             {

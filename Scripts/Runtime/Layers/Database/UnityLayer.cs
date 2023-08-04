@@ -3,10 +3,11 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.Layers
 {
-    public partial class UnityLayer : ScriptableObjectCollectionItem
+    public abstract class UnityLayer : ScriptableObjectCollectionItem
     {
-        [SerializeField]
-        private int layerIndex;
-        public int LayerIndex => layerIndex;
+        public static implicit operator LayerMask(UnityLayer unityLayer)
+        {
+            return unityLayer.ToLayerMask();
+        }
     }
 }
