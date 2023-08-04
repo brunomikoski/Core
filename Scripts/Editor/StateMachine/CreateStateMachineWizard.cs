@@ -42,12 +42,6 @@ namespace BrunoMikoski.Core.StateMachines
             return windowInstance;
         }
 
-
-        private void OnEnable()
-        {
-            // targetNamespace = CompilationPipeline.GetAssemblyRootNamespaceFromScriptPath(pathName);
-        }
-
         public static void Show(string targetPath)
         {
             targetFolderPath = targetPath;
