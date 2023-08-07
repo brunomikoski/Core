@@ -165,9 +165,10 @@ namespace BrunoMikoski.Core.StateMachines
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel("Duration");
-                EditorGUILayout.TextField(elapsed);
+                GUI.enabled = false;
+                EditorGUILayout.TextField($"{elapsed} seconds");
+                GUI.enabled = true;
                 EditorGUILayout.EndHorizontal();
-
 
                 EditorGUILayout.BeginHorizontal();
                 {
