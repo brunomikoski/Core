@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -47,22 +46,40 @@ namespace BrunoMikoski.Core.ScenesReferences
             BuildState buildState = GetBuildStateForSceneAtPath(AssetDatabase.GUIDToAssetPath(guidProperty.stringValue));
             
             EditorGUILayout.BeginHorizontal();
-
-            // Use a control ID for the PrefixLabel, so that following controls can align with it
-            EditorGUILayout.PrefixLabel(new GUIContent("Scene"));
-
-            //  Displaying custom icon for build state
+            
+            
+            float toolboxButtonWidth = EditorGUIUtility.singleLineHeight;
+            Rect rect = EditorGUILayout.GetControlRect();
+            Rect selectorFieldRect = EditorGUI.PrefixLabel(rect, GUIUtility.GetControlID(FocusType.Passive), new GUIContent("Scene"));
+            selectorFieldRect.x -= 14;
+            selectorFieldRect.height = EditorGUIUtility.singleLineHeight;
+            selectorFieldRect.width -= toolboxButtonWidth - 14;
+            
             string unityEditorIconName = buildState == BuildState.InBuildSettings ? "greenLight" : "d_redLight";
-            // GUILayout.Label(EditorGUIUtility.IconContent(unityEditorIconName),  GUILayout.Height(20),GUILayout.Width(20));
-            GUILayout.Label(EditorGUIUtility.IconContent(unityEditorIconName), GUILayout.MaxHeight(20), GUILayout.Width(20), GUILayout.ExpandWidth(false));
+            GUIContent statusIcon = EditorGUIUtility.IconContent(unityEditorIconName);
 
-            // Scene field  
-            EditorGUI.BeginChangeCheck();
-            SceneAsset newSceneAsset = EditorGUILayout.ObjectField(sceneAsset, typeof(SceneAsset), false) as SceneAsset;
+            Rect statusButtonRect = new Rect()
+            {
+                x = selectorFieldRect.x-4,
+                width = toolboxButtonWidth,
+                y = selectorFieldRect.y + 1,
+                height = selectorFieldRect.height - 1
+            };
+            
+            GUI.Label(statusButtonRect, statusIcon);
+            
+            SceneAsset newSceneAsset = (SceneAsset)EditorGUI.ObjectField(selectorFieldRect, sceneAsset, typeof(SceneAsset), false);
+            
+            Rect toolboxButtonRect = new Rect
+            {
+                x = selectorFieldRect.x + selectorFieldRect.width + 2,
+                width = toolboxButtonWidth,
+                y = selectorFieldRect.y + 1,
+                height = selectorFieldRect.height - 1
+            };
 
-
-            // Cog button
-            if (GUILayout.Button(EditorGUIUtility.IconContent("_Popup@2x"), GUILayout.Width(20)))
+            GUIContent settingsIcon = EditorGUIUtility.IconContent("SettingsIcon");
+            if (GUI.Button(toolboxButtonRect, settingsIcon, EditorStyles.iconButton))
             {
                 GenericMenu menu = new GenericMenu();
                 if(buildState == BuildState.NotInBuildSettings)
@@ -73,9 +90,9 @@ namespace BrunoMikoski.Core.ScenesReferences
                         serializedObject.FindProperty("buildIndex").intValue =
                             GetBuildIndexForSceneAtPath(scenePathProperty.stringValue);
                     });
-                    
-                }
                 
+                }
+            
                 if(buildState == BuildState.InBuildSettings)
                 {
                     menu.AddItem(new GUIContent("Remove from Build Settings"), false, () =>
@@ -84,7 +101,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                         serializedObject.FindProperty("buildIndex").intValue = -1;
                     });
                 }
-
+            
                 menu.AddItem(new GUIContent("Show at the scene picker"), ScenePickerToolbar.IsShowingAtScenePicker(scenePathProperty.stringValue), () =>
                 {
                     if (ScenePickerToolbar.IsShowingAtScenePicker(scenePathProperty.stringValue))
@@ -92,8 +109,9 @@ namespace BrunoMikoski.Core.ScenesReferences
                     else
                         ScenePickerToolbar.ShowAtScenePicker(scenePathProperty.stringValue);
                 });
-
+            
                 menu.ShowAsContext();
+                
             }
 
             EditorGUILayout.EndHorizontal();
