@@ -9,9 +9,11 @@ namespace BrunoMikoski.Core.ScenesReferences
     [CustomEditor(typeof(UnityScenesCollection), true)]
     public class UnityScenesCollectionCustomEditor : CollectionCustomEditor
     {
+        
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
+
             if (GUILayout.Button("Sync"))
             {
                 SyncScenes();
@@ -27,9 +29,11 @@ namespace BrunoMikoski.Core.ScenesReferences
                 string possibleAssetGUID = possibleAssets[i];
                 string scenePath = AssetDatabase.GUIDToAssetPath(possibleAssetGUID);
                 string sceneName = Path.GetFileNameWithoutExtension(scenePath);
-                SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+                
+                if(IsIgnored(scenePath))
+                    continue;
 
-                TryGetUnityBuildSettingsScene(scenePath, out EditorBuildSettingsScene editorBuildScene, out int buildIndex);
+                TryGetUnityBuildSettingsScene(scenePath, out EditorBuildSettingsScene _, out int buildIndex);
                 
                 UnityScene targetUnityScene = GetOrAddSceneObject(scenePath, possibleAssetGUID);
                 
@@ -50,6 +54,23 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
             OnEnable();
             Repaint();
+        }
+
+        private bool IsIgnored(string scenePath)
+        {
+            SerializedProperty ignoredPaths = serializedObject.FindProperty("ignoredScenePaths");
+
+            for (int i = 0; i < ignoredPaths.arraySize; i++)
+            {
+                SerializedProperty ignoredPath = ignoredPaths.GetArrayElementAtIndex(i);
+                if (string.IsNullOrEmpty(ignoredPath.stringValue))
+                    continue;
+
+                if (scenePath.IndexOf(ignoredPath.stringValue, StringComparison.Ordinal) > -1)
+                    return true;
+            }
+
+            return false;
         }
 
         private UnityScene GetOrAddSceneObject(string scenePath, string sceneGUID)
