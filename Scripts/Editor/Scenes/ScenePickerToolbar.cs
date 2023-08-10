@@ -16,10 +16,11 @@ namespace BrunoMikoski.Core.ScenesReferences
         public const string HIDE_FROM_SCENE_PICKER_KEY = "HIDE_FROM_SCENE_PICKER_KEY";
 
         private static UnityScenesCollection SCENES_COLLECTION;
-        private static readonly GUIContent SCENE_ICON;
+        private static GUIContent SCENE_ICON;
         private static GUIStyle GUI_STYLE;
 
-        static ScenePickerToolbar()
+        [InitializeOnLoadMethod]
+        private static void InitializeOnLoadMethod()
         {
             SCENE_ICON = EditorGUIUtility.IconContent("d_SceneAsset Icon");
             SCENE_ICON.text = "Scenes";

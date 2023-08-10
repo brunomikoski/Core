@@ -257,6 +257,31 @@ namespace BrunoMikoski.Core.StateMachines
             OnStateChangedEvent?.Invoke(fromState, toState);
         }
 
+        public bool TryGetTransition<T>(StateID from, StateID to, out T resultTransition) where T : TransitionBase
+        {
+            for (int i = 0; i < availableTransitions.Count; i++)
+            {
+                TransitionBase availableTransition = availableTransitions[i];
+                if (availableTransition is not T transition) 
+                    continue;
+                
+                if (from != null && to != null)
+                {
+                    if (availableTransition.FromState == from && availableTransition.ToState == to)
+                    {
+                        resultTransition = transition;
+                        return true;
+                    }
+                }
+                    
+                resultTransition = transition;
+                return true;
+            }
+            
+            resultTransition = null;
+            return false;
+        }
+        
         protected virtual void Awake()
         {
             StateMachineRegistry.Register(this);
