@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core.PhysX
 {
@@ -12,13 +13,10 @@ namespace BrunoMikoski.Core.PhysX
 
         public List<Collider> collidersInVolume;
 
-        private PoolList<Collider> poolList;
-
         public ObjectInTriggerVolumeData(Rigidbody rigidbody)
         {
             this.rigidbody = rigidbody;
-            poolList = PoolList<Collider>.ObtainLongTerm();
-            collidersInVolume = poolList;
+            collidersInVolume = ListPool<Collider>.Get();
         }
 
         public static implicit operator ObjectInTriggerVolumeData(Rigidbody rigidbody)
@@ -51,9 +49,10 @@ namespace BrunoMikoski.Core.PhysX
 
         public void Dispose()
         {
-            if (poolList != null)
-                poolList.Dispose();
-            poolList = null;
+            if (collidersInVolume != null)
+                ListPool<Collider>.Release(collidersInVolume);
+            
+            collidersInVolume = null;
         }
 
     }

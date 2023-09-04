@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core
 {
@@ -35,7 +36,7 @@ namespace BrunoMikoski.Core
             action();
             
             Stopwatch stopwatch = Stopwatch.StartNew();
-            List<double> durations = new List<double>(runs);
+            List<double> durations = ListPool<double>.Get();
 
             // Call Garbage Collector to minimize interference
             GC.Collect();
@@ -84,6 +85,7 @@ namespace BrunoMikoski.Core
                 NumberOfRuns = runs
             };
 
+            ListPool<double>.Release(durations);
             return result;
         }
         

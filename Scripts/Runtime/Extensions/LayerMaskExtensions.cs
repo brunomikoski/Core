@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core
 {
@@ -92,7 +93,7 @@ namespace BrunoMikoski.Core
         /// </summary>
         public static string[] MaskToNames(this LayerMask original)
         {
-            var output = new List<string>();
+            List<string> output = ListPool<string>.Get();
 			
             for (int i = 0; i < 32; ++i)
             {
@@ -106,7 +107,10 @@ namespace BrunoMikoski.Core
                     }
                 }
             }
-            return output.ToArray();
+
+            string[] result = output.ToArray();
+            ListPool<string>.Release(output);
+            return result;
         }
 
         /// <summary>
@@ -114,7 +118,7 @@ namespace BrunoMikoski.Core
         /// </summary>
         public static int[] MaskToNumbers(this LayerMask original)
         {
-            var output = new List<int>();
+            List<int> output = ListPool<int>.Get();
 			
             for (int i = 0; i < 32; ++i)
             {
@@ -124,7 +128,10 @@ namespace BrunoMikoski.Core
                     output.Add(i);
                 }
             }
-            return output.ToArray();
+
+            int[] result = output.ToArray();
+            ListPool<int>.Release(output);
+            return result;
         }
 
         /// <summary>

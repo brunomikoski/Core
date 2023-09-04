@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core
 {
@@ -19,7 +21,7 @@ namespace BrunoMikoski.Core
             bounds = collider.GetLocalBounds();
         }
 
-        public void GetCorners(PoolList<Vector3> corners)
+        public void GetCorners(List<Vector3> corners)
         {
             bounds.GetCorners(corners);
 
@@ -29,7 +31,7 @@ namespace BrunoMikoski.Core
 
         public bool Encapsulates(LocalBounds other)
         {
-            using (PoolList<Vector3> corners = PoolList<Vector3>.Obtain(8))
+            using (ListPool<Vector3>.Get(out List<Vector3> corners))
             {
                 other.GetCorners(corners);
 

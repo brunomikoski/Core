@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core.PhysX
 {
@@ -43,10 +44,10 @@ namespace BrunoMikoski.Core.PhysX
             List<int> meshTriangles = mesh.triangles.ToList();
             List<Vector3> meshVertices = mesh.vertices.ToList();
 
-            List<int> triangles = new List<int>();
-            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = ListPool<int>.Get();
+            List<Vector3> vertices = ListPool<Vector3>.Get();
 
-            List<Mesh> subMeshes = new List<Mesh>();
+            List<Mesh> subMeshes = ListPool<Mesh>.Get();
             for (int i = 0; i < meshTriangles.Count; i += 3)
             {
                 vertices.Clear();
@@ -73,13 +74,18 @@ namespace BrunoMikoski.Core.PhysX
                 subMeshes.Add(subMesh);
             }
 
+            
             triggerColliders = new List<MeshCollider>();
             for (int i = 0; i < subMeshes.Count; i++)
             {
-                MeshCollider meshCollider = (MeshCollider) CreateCollider<MeshCollider>();
+                MeshCollider meshCollider = CreateCollider<MeshCollider>();
                 meshCollider.sharedMesh = subMeshes[i];
                 triggerColliders.Add(meshCollider);
             }
+            
+            ListPool<Mesh>.Release(subMeshes);
+            ListPool<int>.Release(triangles);
+            ListPool<Vector3>.Release(vertices);
 
             UpdateMeshDimensions();
         }
