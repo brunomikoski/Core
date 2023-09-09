@@ -3,6 +3,7 @@ namespace BrunoMikoski.Core.StateMachines
     public class State<TStateID> : StateBase where TStateID : StateID
     {
         public new TStateID StateID => (TStateID) stateID;
+        public new StateMachine<TStateID> StateMachine => (StateMachine<TStateID>)stateMachine;
 
         public State(TStateID targetStateID) : base(targetStateID)
         {
@@ -11,8 +12,9 @@ namespace BrunoMikoski.Core.StateMachines
     
     public class StateBase
     {
-        private StateMachineBase stateMachine;
-        
+        protected StateMachineBase stateMachine;
+        public StateMachineBase StateMachine => stateMachine;
+
         protected StateID stateID;
         public StateID StateID => stateID;
 
@@ -23,20 +25,20 @@ namespace BrunoMikoski.Core.StateMachines
 
         internal void Internal_Enter()
         {
-            Enter();
-            stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
 #if UNITY_EDITOR
             StateMachineTracker.TrackEnterState(stateMachine, this);
 #endif
+            Enter();
+            stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
         
         internal void Internal_Exit()
         {
-            Exit();
-            stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
 #if UNITY_EDITOR
             StateMachineTracker.TrackExitState(stateMachine, this);
 #endif
+            Exit();
+            stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
         }
         
         

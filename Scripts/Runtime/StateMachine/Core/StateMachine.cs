@@ -33,6 +33,12 @@ namespace BrunoMikoski.Core.StateMachines
             TransitTo(InitialState);
         }
 
+        protected override void ClearAll()
+        {
+            base.ClearAll();
+            currentState = null;
+        }
+
         public void TransitTo(TStateID targetStateID)
         {
             if (!CanTransitTo(targetStateID))
@@ -280,6 +286,12 @@ namespace BrunoMikoski.Core.StateMachines
             
             resultTransition = null;
             return false;
+        }
+
+        protected virtual void ClearAll()
+        {
+            availableStates.Clear();
+            availableTransitions.Clear();
         }
         
         protected virtual void Awake()
