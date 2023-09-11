@@ -193,14 +193,14 @@ namespace BrunoMikoski.Core.StateMachines
             return false;
         }
 
-        private bool TryGetStateWithID(StateID targetStaID, out State<TStateID> resultState)
+        private bool TryGetStateWithID(StateID targetStaID, out State<StateID> resultState)
         {
             for (int i = 0; i < availableStates.Count; i++)
             {
                 StateBase availableState = availableStates[i];
                 if (availableState.StateID == targetStaID)
                 {
-                    resultState = (State<TStateID>) availableState;
+                    resultState = (State<StateID>) availableState;
                     return true;
                 }
             }
@@ -208,6 +208,23 @@ namespace BrunoMikoski.Core.StateMachines
             resultState = null;
             return false;
         }
+
+        public bool TryGetStateWithID<T>(StateID targetStaID, out T resultState) where T : State<TStateID>
+        {
+            for (int i = 0; i < availableStates.Count; i++)
+            {
+                StateBase availableState = availableStates[i];
+                if (availableState.StateID == targetStaID)
+                {
+                    resultState = (T) availableState;
+                    return resultState != null;
+                }
+            }
+
+            resultState = null;
+            return false;
+        }
+
 
         private void Update()
         {
