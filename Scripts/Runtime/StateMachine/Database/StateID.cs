@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
 
@@ -15,5 +13,9 @@ namespace BrunoMikoski.Core.StateMachines
         [SerializeField]
         private bool fromAnyState;
         public bool FromAnyState => fromAnyState;
+
+        [SerializeField]
+        private bool allowSelfTransition;
+        public bool AllowSelfTransition => allowSelfTransition;
     }
 }

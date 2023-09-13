@@ -50,7 +50,7 @@ namespace BrunoMikoski.Core.StateMachines
                 return;
             }
 
-            if (currentState != null && currentState.StateID == targetStateID)
+            if (currentState != null && currentState.StateID == targetStateID && !currentState.StateID.AllowSelfTransition)
             {
                 Debug.LogError($"Cannot transit to the same state {targetStateID}");
                 return;
