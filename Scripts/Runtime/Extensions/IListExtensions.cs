@@ -225,13 +225,16 @@ namespace System.Linq
             return max;
         }
         
-        public static void Shuffle<T>(this IList<T> list)
+        public static void Shuffle<T>(this IList<T> list, Random random = null)
         {
+            if (random == null)
+                random = RANDOM;
+            
             int i = list.Count;
             while (i > 1)
             {
                 i--;
-                int k = RANDOM.Next(i + 1);
+                int k = random.Next(i + 1);
                 (list[k], list[i]) = (list[i], list[k]);
             }
         }
