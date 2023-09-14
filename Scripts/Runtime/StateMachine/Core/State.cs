@@ -40,17 +40,17 @@ namespace BrunoMikoski.Core.StateMachines
             Exit();
             stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
         }
-        
-        
-        public virtual void Enter()
+
+
+        protected virtual void Enter()
         {
         }
 
-        public virtual void Exit()
+        protected virtual void Exit()
         {
         }
 
-        public virtual void Update()
+        internal virtual void Update()
         {
         }
 
