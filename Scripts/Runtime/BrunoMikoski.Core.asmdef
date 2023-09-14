@@ -7,7 +7,8 @@
         "BrunoMikoski.ScriptableObjectCollection",
         "BrunoMikoski.ServiceLocator",
         "BrunoMikoski.UIManager",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "BrunoMikoski.SimplePool"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
