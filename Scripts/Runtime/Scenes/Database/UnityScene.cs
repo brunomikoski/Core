@@ -97,6 +97,7 @@ namespace BrunoMikoski.Core.ScenesReferences
 
         private void ValidateSceneAsset()
         {
+#if UNITY_EDITOR
             SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
             if (sceneAsset != null)
                 return;
@@ -129,6 +130,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                 return;
             }
             throw new Exception($"Invalid scene data {this.name}");
+#endif
         }
 
 
