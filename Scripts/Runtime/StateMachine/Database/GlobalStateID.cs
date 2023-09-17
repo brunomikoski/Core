@@ -1,8 +1,11 @@
 using System;
+#if UNITASK_AVAILABLE
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace BrunoMikoski.Core.StateMachines
 {
-    public class GlobalStateID : StateID
+    public abstract class GlobalStateID : StateID
     {
         public event Action OnEnterEvent
         {
@@ -27,6 +30,47 @@ namespace BrunoMikoski.Core.StateMachines
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.BeginTransitionTo, this, value);
             remove => StateMachineRegistry.UnsubscribeFromGlobalEvent(StateMachineEvent.BeginTransitionTo, this, value);
         }
+
+
+
+        [NonSerialized]
+        private bool hasCachedStateMachine;
+        private StateMachineBase cachedStateMachine;
+        private StateMachineBase StateMachine
+        {
+            get
+            {
+                if (!hasCachedStateMachine)
+                {
+                    hasCachedStateMachine = StateMachineRegistry.TryGetStateMachineByStateType(this.GetType(), out cachedStateMachine);
+                }
+                return cachedStateMachine;
+            }
+        }
+        
+        public bool IsOnState
+        {
+            get
+            {
+                if (StateMachine != null)
+                {
+                    if (StateMachine.CurrentState.StateID == this)
+                        return true;
+                }
+
+                return false;
+            }   
+        }
+        
+#if UNITASK_AVAILABLE
+        public async UniTask WaitStateEnterAsync()
+        {
+            while (StateMachine == null || StateMachine.CurrentState.StateID != this)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+        }
+#endif
 
     }
 }

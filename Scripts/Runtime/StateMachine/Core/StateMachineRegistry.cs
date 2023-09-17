@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core.StateMachines
 {
@@ -148,6 +149,37 @@ namespace BrunoMikoski.Core.StateMachines
             }
 
             result = null;
+            return false;
+        }
+
+        public static bool TryGetStateMachineByStateType(Type stateMachineStateType, out StateMachineBase resultStateMachine)
+        {
+            using (ListPool<StateMachineBase>.Get(out List<StateMachineBase> results))
+            {
+                for (int i = 0; i < RUNNING_STATE_MACHINES.Count; i++)
+                {
+                    StateMachineBase stateMachineBase = RUNNING_STATE_MACHINES[i];
+                    if(stateMachineBase.StateIDType == stateMachineStateType)
+                    {
+                        results.Add(stateMachineBase);
+                    }
+                }
+
+                if (results.Count == 1)
+                {
+                    resultStateMachine = results[0];
+                    return true;
+                }
+
+                if (results.Count > 1)
+                {
+                    Debug.LogError($"There are more than one state machine of type {stateMachineStateType} running at the same time");
+                    resultStateMachine = null;
+                    return false;
+                }
+            }
+            
+            resultStateMachine = null;
             return false;
         }
     }

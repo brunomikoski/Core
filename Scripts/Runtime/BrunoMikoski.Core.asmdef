@@ -8,7 +8,8 @@
         "BrunoMikoski.ServiceLocator",
         "BrunoMikoski.UIManager",
         "DOTween.Modules",
-        "BrunoMikoski.SimplePool"
+        "BrunoMikoski.SimplePool",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -27,6 +28,11 @@
             "name": "com.brunomikoski.uimanager",
             "expression": "",
             "define": "UI_MANAGER_AVAILABLE"
+        },
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "",
+            "define": "UNITASK_AVAILABLE"
         }
     ],
     "noEngineReferences": false
