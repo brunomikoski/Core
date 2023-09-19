@@ -1,3 +1,7 @@
+#if UNITASK_AVAILABLE
+using Cysharp.Threading.Tasks;
+#endif
+
 namespace BrunoMikoski.Core.StateMachines
 {
     public class State<TStateID> : StateBase where TStateID : StateID
@@ -29,6 +33,9 @@ namespace BrunoMikoski.Core.StateMachines
             StateMachineTracker.TrackEnterState(stateMachine, this);
 #endif
             Enter();
+#if UNITASK_AVAILABLE
+            Enter_Async().Forget();
+#endif
             stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
         
@@ -38,6 +45,9 @@ namespace BrunoMikoski.Core.StateMachines
             StateMachineTracker.TrackExitState(stateMachine, this);
 #endif
             Exit();
+#if UNITASK_AVAILABLE
+            Exit_Async().Forget();
+#endif           
             stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
         }
 
@@ -45,10 +55,24 @@ namespace BrunoMikoski.Core.StateMachines
         protected virtual void Enter()
         {
         }
+        
+#if UNITASK_AVAILABLE
+        protected virtual UniTaskVoid Enter_Async()
+        {
+            return default;
+        }
+#endif
 
         protected virtual void Exit()
         {
         }
+        
+#if UNITASK_AVAILABLE
+        protected virtual UniTaskVoid Exit_Async()
+        {
+            return default;
+        }
+#endif
 
         internal virtual void Update()
         {

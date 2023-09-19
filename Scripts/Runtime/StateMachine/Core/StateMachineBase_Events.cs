@@ -16,7 +16,7 @@ namespace BrunoMikoski.Core.StateMachines
         private Dictionary<StateID, Dictionary<StateMachineEvent, List<Action>>> stateToEventToCallbackList = new();
 
 
-        public void UnsubscribeFromStateEvent(StateMachineEvent targetEvent, StateID targetState, Action callback)
+        internal void UnsubscribeFromStateEvent(StateMachineEvent targetEvent, StateID targetState, Action callback)
         {
             if (!stateToEventToCallbackList.ContainsKey(targetState))
                 return;
@@ -27,18 +27,18 @@ namespace BrunoMikoski.Core.StateMachines
             stateToEventToCallbackList[targetState][targetEvent].Remove(callback);
         }
         
-        public void SubscribeToStateEvent(StateMachineEvent targetEvent, StateID uiWindow, Action callback)
+        internal void SubscribeToStateEvent(StateMachineEvent targetEvent, StateID targetState, Action callback)
         {
-            if (!stateToEventToCallbackList.ContainsKey(uiWindow))
-                stateToEventToCallbackList.Add(uiWindow, new Dictionary<StateMachineEvent, List<Action>>());
+            if (!stateToEventToCallbackList.ContainsKey(targetState))
+                stateToEventToCallbackList.Add(targetState, new Dictionary<StateMachineEvent, List<Action>>());
 
-            if (!stateToEventToCallbackList[uiWindow].ContainsKey(targetEvent))
-                stateToEventToCallbackList[uiWindow].Add(targetEvent, new List<Action>());
+            if (!stateToEventToCallbackList[targetState].ContainsKey(targetEvent))
+                stateToEventToCallbackList[targetState].Add(targetEvent, new List<Action>());
 
-            if (stateToEventToCallbackList[uiWindow][targetEvent].Contains(callback))
+            if (stateToEventToCallbackList[targetState][targetEvent].Contains(callback))
                 return;
 
-            stateToEventToCallbackList[uiWindow][targetEvent].Add(callback);
+            stateToEventToCallbackList[targetState][targetEvent].Add(callback);
         }
         
         internal void DispatchEvent(StateMachineEvent stateMachineEvent, StateID targetState)

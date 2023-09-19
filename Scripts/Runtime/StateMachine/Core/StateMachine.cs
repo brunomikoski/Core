@@ -245,8 +245,18 @@ namespace BrunoMikoski.Core.StateMachines
         {
             overrideInitialState = targetStateID;
         }
+        
+        
+        public void UnsubscribeFromStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
+        {
+            base.UnsubscribeFromStateEvent(targetEvent, targetState, callback);
+        }
+        
+        public void SubscribeToStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
+        {
+            base.SubscribeToStateEvent(targetEvent, targetState, callback);
+        }
     }
-
 
     public partial class StateMachineBase : MonoBehaviour
     {
