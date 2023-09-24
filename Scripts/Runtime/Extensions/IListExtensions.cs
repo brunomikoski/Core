@@ -1,13 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using UnityEngine;
 
 
-namespace System.Linq
+namespace System.Collections.Generic
 {
-    /// <summary>
-    /// These extension methods are in the same convention as System.Linq and can be viewed as an
-    /// addition to those methods, so they are placed in the System.Linq namespace
-    /// </summary>
-    public static class IListExtensions
+    public static partial class IListExtensions
     {
         private static readonly Random RANDOM = new Random();
 
@@ -89,142 +85,6 @@ namespace System.Linq
             return list[^1];
         }
 
-        /// <summary>
-        /// Returns the minimal element of the given sequence, based on
-        /// the given projection.
-        /// </summary>
-        /// <remarks>
-        /// If more than one element has the minimal projected value, the first
-        /// one encountered will be returned. This overload uses the default comparer
-        /// for the projected type. This operator uses immediate execution, but
-        /// only buffers a single result (the current minimal element).
-        /// </remarks>
-        /// <typeparam name="TSource">Type of the source sequence</typeparam>
-        /// <typeparam name="TKey">Type of the projected element</typeparam>
-        /// <param name="source">Source sequence</param>
-        /// <param name="selector">Selector to use to pick the results to compare</param>
-        /// <returns>The minimal element, according to the projection.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="selector"/> is null</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="source"/> is empty</exception>
-
-        public static TSource MinBy<TSource, TKey>(this IList<TSource> source,
-            Func<TSource, TKey> selector)
-        {
-            return source.MinBy(selector, null);
-        }
-
-        /// <summary>
-        /// Returns the minimal element of the given sequence, based on
-        /// the given projection and the specified comparer for projected values.
-        /// </summary>
-        /// <remarks>
-        /// If more than one element has the minimal projected value, the first
-        /// one encountered will be returned. This operator uses immediate execution, but
-        /// only buffers a single result (the current minimal element).
-        /// </remarks>
-        /// <typeparam name="TSource">Type of the source sequence</typeparam>
-        /// <typeparam name="TKey">Type of the projected element</typeparam>
-        /// <param name="source">Source sequence</param>
-        /// <param name="selector">Selector to use to pick the results to compare</param>
-        /// <param name="comparer">Comparer to use to compare projected values</param>
-        /// <returns>The minimal element, according to the projection.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="selector"/>
-        /// or <paramref name="comparer"/> is null</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="source"/> is empty</exception>
-
-        public static TSource MinBy<TSource, TKey>(this IList<TSource> source,
-            Func<TSource, TKey> selector, IComparer<TKey> comparer)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
-            if (source.Count == 0) throw new InvalidOperationException("Sequence contains no elements");
-
-            comparer = comparer ?? Comparer<TKey>.Default;
-
-            TSource min = source[0];
-            TKey minKey = selector(min);
-
-            for (int i = 1; i < source.Count; i++)
-            {
-                TSource candidate = source[i];
-                TKey candidateProjected = selector(candidate);
-                if (comparer.Compare(candidateProjected, minKey) < 0)
-                {
-                    min = candidate;
-                    minKey = candidateProjected;
-                }
-            }
-            return min;
-        }
-
-        /// <summary>
-        /// Returns the maximal element of the given sequence, based on
-        /// the given projection.
-        /// </summary>
-        /// <remarks>
-        /// If more than one element has the maximal projected value, the first
-        /// one encountered will be returned. This overload uses the default comparer
-        /// for the projected type. This operator uses immediate execution, but
-        /// only buffers a single result (the current maximal element).
-        /// </remarks>
-        /// <typeparam name="TSource">Type of the source sequence</typeparam>
-        /// <typeparam name="TKey">Type of the projected element</typeparam>
-        /// <param name="source">Source sequence</param>
-        /// <param name="selector">Selector to use to pick the results to compare</param>
-        /// <returns>The maximal element, according to the projection.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="selector"/> is null</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="source"/> is empty</exception>
-
-        public static TSource MaxBy<TSource, TKey>(this IList<TSource> source,
-            Func<TSource, TKey> selector)
-        {
-            return source.MaxBy(selector, null);
-        }
-
-        /// <summary>
-        /// Returns the maximal element of the given sequence, based on
-        /// the given projection and the specified comparer for projected values.
-        /// </summary>
-        /// <remarks>
-        /// If more than one element has the maximal projected value, the first
-        /// one encountered will be returned. This operator uses immediate execution, but
-        /// only buffers a single result (the current maximal element).
-        /// </remarks>
-        /// <typeparam name="TSource">Type of the source sequence</typeparam>
-        /// <typeparam name="TKey">Type of the projected element</typeparam>
-        /// <param name="source">Source sequence</param>
-        /// <param name="selector">Selector to use to pick the results to compare</param>
-        /// <param name="comparer">Comparer to use to compare projected values</param>
-        /// <returns>The maximal element, according to the projection.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="selector"/>
-        /// or <paramref name="comparer"/> is null</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="source"/> is empty</exception>
-        public static TSource MaxBy<TSource, TKey>(this IList<TSource> source,
-            Func<TSource, TKey> selector, IComparer<TKey> comparer)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
-            if (source.Count == 0) throw new InvalidOperationException("Sequence contains no elements");
-
-            comparer = comparer ?? Comparer<TKey>.Default;
-
-            TSource max = source[0];
-            TKey maxKey = selector(max);
-
-            for (int i = 1; i < source.Count; i++)
-            {
-                TSource candidate = source[i];
-                TKey candidateProjected = selector(candidate);
-                if (comparer.Compare(candidateProjected, maxKey) > 0)
-                {
-                    max = candidate;
-                    maxKey = candidateProjected;
-                }
-            }
-
-            return max;
-        }
-        
         public static void Shuffle<T>(this IList<T> list, Random random = null)
         {
             if (random == null)
@@ -237,6 +97,12 @@ namespace System.Linq
                 int k = random.Next(i + 1);
                 (list[k], list[i]) = (list[i], list[k]);
             }
+        }
+        
+        public static T IndexOrLast<T>(this IList<T> list, int index)
+        {
+            index = Mathf.Clamp(index, 0, list.Count - 1);
+            return list[index];
         }
     }
 }

@@ -1,3 +1,5 @@
+
+using System.Threading;
 #if UNITASK_AVAILABLE
 using Cysharp.Threading.Tasks;
 #endif
@@ -22,6 +24,10 @@ namespace BrunoMikoski.Core.StateMachines
         protected StateID stateID;
         public StateID StateID => stateID;
 
+#if UNITASK_AVAILABLE
+        private CancellationTokenSource exitCancellationTokenSource;
+#endif
+        
         protected StateBase(StateID targetStateID)
         {
             stateID = targetStateID;
@@ -34,7 +40,11 @@ namespace BrunoMikoski.Core.StateMachines
 #endif
             Enter();
 #if UNITASK_AVAILABLE
-            Enter_Async().Forget();
+            exitCancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource cancellationToken =
+                CancellationTokenSource.CreateLinkedTokenSource(exitCancellationTokenSource.Token, stateMachine.GetCancellationTokenOnDestroy());
+            
+            Enter_Async(cancellationToken).Forget();
 #endif
             stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
@@ -44,10 +54,15 @@ namespace BrunoMikoski.Core.StateMachines
 #if UNITY_EDITOR
             StateMachineTracker.TrackExitState(stateMachine, this);
 #endif
-            Exit();
 #if UNITASK_AVAILABLE
-            Exit_Async().Forget();
-#endif           
+            if (exitCancellationTokenSource != null)
+            {
+                exitCancellationTokenSource.Cancel();
+                exitCancellationTokenSource.Dispose();
+            }
+#endif
+            Exit();
+            
             stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
         }
 
@@ -57,7 +72,7 @@ namespace BrunoMikoski.Core.StateMachines
         }
         
 #if UNITASK_AVAILABLE
-        protected virtual UniTaskVoid Enter_Async()
+        protected virtual UniTaskVoid Enter_Async(CancellationTokenSource cancellationToken)
         {
             return default;
         }
@@ -66,13 +81,6 @@ namespace BrunoMikoski.Core.StateMachines
         protected virtual void Exit()
         {
         }
-        
-#if UNITASK_AVAILABLE
-        protected virtual UniTaskVoid Exit_Async()
-        {
-            return default;
-        }
-#endif
 
         internal virtual void Update()
         {
