@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.GUIUtils
 {
-	public class ItemDictionaryGUI<TItemIDType, TItemGUI> : MonoBehaviour
+    public class ItemDictionaryGUI<TItemIDType, TItemGUI> : MonoBehaviour
         where TItemGUI : Component, IItemGUI<TItemIDType>
     {
         [Header("References")]
@@ -14,6 +14,10 @@ namespace BrunoMikoski.Core.GUIUtils
         [Header("Settings")]
         [SerializeField]
         private bool usePool = true;
+        protected bool UsePool => usePool;
+        [SerializeField] 
+        protected int initialPoolSize;
+
         
         public TItemGUI LastClickedGUI { get; private set; }
 
@@ -25,7 +29,7 @@ namespace BrunoMikoski.Core.GUIUtils
 
         public int Count => Items.Count;
 
-        public void ShowAll()
+        public virtual void ShowAll()
         {
             foreach (TItemGUI item in Items.Values)
             {
@@ -33,7 +37,7 @@ namespace BrunoMikoski.Core.GUIUtils
             }
         }
 
-        public void HideAll()
+        public virtual void HideAll()
         {
             foreach (TItemGUI item in Items.Values)
             {
@@ -50,7 +54,6 @@ namespace BrunoMikoski.Core.GUIUtils
             }
 
             TItemGUI item = SpawnItem(itemId);
-            SetItemParent(item);
             item.Initialize(itemId);
 
             item.gameObject.SetActive(activated);
@@ -63,21 +66,16 @@ namespace BrunoMikoski.Core.GUIUtils
         {
             TItemGUI spawnItem;
             if (usePool)
-                spawnItem = SimplePool.Spawn(itemTemplate);
+                spawnItem = SimplePool.Spawn(itemTemplate, itemTemplate.transform.parent);
             else
-                spawnItem = Instantiate(itemTemplate);
+                spawnItem = Instantiate(itemTemplate, itemTemplate.transform.parent);
             
             spawnItem.transform.localScale = Vector3.one;
             spawnItem.transform.localPosition = Vector3.zero;
             return spawnItem;
         }
 
-        protected virtual void SetItemParent(TItemGUI item)
-        {
-            item.transform.SetParent(itemTemplate.transform.parent, false);
-        }
-
-        protected bool RemoveItem(TItemIDType itemId)
+        protected virtual bool RemoveItem(TItemIDType itemId)
         {
             if (!items.ContainsKey(itemId))
                 return false;
@@ -121,19 +119,28 @@ namespace BrunoMikoski.Core.GUIUtils
             }
         }
 
-        private void DisableTemplate()
+        protected virtual void DisableTemplate()
         {
             itemTemplate.gameObject.SetActive(false);
         }
 
-        private void Initialize()
+        protected virtual void Initialize()
         {
             if (isInitialized)
                 return;
 
             DisableTemplate();
+            CreatePools();
 
             isInitialized = true;
+        }
+
+        protected virtual void CreatePools()
+        {
+            if (!usePool)
+                return;
+
+            SimplePool.Preload(itemTemplate, initialPoolSize);
         }
 
         protected virtual void OnItemClick(TItemGUI itemGUI)
