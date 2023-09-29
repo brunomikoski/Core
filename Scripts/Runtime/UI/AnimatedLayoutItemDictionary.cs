@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
+using BrunoMikoski.Core.CustomEasing;
 using BrunoMikoski.Pooling;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.GUIUtils
 {
-    public class AnimatedLayoutItemDictionary<TItemIDType, TItemGUI> : ItemDictionaryGUI<TItemIDType, TItemGUI>
-        where TItemGUI : Component, IItemGUI<TItemIDType>
+    public class AnimatedLayoutItemDictionary<T, TGUI> : ItemDictionaryGUI<T, TGUI> where TGUI : Component, IItemGUI<T>
     {
         [Header("References")] 
         [SerializeField]
@@ -15,14 +15,14 @@ namespace BrunoMikoski.Core.GUIUtils
         [SerializeField]
         private float moveSpeed;
 
-        private Dictionary<TItemGUI, RectTransform> itemToLayoutItem = new();
+        private Dictionary<TGUI, RectTransform> itemToLayoutItem = new();
+        private HashSet<TGUI> staticItems = new();
 
-
-        public override void Populate(IList<TItemIDType> collection, bool activated = true)
+        public override void Populate(IList<T> collection, bool activated = true)
         {
             for (int i = 0; i < collection.Count; i++)
             {
-                TItemIDType itemIDType = collection[i];
+                T itemIDType = collection[i];
                 if (items.ContainsKey(itemIDType))
                     continue;
 
@@ -51,9 +51,9 @@ namespace BrunoMikoski.Core.GUIUtils
                 SimplePool.Preload(layoutElementTemplate, initialPoolSize);
         }
 
-        public override TItemGUI AddItem(TItemIDType itemId, bool activated = true)
+        public override TGUI AddItem(T itemId, bool activated = true)
         {
-            TItemGUI baseItem = base.AddItem(itemId, activated);
+            TGUI baseItem = base.AddItem(itemId, activated);
 
             if (itemToLayoutItem.TryGetValue(baseItem, out RectTransform layoutElement))
             {
@@ -68,7 +68,7 @@ namespace BrunoMikoski.Core.GUIUtils
             return baseItem;
         }
 
-        protected override bool RemoveItem(TItemIDType itemId)
+        protected override bool RemoveItem(T itemId)
         {
             bool removed =  base.RemoveItem(itemId);
             if (!removed)
@@ -104,6 +104,18 @@ namespace BrunoMikoski.Core.GUIUtils
             return item;
         }
 
+        public void SetAnimationEnabled(T itemId, bool isEnabled)
+        {
+            if (!Items.ContainsKey(itemId)) 
+                return;
+
+            if (isEnabled)
+                staticItems.Remove(Items[itemId]);
+            else 
+                staticItems.Add(Items[itemId]);
+                
+        }
+
         private void Update()
         {
             MoveObjects();
@@ -113,7 +125,11 @@ namespace BrunoMikoski.Core.GUIUtils
         {
             foreach (var itemToLayout in itemToLayoutItem)
             {
-                itemToLayout.Key.transform.position = Vector3.Lerp(itemToLayout.Key.transform.position, itemToLayout.Value.position, Time.deltaTime * moveSpeed);
+                if (staticItems.Contains(itemToLayout.Key))
+                    continue;
+                
+                itemToLayout.Key.transform.position = Vector3.Lerp(itemToLayout.Key.transform.position, itemToLayout.Value.position,
+                    Easing.Elastic.Out(Time.deltaTime * moveSpeed));
             }
         }
     }

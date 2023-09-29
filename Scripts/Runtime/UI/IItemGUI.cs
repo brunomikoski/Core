@@ -1,8 +1,8 @@
 namespace BrunoMikoski.Core.GUIUtils
 {
-    public interface IItemGUI<TItemIDType>
+    public interface IItemGUI<T>
     {
-        void Initialize(TItemIDType targetItem);
+        void Initialize(T targetItem);
     }
 }
 
