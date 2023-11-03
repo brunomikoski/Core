@@ -21,6 +21,9 @@ namespace BrunoMikoski.Core.StateMachines
 
         private void OnEnable()
         {
+            if (target == null)
+                return;
+            
             stateMachine = (StateMachineBase) target;
 
             if (!PrefabUtility.IsPartOfAnyPrefab(target))
