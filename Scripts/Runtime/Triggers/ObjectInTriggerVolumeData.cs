@@ -5,7 +5,6 @@ using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core.PhysX
 {
-    [Serializable]
     public struct ObjectInTriggerVolumeData : IDisposable, IEquatable<ObjectInTriggerVolumeData>
     {
         [SerializeField]
