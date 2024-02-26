@@ -23,12 +23,8 @@ namespace BrunoMikoski.Core.UI
                 
                 if (transferWindowsToMainService)
                     windowsManager.InitializeHierarchyWindows(transform);
-                
-                //Destroying parent to take care of the camera as well.
-                if(transform.parent.GetComponentInChildren<Camera>() != null)
-                    Destroy(transform.parent.gameObject);
-                else
-                    Destroy(gameObject);
+
+                Destroy(transform.parent.gameObject);
             }
         }
 
