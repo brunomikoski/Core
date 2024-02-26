@@ -21,7 +21,7 @@ namespace BrunoMikoski.Core
 
         private static void OnPlayModeStateChanged(PlayModeStateChange stateChange)
         {
-            if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap 
+            if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap
                 || !EditorBootstrapSettings.Instance.HasBootstrapSetup()
                 || IsCurrentlyAtUntitledScene())
             {
@@ -31,14 +31,13 @@ namespace BrunoMikoski.Core
                 return;
             }
 
-            SceneAsset bootstrapScene =
-                AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(EditorBootstrapSettings.Instance.BootStrapSceneGuid));
-
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
+                SceneAsset bootstrapScene =
+                    AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(EditorBootstrapSettings.Instance.BootStrapSceneGuid));
+
                 SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
                 SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
-
 
                 if (EditorBuildSettings.scenes.Length > 0 &&
                     IsSceneAlreadyOpen(Path.GetFileNameWithoutExtension(EditorBuildSettings.scenes[0].path)))
@@ -56,7 +55,7 @@ namespace BrunoMikoski.Core
                 }
 
                 EditorSceneManager.playModeStartScene = bootstrapScene == null ? null : bootstrapScene;
-                
+
                 string storageStringOpenScenes = "";
                 Scene activeScene = SceneManager.GetActiveScene();
                 if (!activeScene.name.Equals(bootstrapScene.name, StringComparison.Ordinal))
@@ -85,7 +84,7 @@ namespace BrunoMikoski.Core
                     SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
                     return;
                 }
-                
+
                 SceneManager.sceneLoaded -= OnSceneLoaded;
                 SceneManager.sceneLoaded += OnSceneLoaded;
 
@@ -117,7 +116,8 @@ namespace BrunoMikoski.Core
                         dispatchedCompleteEvent = true;
                     }
                 }
-                if(!dispatchedCompleteEvent)
+
+                if (!dispatchedCompleteEvent)
                     EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
             }
         }
