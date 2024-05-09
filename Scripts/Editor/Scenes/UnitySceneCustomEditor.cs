@@ -110,7 +110,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                     else
                         ScenePickerToolbar.ShowAtScenePicker(scenePathProperty.stringValue);
                 });
-            
+                
                 menu.ShowAsContext();
                 
             }

@@ -1,13 +1,11 @@
-using System;
-using System.Linq;
+﻿using System;
 using System.Reflection;
-using UnityEditor;
 using UnityEditor.Toolbars;
 using UnityEngine;
 using UnityEngine.UIElements;
-using VisualElement = UnityEngine.UIElements.VisualElement;
+using Object = UnityEngine.Object;
 
-namespace BrunoMikoski.Core.SelectionHistory
+namespace BrunoMikoski.Core.Utils
 {
     public static class UnityMainToolbarUtility
     {
@@ -29,40 +27,33 @@ namespace BrunoMikoski.Core.SelectionHistory
         private static VisualElement LEFT_ZONE_ROOT;
         private static VisualElement RIGHT_ZONE_ROOT;
 
-        private static VisualElement MainToolbarRoot => FetchMainToolbarRoot();
-        private static VisualElement CenterRoot => FetchPlaymodeButtonsRoot();
-        private static VisualElement LeftRoot => FetchZoneLeftRoot();
-        private static VisualElement RightRoot => FetchZoneRightRoot();
         
-        public static int GetCurrentToolbarVersion() => MainToolbarRoot.GetHashCode();
+        private static Type ToolbarType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.Toolbar");
+
 
         private static Func<object> toolbarGetter;
         private static Func<object, VisualElement> rootGetter;
-
-        public static void RemoveStockButton(string name)
-        {
-            MainToolbarRoot.Q<VisualElement>(name).RemoveFromHierarchy();
-        }
-
-        public static void RemovePlasticSCMButton()
-        {
-            LeftRoot.Q(className: "unity-imgui-container").RemoveFromHierarchy();
-        }
+        private static bool initialized;
+        
+        private static VisualElement leftZoneRootVisualElement;
+        private static VisualElement rightZoneRootVisualElement;
+        private static VisualElement rootVisualElement;
 
         public static void AddCustom(TargetContainer container, Side side, VisualElement custom)
         {
+            Initialize();
             VisualElement containerElement;
 
             switch (container)
             {
                 case TargetContainer.Left:
-                    containerElement = LeftRoot;
+                    containerElement = leftZoneRootVisualElement;
                     break;
                 case TargetContainer.Right:
-                    containerElement = RightRoot;
+                    containerElement = rightZoneRootVisualElement;
                     break;
                 case TargetContainer.Center:
-                    containerElement = CenterRoot;
+                    containerElement = rootVisualElement;
                     break;
                 default:
                     throw new NotSupportedException();
@@ -82,6 +73,8 @@ namespace BrunoMikoski.Core.SelectionHistory
         public static EditorToolbarButton AddButton(TargetContainer container, Side side, string name, Texture2D icon,
             Action<MouseUpEvent> callback)
         {
+            Initialize();
+            
             EditorToolbarButton button = new EditorToolbarButton()
             {
                 name = name,
@@ -93,13 +86,13 @@ namespace BrunoMikoski.Core.SelectionHistory
             switch (container)
             {
                 case TargetContainer.Left:
-                    containerElement = LeftRoot;
+                    containerElement = leftZoneRootVisualElement;
                     break;
                 case TargetContainer.Right:
-                    containerElement = RightRoot;
+                    containerElement = rightZoneRootVisualElement;
                     break;
                 case TargetContainer.Center:
-                    containerElement = CenterRoot;
+                    containerElement = rootVisualElement;
                     break;
                 default:
                     throw new NotSupportedException();
@@ -120,37 +113,24 @@ namespace BrunoMikoski.Core.SelectionHistory
             return button;
         }
 
-
-        private static VisualElement FetchZoneLeftRoot()
+        private static void Initialize()
         {
-            return MainToolbarRoot.Q<VisualElement>("ToolbarZoneLeftAlign");
-        }
+            if (initialized)
+                return;
+            
+            Object[] toolbars = Resources.FindObjectsOfTypeAll(ToolbarType);
 
-        private static VisualElement FetchZoneRightRoot()
-        {
-            return MainToolbarRoot.Q<VisualElement>("ToolbarZoneRightAlign");
-        }
-
-
-        private static VisualElement FetchMainToolbarRoot()
-        {
-            if (toolbarGetter == null || rootGetter == null)
-            {
-                Type type = TypeCache.GetTypesDerivedFrom<object>().First(x => x.FullName == "UnityEditor.Toolbar");
-                type.GetField("get", BindingFlags.Static | BindingFlags.Public)
-                    .CreateFieldAccessDelegate(out toolbarGetter);
-                FieldInfo rootGetterField = type.GetField("m_Root", BindingFlags.Instance | BindingFlags.NonPublic);
-                rootGetterField.CreateFieldAccessDelegate(out rootGetter);
-            }
-
-            object toolbar = toolbarGetter();
-            VisualElement root = rootGetter(toolbar);
-            return root;
-        }
-
-        private static VisualElement FetchPlaymodeButtonsRoot()
-        {
-            return MainToolbarRoot.Q<EditorToolbarToggle>("Play").parent;
+            if (toolbars.Length == 0)
+                return;
+            
+            Object toolbar = toolbars[0];
+            
+            FieldInfo rootField = toolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance);
+            rootVisualElement = rootField.GetValue(toolbar) as VisualElement;
+            leftZoneRootVisualElement = rootVisualElement.Q<VisualElement>("ToolbarZoneLeftAlign");
+            rightZoneRootVisualElement = rootVisualElement.Q<VisualElement>("ToolbarZoneLeftAlign");
+            
+            initialized = true;
         }
     }
 }
