@@ -28,7 +28,12 @@ namespace BrunoMikoski.Core.Routines
             if (isQuitting)
                 return;
 
+#if UNITY_6000_0_OR_NEWER
+            ROUTINE_RUNNER = Object.FindFirstObjectByType<CoroutineRunnerMonoBehaviour>();
+#else
             ROUTINE_RUNNER = Object.FindObjectOfType<CoroutineRunnerMonoBehaviour>();
+#endif
+
             if (ROUTINE_RUNNER == null)
             {
                 GameObject coroutineGameObject = new(nameof(CoroutineRunnerMonoBehaviour));

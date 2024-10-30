@@ -33,6 +33,11 @@
             "name": "com.cysharp.unitask",
             "expression": "",
             "define": "UNITASK_AVAILABLE"
+        },
+        {
+            "name": "com.vertx.debugging",
+            "expression": "",
+            "define": "VERTX_DEBUG_ENABLED"
         }
     ],
     "noEngineReferences": false

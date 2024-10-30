@@ -180,8 +180,13 @@ namespace BrunoMikoski.Core.PhysX
 
         private bool CheckConditions(Rigidbody2D targetRigidbody)
         {
+#if UNITY_6000_0_OR_NEWER
+            if (!allowKinematics && targetRigidbody.bodyType == RigidbodyType2D.Kinematic)
+                return false;
+#else
             if (!allowKinematics && targetRigidbody.isKinematic)
                 return false;
+#endif
 
             if (ShouldIgnore(targetRigidbody.transform))
                 return false;

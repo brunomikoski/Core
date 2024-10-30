@@ -18,7 +18,6 @@
     "url": "https://www.brunomikoski.com"
   },
   "dependencies": {
-    "com.vertx.debugging": "2.1.4",
     "com.brunomikoski.scriptableobjectcollection": "2.0.4",
     "com.brunomikoski.servicelocator": "1.0.2",
     "com.brunomikoski.simplepool": "1.0.0"
