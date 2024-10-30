@@ -1,5 +1,5 @@
 using UnityEngine;
-#if UNITY_EDITOR && !FORCE_REGULAR_PHYSICS
+#if UNITY_EDITOR && VERTX_DEBUG_ENABLED
 using Physics = Vertx.Debugging.DrawPhysics;
 #endif
 
