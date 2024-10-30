@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Timers;
-using DG.Tweening;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
