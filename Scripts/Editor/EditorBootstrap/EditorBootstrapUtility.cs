@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Build.Content;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,6 +13,7 @@ namespace BrunoMikoski.Core
     {
         private const string EDITOR_BOOTSTRAP_OPEN_SCENES_KEY = "EditorBootstrap_OpenScenes";
         private const string EDITOR_BOOT_SKIP_KEY = "EDITOR_SCENE_SKIP";
+        private const string EDITOR_SCENE_SETUP_SNAPSHOT_KEY = "EDITOR_SCENE_SETUP_SNAPSHOT";
 
         [InitializeOnLoadMethod]
         private static void Initialize()
@@ -23,9 +26,10 @@ namespace BrunoMikoski.Core
         {
             if (!EditorBootstrapSettings.Instance.LoadOpenScenesAfterBootstrap
                 || !EditorBootstrapSettings.Instance.HasBootstrapSetup()
-                || IsCurrentlyAtUntitledScene())
+                || IsCurrentlyAtUntitledScene()
+                || EditorSceneManager.playModeStartScene != null
+                || IsPlayingFromFirstSceneOnBootSettings())
             {
-                EditorSceneManager.playModeStartScene = null;
                 SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
                 SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
                 return;
@@ -33,93 +37,127 @@ namespace BrunoMikoski.Core
 
             if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
-                SceneAsset bootstrapScene =
-                    AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(EditorBootstrapSettings.Instance.BootStrapSceneGuid));
+                SceneSetup sceneSetupSnapshot = GetCurrentSceneSetupSnapshot();
 
-                SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
-                SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
-
-                if (EditorBuildSettings.scenes.Length > 0 &&
-                    IsSceneAlreadyOpen(Path.GetFileNameWithoutExtension(EditorBuildSettings.scenes[0].path)))
+                for (int i = 0; i < EditorBootstrapSettings.Instance.BootStrapScenesGuid.Count; i++)
                 {
-                    EditorSceneManager.playModeStartScene = null;
-                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+                    string boostrapSceneGUID = EditorBootstrapSettings.Instance.BootStrapScenesGuid[i];
+                    string scenePath = AssetDatabase.GUIDToAssetPath(boostrapSceneGUID);
+                    SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+                    if (sceneAsset == null)
+                        continue;
 
+                    if (IsSceneAlreadyOpen(sceneAsset.name))
+                        continue;
+
+                    EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+                    SceneManager.SetActiveScene(GetSceneByName(sceneAsset.name));
+                    sceneSetupSnapshot.LoadedBootstrapSceneGuids.Add(boostrapSceneGUID);
+                }
+
+                SceneAsset lastAutomaticallyLoadedScene =
+                    AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(sceneSetupSnapshot.LoadedBootstrapSceneGuids[^1]));
+
+                foreach (string originalLoadedSceneGUID in sceneSetupSnapshot.OriginalLoadedScenesGuids)
+                {
+                    SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(originalLoadedSceneGUID));
+                    EditorSceneManager.MoveSceneAfter(GetSceneByName(sceneAsset.name), GetSceneByName(lastAutomaticallyLoadedScene.name));
+                }
+
+                SessionState.EraseString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY);
+
+                if (sceneSetupSnapshot.LoadedBootstrapSceneGuids.Count == 0)
+                {
                     return;
                 }
 
-                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-                {
-                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
-                    return;
-                }
-
-                EditorSceneManager.playModeStartScene = bootstrapScene == null ? null : bootstrapScene;
-
-                string storageStringOpenScenes = "";
-                Scene activeScene = SceneManager.GetActiveScene();
-                if (!activeScene.name.Equals(bootstrapScene.name, StringComparison.Ordinal))
-                    storageStringOpenScenes = $"{activeScene.name}";
-
-                for (int i = 0; i < SceneManager.sceneCount; i++)
-                {
-                    Scene scene = SceneManager.GetSceneAt(i);
-                    if (scene.buildIndex == activeScene.buildIndex)
-                        continue;
-
-                    if (scene.name.Equals(bootstrapScene.name, StringComparison.Ordinal))
-                        continue;
-
-                    storageStringOpenScenes += $", {scene.name}";
-                }
-
-                SessionState.SetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, storageStringOpenScenes);
                 SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, true);
+                SessionState.SetString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY, JsonUtility.ToJson(sceneSetupSnapshot));
             }
             else if (stateChange == PlayModeStateChange.EnteredPlayMode)
             {
-                string scenes = SessionState.GetString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY, "");
-                if (string.IsNullOrEmpty(scenes))
-                {
-                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+                string storedSessionJson = SessionState.GetString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY, "");
+                if (string.IsNullOrEmpty(storedSessionJson))
                     return;
-                }
 
-                SceneManager.sceneLoaded -= OnSceneLoaded;
-                SceneManager.sceneLoaded += OnSceneLoaded;
-
-                string[] scenesToOpen = scenes.Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-                bool dispatchedCompleteEvent = false;
-                for (int i = scenesToOpen.Length - 1; i >= 0; i--)
-                {
-                    string sceneToOpen = scenesToOpen[i];
-
-                    if (IsSceneAlreadyOpen(sceneToOpen))
-                        continue;
-
-                    SceneManager.LoadScene(sceneToOpen, LoadSceneMode.Additive);
-
-                    if (i == 0)
-                    {
-                        void SceneManagerOnSceneLoaded(Scene arg0, LoadSceneMode arg1)
-                        {
-                            if (arg0.name.Equals(sceneToOpen, StringComparison.Ordinal))
-                            {
-                                SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
-                                EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
-                            }
-                        }
-
-                        SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
-                        SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
-                        dispatchedCompleteEvent = true;
-                    }
-                }
-
-                if (!dispatchedCompleteEvent)
-                    EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
+                SceneSetup sceneSetupSnapshot = JsonUtility.FromJson<SceneSetup>(storedSessionJson);
+                SceneManager.SetActiveScene(GetSceneByName(sceneSetupSnapshot.ActiveSceneName));
+                EditorBootstrap.OnEditorBootstrapCompleteEvent?.Invoke();
             }
+            else if (stateChange == PlayModeStateChange.EnteredEditMode)
+            {
+                string storedSessionJson = SessionState.GetString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY, "");
+                if (string.IsNullOrEmpty(storedSessionJson))
+                    return;
+
+                SceneSetup sceneSetupSnapshot = JsonUtility.FromJson<SceneSetup>(storedSessionJson);
+
+                for (int i = 0; i < sceneSetupSnapshot.LoadedBootstrapSceneGuids.Count; i++)
+                {
+                    string loadedBootstrapSceneGuid = sceneSetupSnapshot.LoadedBootstrapSceneGuids[i];
+                    string scenePath = AssetDatabase.GUIDToAssetPath(loadedBootstrapSceneGuid);
+                    SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+                    if (sceneAsset == null)
+                        continue;
+                    EditorSceneManager.CloseScene(GetSceneByName(sceneAsset.name), true);
+                }
+
+                SceneManager.SetActiveScene(GetSceneByName(sceneSetupSnapshot.ActiveSceneName));
+                SessionState.EraseString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY);
+            }
+        }
+
+        private static Scene GetSceneByName(string targetName)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.name.Equals(targetName, StringComparison.Ordinal))
+                    return scene;
+            }
+
+            return default;
+        }
+
+        [Serializable]
+        private class SceneSetup
+        {
+            [SerializeField]
+            internal string ActiveSceneName = string.Empty;
+            [SerializeField]
+            internal List<string> OriginalLoadedScenesGuids = new();
+            [SerializeField]
+            internal List<string> LoadedBootstrapSceneGuids = new List<string>();
+        }
+
+        private static SceneSetup GetCurrentSceneSetupSnapshot()
+        {
+            SceneSetup sceneSetup = new SceneSetup();
+
+            for (int i = 0; i < EditorSceneManager.loadedRootSceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.isLoaded)
+                {
+                    if (scene == SceneManager.GetActiveScene())
+                        sceneSetup.ActiveSceneName = scene.name;
+
+                    sceneSetup.OriginalLoadedScenesGuids.Add(AssetDatabase.AssetPathToGUID(scene.path));
+                }
+            }
+            return sceneSetup;
+        }
+
+        private static bool IsPlayingFromFirstSceneOnBootSettings()
+        {
+            Scene currentActiveScene = SceneManager.GetActiveScene();
+            if (string.Equals(currentActiveScene.path, EditorBuildSettings.scenes[0].path,
+                    StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return false;
         }
 
 
