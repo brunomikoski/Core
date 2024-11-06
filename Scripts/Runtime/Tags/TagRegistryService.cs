@@ -7,7 +7,7 @@ namespace BrunoMikoski.Core
     public class TagRegistryService
     {
         private const int INITIAL_SIZE = 100;
-        private List<TagController> tagControllers = new List<TagController>(INITIAL_SIZE);
+        private List<TagController> tagControllers = new(INITIAL_SIZE);
         
         
         public void RegisterTagController(TagController tagController)
