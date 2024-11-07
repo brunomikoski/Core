@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.PhysX
 {
+
     [AddComponentMenu("Triggers/Sphere Trigger Volume")]
     public sealed class SphereTriggerVolume : TriggerVolumeBase
     {
@@ -12,18 +13,20 @@ namespace BrunoMikoski.Core.PhysX
 
         public float Size => size;
 
+        public SphereCollider SphereCollider => (SphereCollider) TriggerCollider;
+
         protected override void CreateTriggerCollider()
         {
             CreateCollider<SphereCollider>();
+
             UpdateSphereDimensions();
         }
 
         private void UpdateSphereDimensions()
         {
-            SphereCollider sphereCollider = (SphereCollider) TriggerCollider;
-            float newRadius = size * 0.5f;
-            if (!Mathf.Approximately(newRadius, sphereCollider.radius))
-                sphereCollider.radius = newRadius;
+            float newRadius = size;
+            if (!Mathf.Approximately(newRadius, SphereCollider.radius))
+                SphereCollider.radius = newRadius;
         }
 
         public override Vector3 GetTriggerOrigin()
