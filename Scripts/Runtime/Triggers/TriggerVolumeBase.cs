@@ -15,6 +15,9 @@ namespace BrunoMikoski.Core.PhysX
         [SerializeField] 
         private bool allowKinematics = true;
 
+        [SerializeField]
+        private LayerMask layerMask = Physics.AllLayers;
+
         protected GameObject triggerChild;
         private Collider triggerCollider;
         public Collider TriggerCollider
@@ -337,6 +340,11 @@ namespace BrunoMikoski.Core.PhysX
             }
 
             if (transform.IsChildOf(other) || other.IsChildOf(transform))
+            {
+                return false;
+            }
+
+            if (!other.gameObject.IsInLayerMask(layerMask))
             {
                 return false;
             }
