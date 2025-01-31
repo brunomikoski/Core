@@ -103,9 +103,9 @@ namespace BrunoMikoski.Core.ScenesReferences
                     });
                 }
             
-                menu.AddItem(new GUIContent("Show at the scene picker"), ScenePickerToolbar.IsShowingAtScenePicker(scenePathProperty.stringValue), () =>
+                menu.AddItem(new GUIContent("Show at the scene picker"), !ScenePickerToolbar.IsHiddenFromScenePicker(scenePathProperty.stringValue), () =>
                 {
-                    if (ScenePickerToolbar.IsShowingAtScenePicker(scenePathProperty.stringValue))
+                    if (!ScenePickerToolbar.IsHiddenFromScenePicker(scenePathProperty.stringValue))
                         ScenePickerToolbar.HideFromScenePicker(scenePathProperty.stringValue);
                     else
                         ScenePickerToolbar.ShowAtScenePicker(scenePathProperty.stringValue);

@@ -4,6 +4,7 @@ using System.Linq;
 using BrunoMikoski.Core.Utils;
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -54,7 +55,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                 UnityMainToolbarUtility.Side.Right, parent);
         }
         
-        public static bool IsShowingAtScenePicker(string scenePath)
+        public static bool IsHiddenFromScenePicker(string scenePath)
         {
             string hiddenPickerList = EditorPrefs.GetString(HIDE_FROM_SCENE_PICKER_KEY, "");
             string[] hiddenPickerListArray = hiddenPickerList.Split(",", StringSplitOptions.RemoveEmptyEntries);
@@ -62,10 +63,10 @@ namespace BrunoMikoski.Core.ScenesReferences
             {
                 string hiddenPath = hiddenPickerListArray[i];
                 if (hiddenPath.Equals(scenePath, StringComparison.Ordinal))
-                    return false;
+                    return true;
             }
 
-            return true;
+            return false;
         }
 
         public static void HideFromScenePicker(string scenePath)
@@ -117,24 +118,72 @@ namespace BrunoMikoski.Core.ScenesReferences
  
             void HandleItemClicked(object parameter)
             {
-                UnityScene unityScene = (UnityScene) parameter;
-                if (unityScene.IsLoaded())
+                if (parameter is UnityScene unityScene)
                 {
-                    if(CanUnload())
-                       unityScene.Unload();
+                    if (unityScene.IsLoaded())
+                    {
+                        if(CanUnload())
+                            unityScene.Unload();
+                    }
+                    else
+                    {
+                        unityScene.Load();
+                    }
                 }
-                else
-                    unityScene.Load();
+                else if (parameter is Scene scene)
+                {
+                    if (scene.isLoaded)
+                    {
+                        if (CanUnload())
+                        {
+                            if (EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new Scene[] { scene }))
+                            {
+                                EditorSceneManager.CloseScene(scene, true);
+                            }
+                        }
+                        else
+                        {
+                            EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Additive);
+                        }
+                    }
+
+                }
             }
  
             GenericMenu menu = new();
             for (int i = 0; i < SCENES_COLLECTION.Count; i++)
             {
                 UnityScene unityScene = SCENES_COLLECTION[i];
-                if (!IsShowingAtScenePicker(unityScene.ScenePath))
+                if (IsHiddenFromScenePicker(unityScene.ScenePath))
                     continue;
                 
                 menu.AddItem(new GUIContent(unityScene.name), unityScene.IsLoaded(), HandleItemClicked, unityScene);
+            }
+
+            bool addedSeparator = false;
+
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene openScene = SceneManager.GetSceneAt(i);
+                if (SCENES_COLLECTION.Any(scene => scene.Scene == openScene))
+                    continue;
+
+                if (IsHiddenFromScenePicker(openScene.path))
+                    continue;
+
+                if (!addedSeparator)
+                {
+                    menu.AddSeparator("");
+                    addedSeparator = true;
+                }
+
+                string openSceneName = openScene.name;
+                if (string.IsNullOrEmpty(openSceneName))
+                {
+                    openSceneName = $"Untitled Scene {i}";
+                }
+
+                menu.AddItem(new GUIContent(openSceneName), true, HandleItemClicked, openScene);
             }
 
             menu.DropDown(EditorGUILayout.GetControlRect());
