@@ -15,23 +15,20 @@ namespace BrunoMikoski.Core.ScenesReferences
     public class ScenePickerToolbar
     {
         public const string HIDE_FROM_SCENE_PICKER_KEY = "HIDE_FROM_SCENE_PICKER_KEY";
-
         private static UnityScenesCollection SCENES_COLLECTION;
         private static GUIContent SCENE_ICON;
-        private static GUIStyle GUI_STYLE;
 
         [InitializeOnLoadMethod]
         private static void InitializeOnLoadMethod()
         {
             SCENE_ICON = EditorGUIUtility.IconContent("d_SceneAsset Icon");
             SCENE_ICON.text = "Scenes";
-            
             EditorApplication.delayCall += Initialize;
         }
-        
+
         private static void Initialize()
         {
-            VisualElement parent = new VisualElement()
+            VisualElement parent = new VisualElement
             {
                 style =
                 {
@@ -40,158 +37,176 @@ namespace BrunoMikoski.Core.ScenesReferences
                 },
             };
 
-            parent.Add(new VisualElement()
+            // Optional filler element to push our control to the right.
+            parent.Add(new VisualElement { style = { flexGrow = 1 } });
+
+            // Create a ToolbarMenu that will serve as our scene picker.
+            ToolbarMenu scenePickerMenu = new ToolbarMenu
+            {
+                tooltip = "Click to see available scenes",
+            };
+
+            // Build a content container with an icon and label.
+            VisualElement content = new VisualElement
             {
                 style =
                 {
-                    flexGrow = 1,
-                },
-            });
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                }
+            };
+            VisualElement iconElement = new VisualElement();
+            iconElement.style.backgroundImage = new StyleBackground((Texture2D)SCENE_ICON.image);
+            iconElement.style.width = 16;
+            iconElement.style.height = 16;
+            iconElement.style.marginRight = 4;
+            content.Add(iconElement);
+            Label label = new Label(SCENE_ICON.text);
+            content.Add(label);
+            scenePickerMenu.Add(content);
 
-            parent.Add(new ToolbarSpacer());
-            parent.Add(new IMGUIContainer(DropDownIMGUI));
+            ApplyToolbarStyle(scenePickerMenu);
+
+            scenePickerMenu.RegisterCallback<MouseUpEvent>(e =>
+            {
+                if (e.button == 0)
+                    ShowScenesMenu(scenePickerMenu);
+            });
+            parent.Add(scenePickerMenu);
 
             UnityMainToolbarUtility.AddCustom(UnityMainToolbarUtility.TargetContainer.Left,
                 UnityMainToolbarUtility.Side.Right, parent);
         }
-        
+
         public static bool IsHiddenFromScenePicker(string scenePath)
         {
             string hiddenPickerList = EditorPrefs.GetString(HIDE_FROM_SCENE_PICKER_KEY, "");
-            string[] hiddenPickerListArray = hiddenPickerList.Split(",", StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < hiddenPickerListArray.Length; i++)
+            string[] hiddenPickerListArray = hiddenPickerList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string hiddenPath in hiddenPickerListArray)
             {
-                string hiddenPath = hiddenPickerListArray[i];
                 if (hiddenPath.Equals(scenePath, StringComparison.Ordinal))
                     return true;
             }
-
             return false;
         }
 
         public static void HideFromScenePicker(string scenePath)
         {
             string hiddenPickerList = EditorPrefs.GetString(HIDE_FROM_SCENE_PICKER_KEY, "");
-            string[] hiddenPickerListArray = hiddenPickerList.Split(",", StringSplitOptions.RemoveEmptyEntries);
+            string[] hiddenPickerListArray = hiddenPickerList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             Array.Resize(ref hiddenPickerListArray, hiddenPickerListArray.Length + 1);
             hiddenPickerListArray[^1] = scenePath;
             EditorPrefs.SetString(HIDE_FROM_SCENE_PICKER_KEY, string.Join(",", hiddenPickerListArray));
         }
-        
+
         public static void ShowAtScenePicker(string scenePath)
         {
             string hiddenPickerList = EditorPrefs.GetString(HIDE_FROM_SCENE_PICKER_KEY, "");
-            List<string> hiddenPickerListArray = hiddenPickerList.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            List<string> hiddenPickerListArray = hiddenPickerList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             for (int i = hiddenPickerListArray.Count - 1; i >= 0; i--)
             {
-                string ignoredScenePath = hiddenPickerListArray[i];
-                if (ignoredScenePath.Equals(scenePath, StringComparison.Ordinal))
+                if (hiddenPickerListArray[i].Equals(scenePath, StringComparison.Ordinal))
                 {
                     hiddenPickerListArray.RemoveAt(i);
                     break;
                 }
             }
-
             EditorPrefs.SetString(HIDE_FROM_SCENE_PICKER_KEY, string.Join(",", hiddenPickerListArray));
         }
 
-
-        private static void DropDownIMGUI()
+        private static void ShowScenesMenu(ToolbarMenu menu)
         {
             if (!CollectionsRegistry.Instance.TryGetCollectionOfType(out SCENES_COLLECTION))
                 return;
 
-            if (GUI_STYLE == null && EditorStyles.toolbarPopup != null)
-            {
-                GUI_STYLE = new GUIStyle(EditorStyles.toolbarPopup)
-                {
-                    fixedHeight = 19,
-                    fixedWidth = 100,
-                };
-            }
-            
-            
-            if (!EditorGUILayout.DropdownButton(SCENE_ICON, FocusType.Passive, GUI_STYLE))
-            {
-                return;
-            }
- 
-            void HandleItemClicked(object parameter)
-            {
-                if (parameter is UnityScene unityScene)
-                {
-                    if (unityScene.IsLoaded())
-                    {
-                        if(CanUnload())
-                            unityScene.Unload();
-                    }
-                    else
-                    {
-                        unityScene.Load();
-                    }
-                }
-                else if (parameter is Scene scene)
-                {
-                    if (scene.isLoaded)
-                    {
-                        if (CanUnload())
-                        {
-                            if (EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new Scene[] { scene }))
-                            {
-                                EditorSceneManager.CloseScene(scene, true);
-                            }
-                        }
-                        else
-                        {
-                            EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Additive);
-                        }
-                    }
+            Rect rect = menu.worldBound;
+            GenericMenu genericMenu = new GenericMenu();
 
-                }
-            }
- 
-            GenericMenu menu = new();
+            // Add scenes from the collection.
             for (int i = 0; i < SCENES_COLLECTION.Count; i++)
             {
                 UnityScene unityScene = SCENES_COLLECTION[i];
                 if (IsHiddenFromScenePicker(unityScene.ScenePath))
                     continue;
-                
-                menu.AddItem(new GUIContent(unityScene.name), unityScene.IsLoaded(), HandleItemClicked, unityScene);
+                genericMenu.AddItem(new GUIContent(unityScene.name), unityScene.IsLoaded(), HandleItemClicked, unityScene);
             }
 
             bool addedSeparator = false;
-
+            // Add any open scenes not in the collection.
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene openScene = SceneManager.GetSceneAt(i);
                 if (SCENES_COLLECTION.Any(scene => scene.Scene == openScene))
                     continue;
-
                 if (IsHiddenFromScenePicker(openScene.path))
                     continue;
-
                 if (!addedSeparator)
                 {
-                    menu.AddSeparator("");
+                    genericMenu.AddSeparator("");
                     addedSeparator = true;
                 }
-
-                string openSceneName = openScene.name;
-                if (string.IsNullOrEmpty(openSceneName))
-                {
-                    openSceneName = $"Untitled Scene {i}";
-                }
-
-                menu.AddItem(new GUIContent(openSceneName), true, HandleItemClicked, openScene);
+                string openSceneName = string.IsNullOrEmpty(openScene.name) ? $"Untitled Scene {i}" : openScene.name;
+                genericMenu.AddItem(new GUIContent(openSceneName), true, HandleItemClicked, openScene);
             }
 
-            menu.DropDown(EditorGUILayout.GetControlRect());
+            genericMenu.DropDown(rect);
         }
 
-        private static bool CanUnload()
+        private static void HandleItemClicked(object parameter)
+        {
+            if (parameter is UnityScene unityScene)
+            {
+                if (unityScene.IsLoaded())
+                {
+                    if (CanUnload())
+                        unityScene.Unload();
+                }
+                else
+                {
+                    unityScene.Load();
+                }
+            }
+            else if (parameter is Scene scene)
+            {
+                if (scene.isLoaded)
+                {
+                    if (CanUnload())
+                    {
+                        bool proceed = EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new Scene[] { scene });
+                        if (proceed)
+                        {
+                            EditorSceneManager.CloseScene(scene, true);
+                        }
+                    }
+                    else
+                    {
+                        EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Additive);
+                    }
+                }
+            }
+        }
+
+        public static bool CanUnload()
         {
             return SceneManager.sceneCount > 1;
+        }
+
+        private static void ApplyToolbarStyle(VisualElement element)
+        {
+            element.AddToClassList("unity-toolbar-button");
+            element.AddToClassList("unity-editor-toolbar-element");
+            element.RemoveFromClassList("unity-button");
+            element.style.paddingRight = 8;
+            element.style.paddingLeft = 8;
+            element.style.justifyContent = Justify.Center;
+            element.style.display = DisplayStyle.Flex;
+            element.style.borderTopLeftRadius = 2;
+            element.style.borderTopRightRadius = 2;
+            element.style.borderBottomLeftRadius = 2;
+            element.style.borderBottomRightRadius = 2;
+            element.style.height = 19;
+            element.style.marginRight = 1;
+            element.style.marginLeft = 1;
         }
     }
 }
