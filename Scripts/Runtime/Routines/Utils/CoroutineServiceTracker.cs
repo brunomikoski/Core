@@ -31,20 +31,20 @@ namespace BrunoMikoski.Core.Routines
         {
             RUNNING_ROUTINES.Clear();
         }
-        
+
         public static void TrackRoutine(Routine targetRoutine)
         {
 #if UNITY_EDITOR
-            string stackTrace = new StackTrace(3, true).CleanupAsyncStackTrace() ;
-            
+            string stackTrace = new StackTrace(3, true).CleanupAsyncStackTrace();
+
             RUNNING_ROUTINES.Add(new RoutineData(DateTime.UtcNow, GetFirstLine(stackTrace), stackTrace, targetRoutine));
 #endif
         }
-        
+
         static string GetFirstLine(string str)
         {
             Match match = Regex.Match(str, @"^(.*?\))");
-        
+
             if (match.Success)
             {
                 return match.Groups[1].Value;

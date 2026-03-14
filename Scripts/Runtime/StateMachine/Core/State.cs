@@ -24,9 +24,8 @@ namespace BrunoMikoski.Core.StateMachines
         protected StateID stateID;
         public StateID StateID => stateID;
 
-#if UNITASK_AVAILABLE
         private CancellationTokenSource exitCancellationTokenSource;
-#endif
+        private CancellationTokenSource enterLinkedCancellationTokenSource;
         
         protected StateBase(StateID targetStateID)
         {
@@ -39,13 +38,9 @@ namespace BrunoMikoski.Core.StateMachines
             StateMachineTracker.TrackEnterState(stateMachine, this);
 #endif
             Enter();
-#if UNITASK_AVAILABLE
             exitCancellationTokenSource = new CancellationTokenSource();
-            CancellationTokenSource cancellationToken =
-                CancellationTokenSource.CreateLinkedTokenSource(exitCancellationTokenSource.Token, stateMachine.GetCancellationTokenOnDestroy());
-            
-            Enter_Async(cancellationToken).Forget();
-#endif
+            enterLinkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(exitCancellationTokenSource.Token, stateMachine.GetCancellationTokenOnDestroy());
+            Enter_Async(enterLinkedCancellationTokenSource.Token).Forget();
             stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
         
@@ -54,13 +49,18 @@ namespace BrunoMikoski.Core.StateMachines
 #if UNITY_EDITOR
             StateMachineTracker.TrackExitState(stateMachine, this);
 #endif
-#if UNITASK_AVAILABLE
             if (exitCancellationTokenSource != null)
             {
                 exitCancellationTokenSource.Cancel();
                 exitCancellationTokenSource.Dispose();
+                exitCancellationTokenSource = null;
             }
-#endif
+            if (enterLinkedCancellationTokenSource != null)
+            {
+                enterLinkedCancellationTokenSource.Dispose();
+                enterLinkedCancellationTokenSource = null;
+            }
+            
             Exit();
             
             stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
@@ -71,12 +71,10 @@ namespace BrunoMikoski.Core.StateMachines
         {
         }
         
-#if UNITASK_AVAILABLE
-        protected virtual UniTaskVoid Enter_Async(CancellationTokenSource cancellationToken)
+        protected virtual UniTask Enter_Async(CancellationToken cancellationToken)
         {
-            return default;
+            return UniTask.CompletedTask;
         }
-#endif
 
         protected virtual void Exit()
         {

@@ -13,8 +13,6 @@ namespace BrunoMikoski.Core.Routines
         private void OnDestroy()
         {
             CoroutineRunner.OnRunnerDestroyed();
-
-            CoroutineRunner.StopAll();
         }
     }
 }

@@ -9,6 +9,7 @@ namespace BrunoMikoski.Core.StateMachines
         private TStateID overrideInitialState;
         private TStateID defaultInitialState;
 
+
         private TStateID InitialState
         {
             get
@@ -19,8 +20,13 @@ namespace BrunoMikoski.Core.StateMachines
             }
         }
 
-
         public override Type StateIDType => typeof(TStateID);
+        private Queue<TStateID> queuedTransitions = new();
+
+        protected override string GetLogPrefix()
+        {
+            return $"[StateMachine<{typeof(TStateID).Name}>:{name}]";
+        }
 
         public void StartStateMachine()
         {
@@ -37,22 +43,39 @@ namespace BrunoMikoski.Core.StateMachines
         {
             base.ClearAll();
             currentState = null;
+            queuedTransitions.Clear();
         }
 
         public void TransitTo(TStateID targetStateID)
         {
+            if (currentTransition != null)
+            {
+                // Make sure we aren't already transitioning to the targetStateID
+                if (currentTransition.ToState != targetStateID || targetStateID.AllowSelfTransition)
+                {
+                    LogWarning("Cannot transit to a new state while a transition is in progress, queuing the transition");
+                    queuedTransitions.Enqueue(targetStateID);
+                }
+                else
+                {
+                    LogWarning($"Cannot transit to state '{targetStateID}' because the current transition is already transitioning there");
+                }
+
+                return;
+            }
+
             if (!CanTransitTo(targetStateID))
             {
                 if (currentState != null)
-                    Debug.LogError($"Cannot transit to {targetStateID} from {currentState.StateID}");
+                    LogError($"Cannot transit to {targetStateID} from {currentState.StateID}");
                 else
-                    Debug.LogError($"Cannot transit to {targetStateID}");
+                    LogError($"Cannot transit to {targetStateID}");
                 return;
             }
 
             if (currentState != null && currentState.StateID == targetStateID && !currentState.StateID.AllowSelfTransition)
             {
-                Debug.LogError($"Cannot transit to the same state {targetStateID}");
+                LogError($"Cannot transit to the same state {targetStateID}");
                 return;
             }
 
@@ -66,12 +89,12 @@ namespace BrunoMikoski.Core.StateMachines
 
             if (currentState == null && targetStateID == InitialState)
                 return true;
-            
+
             if (currentState != null)
             {
                 for (int i = 0; i < availableTransitions.Count; i++)
                 {
-                    Transition<TStateID> availableTransition = (Transition<TStateID>) availableTransitions[i];
+                    Transition<TStateID> availableTransition = (Transition<TStateID>)availableTransitions[i];
                     if (availableTransition.FromState == currentState.StateID &&
                         availableTransition.ToState == targetStateID)
                         return true;
@@ -85,7 +108,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if (!TryGetStateWithID(nextStateID, out State<TStateID> _))
             {
-                Debug.LogError($"Cannot find state implementation for {nextStateID}");
+                LogError($"Cannot find state implementation for {nextStateID}");
                 return;
             }
 
@@ -94,7 +117,6 @@ namespace BrunoMikoski.Core.StateMachines
                 currentState.Internal_Exit();
                 currentTransition = GetOrCreateTransition(currentState.StateID, nextStateID);
                 currentTransition.Internal_Start();
-                
             }
             else
             {
@@ -107,27 +129,33 @@ namespace BrunoMikoski.Core.StateMachines
             currentTransition = null;
             if (!TryGetStateWithID(toState, out State<TStateID> newState))
             {
-                Debug.LogError($"Cannot find state implementation for {toState}");
+                LogError($"Cannot find state implementation for {toState}");
                 return;
             }
 
             previousState = currentState;
             currentState = newState;
             currentState.Internal_Enter();
-            
+
             TStateID previousStateID = null;
 
             if (previousState != null)
-                previousStateID = (TStateID) previousState.StateID;
+                previousStateID = (TStateID)previousState.StateID;
 
             DispatchStateChangedEvent(previousStateID, toState);
+            if (queuedTransitions.Count > 0)
+            {
+                TStateID nextTransition = queuedTransitions.Dequeue();
+                Log($"Processing queued transition to {nextTransition}");
+                TransitTo(nextTransition);
+            }
         }
 
         public void AddState(State<TStateID> state)
         {
             if (AlreadyContainState(state))
             {
-                Debug.LogError(
+                LogError(
                     $"State with the same ID ({state.StateID}) already exist on the state machine, ignoring it");
                 return;
             }
@@ -142,7 +170,7 @@ namespace BrunoMikoski.Core.StateMachines
                 }
                 else
                 {
-                    Debug.LogError(
+                    LogError(
                         $"Initial state already exist ({InitialState}), ignoring the new one ({state.StateID})");
                 }
             }
@@ -152,7 +180,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if (AlreadyContainTransition(transition))
             {
-                Debug.LogError(
+                LogError(
                     $"Transition from {transition.FromState} to {transition.ToState} already exist, ignoring it");
                 return;
             }
@@ -170,7 +198,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if (!TryGetTransition(fromStateID, toStateID, out Transition<TStateID> transition))
             {
-                transition = new Transition<TStateID>((TStateID) fromStateID, (TStateID) toStateID);
+                transition = new Transition<TStateID>((TStateID)fromStateID, (TStateID)toStateID);
                 AddTransition(transition);
             }
 
@@ -181,7 +209,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             for (int i = 0; i < availableTransitions.Count; i++)
             {
-                Transition<TStateID> availableTransition = (Transition<TStateID>) availableTransitions[i];
+                Transition<TStateID> availableTransition = (Transition<TStateID>)availableTransitions[i];
                 if (availableTransition.FromState == fromStateID && availableTransition.ToState == toStateID)
                 {
                     resultTransition = availableTransition;
@@ -200,7 +228,7 @@ namespace BrunoMikoski.Core.StateMachines
                 StateBase availableState = availableStates[i];
                 if (availableState.StateID == targetStaID)
                 {
-                    resultState = (State<StateID>) availableState;
+                    resultState = (State<StateID>)availableState;
                     return true;
                 }
             }
@@ -216,7 +244,7 @@ namespace BrunoMikoski.Core.StateMachines
                 StateBase availableState = availableStates[i];
                 if (availableState.StateID == targetStaID)
                 {
-                    resultState = (T) availableState;
+                    resultState = (T)availableState;
                     return resultState != null;
                 }
             }
@@ -238,20 +266,20 @@ namespace BrunoMikoski.Core.StateMachines
 
         internal override void TransitionFinished(StateID toState)
         {
-            FinishEnterState((TStateID) toState);
+            FinishEnterState((TStateID)toState);
         }
 
         public void OverrideInitialState(TStateID targetStateID)
         {
             overrideInitialState = targetStateID;
         }
-        
-        
+
+
         public void UnsubscribeFromStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
         {
             base.UnsubscribeFromStateEvent(targetEvent, targetState, callback);
         }
-        
+
         public void SubscribeToStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
         {
             base.SubscribeToStateEvent(targetEvent, targetState, callback);
@@ -262,7 +290,7 @@ namespace BrunoMikoski.Core.StateMachines
     {
         protected List<StateBase> availableStates = new();
         public List<StateBase> AvailableStates => availableStates;
-        
+
         protected List<TransitionBase> availableTransitions = new();
         public List<TransitionBase> AvailableTransitions => availableTransitions;
 
@@ -277,14 +305,68 @@ namespace BrunoMikoski.Core.StateMachines
 
 
         public virtual Type StateIDType => typeof(StateID);
-        
+
         public event Action<StateID, StateID> OnStateChangedEvent;
-        
+
+        [field: SerializeField]
+        public bool ShowLogs { get; private set; }
+
+        public void Log(string message, LogType logType = LogType.Log)
+        {
+            if (!ShowLogs)
+                return;
+
+            switch (logType)
+            {
+                case LogType.Error:
+                {
+                    Debug.LogError($"{GetLogPrefix()} {message}", this);
+                    break;
+                }
+                case LogType.Assert:
+                {
+                    Debug.LogAssertion($"{GetLogPrefix()} {message}", this);
+                    break;
+                }
+                case LogType.Warning:
+                {
+                    Debug.LogWarning($"{GetLogPrefix()} {message}", this);
+
+                    break;
+                }
+                case LogType.Exception:
+                {
+                    Debug.LogError($"{GetLogPrefix()} {message}", this);
+
+                    break;
+                }
+                default:
+                {
+                    Debug.Log($"{GetLogPrefix()} {message}", this);
+                    break;
+                }
+            }
+        }
+
+        public void LogWarning(string message)
+        {
+            Log(message, LogType.Warning);
+        }
+
+        public void LogError(string message)
+        {
+            Log(message, LogType.Error);
+        }
+
+        protected virtual string GetLogPrefix()
+        {
+            return $"[StateMachine:{GetType().Name}]";
+        }
 
         internal virtual void TransitionFinished(StateID toState)
         {
         }
-        
+
         protected void DispatchStateChangedEvent(StateID fromState, StateID toState)
         {
             OnStateChangedEvent?.Invoke(fromState, toState);
@@ -295,9 +377,9 @@ namespace BrunoMikoski.Core.StateMachines
             for (int i = 0; i < availableTransitions.Count; i++)
             {
                 TransitionBase availableTransition = availableTransitions[i];
-                if (availableTransition is not T transition) 
+                if (availableTransition is not T transition)
                     continue;
-                
+
                 if (from != null && to != null)
                 {
                     if (availableTransition.FromState == from && availableTransition.ToState == to)
@@ -306,11 +388,11 @@ namespace BrunoMikoski.Core.StateMachines
                         return true;
                     }
                 }
-                    
+
                 resultTransition = transition;
                 return true;
             }
-            
+
             resultTransition = null;
             return false;
         }
@@ -320,7 +402,7 @@ namespace BrunoMikoski.Core.StateMachines
             availableStates.Clear();
             availableTransitions.Clear();
         }
-        
+
         protected virtual void Awake()
         {
             StateMachineRegistry.Register(this);
@@ -333,7 +415,5 @@ namespace BrunoMikoski.Core.StateMachines
             StateMachineTracker.Forget(this);
 #endif
         }
-
     }
 }
-

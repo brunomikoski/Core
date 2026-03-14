@@ -7,38 +7,33 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core
 {
-   using System.Collections.Generic;
-using UnityEditor;
-using UnityEditorInternal;
-using UnityEngine;
-
-public static class EditorBootstrapSettingsProvider
-{
-    private static SceneAsset[] requiredScenes = Array.Empty<SceneAsset>();
-    private static ReorderableList reorderableList;
-
-    [SettingsProvider]
-    public static SettingsProvider CreateMyCustomSettingsProvider()
+    public static class EditorBootstrapSettingsProvider
     {
-        SettingsProvider provider = new SettingsProvider("Project/Editor Bootstrap", SettingsScope.Project)
+        private static SceneAsset[] requiredScenes = Array.Empty<SceneAsset>();
+        private static ReorderableList reorderableList;
+
+        [SettingsProvider]
+        public static SettingsProvider CreateMyCustomSettingsProvider()
         {
-            label = "Editor Bootstrap",
-            guiHandler = (searchContext) =>
+            SettingsProvider provider = new SettingsProvider("Project/Editor Bootstrap", SettingsScope.Project)
             {
-                EditorBootstrapSettings settings = EditorBootstrapSettings.Instance;
-
-                if ((requiredScenes.Length == 0 || requiredScenes.Length != settings.BootStrapScenesGuid.Count) && settings.HasBootstrapSetup())
+                label = "Editor Bootstrap",
+                guiHandler = (searchContext) =>
                 {
-                    requiredScenes = new SceneAsset[settings.BootStrapScenesGuid.Count];
-                    for (int i = 0; i < settings.BootStrapScenesGuid.Count; i++)
+                    EditorBootstrapSettings settings = EditorBootstrapSettings.Instance;
+
+                    if ((requiredScenes.Length == 0 || requiredScenes.Length != settings.BootStrapScenesGuid.Count) && settings.HasBootstrapSetup())
                     {
-                        requiredScenes[i] = AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(settings.BootStrapScenesGuid[i]));
+                        requiredScenes = new SceneAsset[settings.BootStrapScenesGuid.Count];
+                        for (int i = 0; i < settings.BootStrapScenesGuid.Count; i++)
+                        {
+                            requiredScenes[i] = AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(settings.BootStrapScenesGuid[i]));
+                        }
                     }
-                }
 
-                if (reorderableList == null || reorderableList.count != requiredScenes.Length)
-                {
-                    reorderableList = new ReorderableList(requiredScenes, typeof(SceneAsset), true, true, true, true)
+                    if (reorderableList == null || reorderableList.count != requiredScenes.Length)
+                    {
+                        reorderableList = new ReorderableList(requiredScenes, typeof(SceneAsset), true, true, true, true)
                         {
                             drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Required Scenes"),
                             drawElementCallback = (rect, index, isActive, isFocused) =>
@@ -54,55 +49,54 @@ public static class EditorBootstrapSettingsProvider
                                 }
                             }
                         };
-                    reorderableList.onAddCallback = list =>
-                    {
-                        List<SceneAsset> sceneList = new(requiredScenes) { null };
-                        requiredScenes = sceneList.ToArray();
-                        reorderableList.list = requiredScenes;
-                    };
-                    reorderableList.onRemoveCallback = list =>
-                    {
-                        List<SceneAsset> sceneList = new(requiredScenes);
-                        if (list.index >= 0 && list.index < sceneList.Count)
+                        reorderableList.onAddCallback = list =>
                         {
-                            sceneList.RemoveAt(list.index);
+                            List<SceneAsset> sceneList = new(requiredScenes) { null };
                             requiredScenes = sceneList.ToArray();
                             reorderableList.list = requiredScenes;
-                        }
-                    };
-                }
-
-                EditorGUI.BeginChangeCheck();
-
-                reorderableList.DoLayoutList();
-
-                settings.LoadOpenScenesAfterBootstrap = EditorGUILayout.Toggle("Load Open Scenes After Bootstrap", settings.LoadOpenScenesAfterBootstrap);
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    // Save settings when changes occur
-                    settings.BootStrapScenesGuid.Clear();
-                    foreach (SceneAsset scene in requiredScenes)
-                    {
-                        if (scene != null)
+                        };
+                        reorderableList.onRemoveCallback = list =>
                         {
-                            string scenePath = AssetDatabase.GetAssetPath(scene);
-                            string sceneGuid = AssetDatabase.AssetPathToGUID(scenePath);
-                            settings.BootStrapScenesGuid.Add(sceneGuid);
-                        }
+                            List<SceneAsset> sceneList = new(requiredScenes);
+                            if (list.index >= 0 && list.index < sceneList.Count)
+                            {
+                                sceneList.RemoveAt(list.index);
+                                requiredScenes = sceneList.ToArray();
+                                reorderableList.list = requiredScenes;
+                            }
+                        };
                     }
 
-                    settings.Save();
-                }
-            },
+                    EditorGUI.BeginChangeCheck();
 
-            keywords = new HashSet<string>(new[] { "Editor", "Bootstrap", "Settings", "Bootstrap Scene" })
-        };
+                    reorderableList.DoLayoutList();
 
-        return provider;
+                    settings.LoadOpenScenesAfterBootstrap = EditorGUILayout.Toggle("Load Open Scenes After Bootstrap", settings.LoadOpenScenesAfterBootstrap);
+
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        // Save settings when changes occur
+                        settings.BootStrapScenesGuid.Clear();
+                        foreach (SceneAsset scene in requiredScenes)
+                        {
+                            if (scene != null)
+                            {
+                                string scenePath = AssetDatabase.GetAssetPath(scene);
+                                string sceneGuid = AssetDatabase.AssetPathToGUID(scenePath);
+                                settings.BootStrapScenesGuid.Add(sceneGuid);
+                            }
+                        }
+
+                        settings.Save();
+                    }
+                },
+
+                keywords = new HashSet<string>(new[] { "Editor", "Bootstrap", "Settings", "Bootstrap Scene" })
+            };
+
+            return provider;
+        }
     }
-}
-
 
 
     [Serializable]

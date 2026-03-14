@@ -28,7 +28,8 @@ namespace BrunoMikoski.Core
                 || !EditorBootstrapSettings.Instance.HasBootstrapSetup()
                 || IsCurrentlyAtUntitledScene()
                 || EditorSceneManager.playModeStartScene != null
-                || IsPlayingFromFirstSceneOnBootSettings())
+                || IsPlayingFromFirstSceneOnBootSettings()
+                || !IsPlayingFromAKnownScene())
             {
                 SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
                 SessionState.EraseString(EDITOR_BOOTSTRAP_OPEN_SCENES_KEY);
@@ -107,6 +108,22 @@ namespace BrunoMikoski.Core
             }
         }
 
+        private static bool IsPlayingFromAKnownScene()
+        {
+            string activeScenePath = SceneManager.GetActiveScene().path;
+
+            if (string.IsNullOrEmpty(activeScenePath))
+                return false;
+
+            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+            {
+                if (string.Equals(scene.path, activeScenePath, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
         private static Scene GetSceneByName(string targetName)
         {
             for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -124,8 +141,10 @@ namespace BrunoMikoski.Core
         {
             [SerializeField]
             internal string ActiveSceneName = string.Empty;
+
             [SerializeField]
             internal List<string> OriginalLoadedScenesGuids = new();
+
             [SerializeField]
             internal List<string> LoadedBootstrapSceneGuids = new List<string>();
         }
@@ -145,6 +164,7 @@ namespace BrunoMikoski.Core
                     sceneSetup.OriginalLoadedScenesGuids.Add(AssetDatabase.AssetPathToGUID(scene.path));
                 }
             }
+
             return sceneSetup;
         }
 

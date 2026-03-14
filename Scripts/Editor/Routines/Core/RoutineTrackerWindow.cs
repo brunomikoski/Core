@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+#pragma warning disable CS0618
 namespace BrunoMikoski.Core.Routines
 {
     public class CoroutineTrackerViewItem : TreeViewItem
@@ -373,3 +374,4 @@ namespace BrunoMikoski.Core.Routines
         #endregion
     }
 }
+#pragma warning restore CS0618

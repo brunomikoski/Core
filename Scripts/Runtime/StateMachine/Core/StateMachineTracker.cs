@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
 {
-
     public class StepData
     {
         public string DisplayName;
@@ -15,6 +14,7 @@ namespace BrunoMikoski.Core.StateMachines
         public DateTime EnterTime;
         public DateTime ExitTime;
     }
+
     public class StateData : StepData
     {
     }
@@ -22,14 +22,14 @@ namespace BrunoMikoski.Core.StateMachines
     public class TransitionData : StepData
     {
     }
-    
+
     public class StateMachineState
     {
         public List<StepData> History = new();
 
         public StateData CurrentState;
         public TransitionData CurrentTransition;
-        
+
         public List<string> AvailableNextStates;
     }
 
@@ -85,21 +85,20 @@ namespace BrunoMikoski.Core.StateMachines
                 EnterStackTrace = stackTrace,
                 EnterTime = DateTime.Now
             };
-
         }
 
         public static void TrackTransitionEnd(StateMachineBase stateMachine, TransitionBase targetTransition)
         {
             StackTrace stackTrace = new StackTrace(2, true);
             StateMachineState stateMachineState = GetOrCreateStateMachineState(stateMachine);
-            
+
             stateMachineState.CurrentTransition.ExitStackTrace = stackTrace;
             stateMachineState.CurrentTransition.ExitTime = DateTime.Now;
-            
+
             stateMachineState.History.Add(stateMachineState.CurrentTransition);
             stateMachineState.CurrentTransition = null;
         }
-        
+
         private static List<string> GetAvailableNextSteps(StateMachineBase stateMachine, StateBase targetState)
         {
             List<string> result = new List<string>();
@@ -117,7 +116,7 @@ namespace BrunoMikoski.Core.StateMachines
             {
                 if (!stateBase.StateID.FromAnyState)
                     continue;
-                
+
                 if (!result.Contains(stateBase.StateID.name))
                     result.Add(stateBase.StateID.name);
             }
@@ -125,14 +124,13 @@ namespace BrunoMikoski.Core.StateMachines
             return result;
         }
 
-        
-        
+
         private static StateMachineState GetOrCreateStateMachineState(StateMachineBase stateMachine)
         {
             if (stateMachineToState.TryGetValue(stateMachine, out StateMachineState resultState))
                 return resultState;
-            
-            
+
+
             resultState = new StateMachineState();
             stateMachineToState.Add(stateMachine, resultState);
             return resultState;

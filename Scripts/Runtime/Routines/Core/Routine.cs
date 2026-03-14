@@ -17,7 +17,7 @@ namespace BrunoMikoski.Core.Routines
         public bool IsRunning => isRunning;
 
         private bool monoBehaviourDependent;
-        
+
         private bool isPaused;
         public bool IsPaused => isPaused;
 
@@ -28,7 +28,7 @@ namespace BrunoMikoski.Core.Routines
 
 
         public override bool keepWaiting => isRunning;
-        
+
         private DateTime finishedTime;
         public DateTime FinishedTime => finishedTime;
 
@@ -82,7 +82,7 @@ namespace BrunoMikoski.Core.Routines
         {
             isRunning = false;
         }
-#if UNITASK_ENABLED        
+#if UNITASK_ENABLED
         public async UniTask ToUniTask()
         {
             await UniTask.WaitUntil(() => isCompleted);

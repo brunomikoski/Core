@@ -9,22 +9,28 @@ namespace BrunoMikoski.Core.GUIUtils
         [Header("References")]
         [SerializeField]
         protected TGUI itemTemplate;
-        
+
         [Header("Settings")]
         [SerializeField]
         private bool usePool = true;
+
         protected bool UsePool => usePool;
-        [SerializeField] 
+
+        [SerializeField]
         protected int initialPoolSize;
 
-        
+
         public TGUI LastClickedGUI { get; private set; }
 
+#if USE_ORDERED_DICTIONARY
+        protected readonly OrderedDictionary<T, TGUI> items = new();
+        public OrderedDictionary<T, TGUI> Items => items;
+#else
         protected readonly Dictionary<T, TGUI> items = new();
+        public Dictionary<T, TGUI> Items => items;
+#endif
 
         private bool isInitialized;
-
-        public Dictionary<T, TGUI> Items => items;
 
         public int Count => Items.Count;
 
@@ -48,8 +54,9 @@ namespace BrunoMikoski.Core.GUIUtils
         {
             Initialize();
 
-            if (items.TryGetValue(itemId, out TGUI resultItem)) {
-	            DestroyItem(resultItem);
+            if (items.TryGetValue(itemId, out TGUI resultItem))
+            {
+                DestroyItem(resultItem);
             }
 
             TGUI item = SpawnItem(itemId);
@@ -68,7 +75,7 @@ namespace BrunoMikoski.Core.GUIUtils
                 spawnItem = SimplePool.Spawn(itemTemplate, itemTemplate.transform.parent);
             else
                 spawnItem = Instantiate(itemTemplate, itemTemplate.transform.parent);
-            
+
             spawnItem.transform.localScale = Vector3.one;
             spawnItem.transform.localPosition = Vector3.zero;
             return spawnItem;
@@ -76,10 +83,10 @@ namespace BrunoMikoski.Core.GUIUtils
 
         protected virtual bool RemoveItem(T itemId)
         {
-            if (!items.ContainsKey(itemId))
+            if (!items.TryGetValue(itemId, out TGUI item))
                 return false;
 
-            DestroyItem(items[itemId]);
+            DestroyItem(item);
             items.Remove(itemId);
 
             return true;
@@ -106,11 +113,14 @@ namespace BrunoMikoski.Core.GUIUtils
             items.Clear();
         }
 
-        private void DestroyItem(TGUI item)
+        protected virtual void DestroyItem(TGUI item)
         {
             if (usePool)
             {
-                SimplePool.Despawn(item.gameObject);
+                if (item != null && item.gameObject != null)
+                {
+                    SimplePool.Despawn(item.gameObject);
+                }
             }
             else
             {
@@ -148,9 +158,18 @@ namespace BrunoMikoski.Core.GUIUtils
 
         protected virtual void OnValidate()
         {
-            if (itemTemplate == null)
+            if (this.gameObject.scene.IsValid() && itemTemplate == null)
             {
                 Debug.LogError("No item template assigned", this);
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            Clear();
+            if (usePool)
+            {
+                SimplePool.DestroyPool(itemTemplate);
             }
         }
     }

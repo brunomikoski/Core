@@ -20,5 +20,12 @@ namespace BrunoMikoski.Core
         }
 
         public static Action OnEditorBootstrapCompleteEvent;
+
+        public static void SetBackToTheNormalFlow()
+        {
+#if UNITY_EDITOR
+            UnityEditor.SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+#endif           
+        }
     }
 }
