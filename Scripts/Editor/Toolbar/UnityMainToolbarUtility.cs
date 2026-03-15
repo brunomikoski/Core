@@ -3,9 +3,9 @@ using System.Reflection;
 using UnityEditor.Toolbars;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
+using Object = System.Object;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.UnityToolbar
 {
     public static class UnityMainToolbarUtility
     {
@@ -27,14 +27,14 @@ namespace BrunoMikoski.Core.Utils
         private static VisualElement LEFT_ZONE_ROOT;
         private static VisualElement RIGHT_ZONE_ROOT;
 
-        
+
         private static Type ToolbarType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.Toolbar");
 
 
         private static Func<object> toolbarGetter;
         private static Func<object, VisualElement> rootGetter;
         private static bool initialized;
-        
+
         private static VisualElement leftZoneRootVisualElement;
         private static VisualElement rightZoneRootVisualElement;
         private static VisualElement rootVisualElement;
@@ -71,10 +71,10 @@ namespace BrunoMikoski.Core.Utils
         }
 
         public static EditorToolbarButton AddButton(TargetContainer container, Side side, string name, Texture2D icon,
-            Action<MouseUpEvent> callback)
+            Action callback)
         {
             Initialize();
-            
+
             EditorToolbarButton button = new EditorToolbarButton()
             {
                 name = name,
@@ -108,7 +108,7 @@ namespace BrunoMikoski.Core.Utils
                     break;
             }
 
-            button.clickable.clickedWithEventInfo += x => callback((MouseUpEvent) x);
+            button.clickable.clicked += callback;
             EditorToolbarUtility.SetupChildrenAsButtonStrip(containerElement);
             return button;
         }
@@ -117,20 +117,27 @@ namespace BrunoMikoski.Core.Utils
         {
             if (initialized)
                 return;
-            
+
             Object[] toolbars = Resources.FindObjectsOfTypeAll(ToolbarType);
 
             if (toolbars.Length == 0)
                 return;
-            
+
             Object toolbar = toolbars[0];
-            
+
             FieldInfo rootField = toolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance);
             rootVisualElement = rootField.GetValue(toolbar) as VisualElement;
             leftZoneRootVisualElement = rootVisualElement.Q<VisualElement>("ToolbarZoneLeftAlign");
             rightZoneRootVisualElement = rootVisualElement.Q<VisualElement>("ToolbarZoneLeftAlign");
-            
+
             initialized = true;
+        }
+
+        public static bool IsToolbarAvailable()
+        {
+            Initialize();
+
+            return rootVisualElement != null;
         }
     }
 }

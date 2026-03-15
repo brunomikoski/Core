@@ -1,4 +1,5 @@
 using BrunoMikoski.ScriptableObjectCollections;
+using BrunoMikoski.ScriptableObjectCollections.Picker;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
@@ -10,12 +11,11 @@ namespace BrunoMikoski.Core.StateMachines
         private bool initialState;
         public bool InitialState => initialState;
         
-        [SerializeField]
-        private bool fromAnyState;
-        public bool FromAnyState => fromAnyState;
+        public bool FromAnyState => AllowedTransitions.Count == 0;
 
-        [SerializeField]
-        private bool allowSelfTransition;
-        public bool AllowSelfTransition => allowSelfTransition;
+        public bool AllowSelfTransition => AllowedTransitions.Contains(this);
+        
+        [field: SerializeField]
+        public CollectionItemPicker<StateID> AllowedTransitions { get; private set; } = new();
     }
 }
