@@ -10,20 +10,20 @@ namespace BrunoMikoski.Core.UI
     public class WindowsManagerService : WindowsManager, IOnServiceRegistered
     {
         [SerializeField]
-        private bool transferWindowsToMainService = true;
+        protected bool transferWindowsToMainService = true;
 
-        private ServiceReference<WindowsManagerService> _windowService = new();
+        protected readonly ServiceReference<WindowsManagerService> windowService = new();
 
         //Hijacking the Awake to make sure we don't have multiple WindowsManager in the scene
         protected override void Awake()
         {
-            if (_windowService.Exists)
+            if (windowService.Exists)
             {
-                if (_windowService.Reference == this)
+                if (windowService.Reference == this)
                     return;
 
                 if (transferWindowsToMainService)
-                    _windowService.Reference.InitializeHierarchyWindows(transform);
+                    windowService.Reference.InitializeHierarchyWindows(transform);
 
                 Destroy(this.gameObject);
             }
