@@ -100,7 +100,7 @@ namespace BrunoMikoski.Core.Attributes
                     BindingFlags.NonPublic | BindingFlags.Instance);
             }
 
-            if (ATTRIBUTE_FIELD_INFO != null) 
+            if (ATTRIBUTE_FIELD_INFO != null)
                 ATTRIBUTE_FIELD_INFO.SetValue(result, propertyAttribute);
 
             return result;

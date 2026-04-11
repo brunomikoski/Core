@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace BrunoMikoski.Core.Development
+namespace BrunoMikoski.Core
 {
     public class DevelopmentSettingGeneric<T>
     {

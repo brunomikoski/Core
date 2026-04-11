@@ -1,4 +1,4 @@
-﻿namespace BrunoMikoski.Core.Development
+namespace BrunoMikoski.Core
 {
     public static partial class DevelopmentSettings
     {

@@ -7,13 +7,15 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core
 {
-    public class TagController : MonoBehaviour, IList<Tag>
+    public class TagController : MonoBehaviour, IList<Tag>, ITagSource
     {
         [SerializeField]
         private CollectionItemPicker<Tag> tags = new CollectionItemPicker<Tag>();
 
+        public IReadOnlyList<Tag> Tags => tags.Items;
 
-        private ServiceReference<TagRegistryService> tagRegistryService= new();
+
+        private readonly ServiceReference<TagRegistryService> tagRegistryService= new();
 
         private void Awake()
         {
@@ -83,5 +85,6 @@ namespace BrunoMikoski.Core
             get => tags[index];
             set => tags[index] = value;
         }
+
     }
 }

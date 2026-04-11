@@ -1,4 +1,4 @@
-﻿#if DOTWEEN
+#if DOTWEEN
 using System;
 using DG.Tweening;
 using DG.Tweening.Core.Easing;
@@ -39,7 +39,7 @@ namespace BrunoMikoski.Core.CustomEasing
         {
             ease = Ease.InOutCirc;
         }
-        
+
         public float Lerp(float from, float to, float fraction)
         {
             return Mathf.Lerp(from, to, Evaluate(fraction));
@@ -104,7 +104,7 @@ namespace BrunoMikoski.Core.CustomEasing
             }
         }
     }
-    
+
     public static partial class CustomEaseExtensions
     {
         /// <summary>Sets the ease of the tween using a custom ease function.

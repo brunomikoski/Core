@@ -17,7 +17,7 @@ namespace BrunoMikoski.Core.Routines
         public string TaskType { get; set; }
         public string Elapsed { get; set; }
         public string Status { get; set; }
-        
+
         public string OwnerName { get; set; }
 
         string position;
@@ -68,7 +68,7 @@ namespace BrunoMikoski.Core.Routines
                 new MultiColumnHeaderState.Column() { headerContent = new GUIContent("Elapsed"), width = 10},
                 new MultiColumnHeaderState.Column() { headerContent = new GUIContent("Status"), width = 10},
                 new MultiColumnHeaderState.Column() { headerContent = new GUIContent("Position")},
-                
+
             })))
         {
         }
@@ -150,7 +150,7 @@ namespace BrunoMikoski.Core.Routines
                         status = "Running";
                     }
                 }
-                
+
                 string lastKnowPath = "";
                 if (routineData.Routine.MonoBehaviour != null)
                 {
@@ -160,7 +160,7 @@ namespace BrunoMikoski.Core.Routines
                 string elapsed = (RoutineTrackerWindow.Window.LastUpdate - routineData.Created).TotalSeconds.ToString("00.00");
                 if (routineData.Routine.IsCompleted)
                     elapsed = (routineData.Routine.FinishedTime - routineData.Created).TotalSeconds.ToString("00.00");
-                
+
                 children.Add(new CoroutineTrackerViewItem(i)
                 {
                     OwnerName = lastKnowPath,
@@ -215,13 +215,13 @@ namespace BrunoMikoski.Core.Routines
             }
         }
     }
-    
+
     public class RoutineTrackerWindow : EditorWindow
     {
         private static int INTERVAL;
 
         public static RoutineTrackerWindow Window;
-        
+
         public DateTime LastUpdate;
 
         [MenuItem("Window/Analysis/CoroutineRunner Tracker")]
@@ -322,7 +322,7 @@ namespace BrunoMikoski.Core.Routines
                 if (Application.isPlaying)
                     LastUpdate = DateTime.UtcNow;
                 treeView.ReloadAndSort();
-                Repaint(); 
+                Repaint();
             }
         }
 

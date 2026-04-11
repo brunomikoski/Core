@@ -11,7 +11,7 @@ namespace BrunoMikoski.Core.Editor.Layers
     {
         public int layerIndex;
     }
-    
+
     [UsedImplicitly]
     public sealed class UnityLayerCollectionGenerator : IScriptableObjectCollectionGenerator<UnityLayerCollection, UnityLayerTemplate>
     {
@@ -19,10 +19,13 @@ namespace BrunoMikoski.Core.Editor.Layers
 
         public void GetItemTemplates(List<UnityLayerTemplate> templates, UnityLayerCollection collection)
         {
-            string[] layers = Enumerable.Range(0, 31).Select(LayerMask.LayerToName).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+            string[] layers = Enumerable.Range(0, 31).Select(LayerMask.LayerToName).ToArray();
 
             for (int i = 0; i < layers.Length; i++)
             {
+                if (string.IsNullOrEmpty(layers[i]))
+                    continue;
+
                 templates.Add(new UnityLayerTemplate { name = layers[i], layerIndex = i});
             }
         }

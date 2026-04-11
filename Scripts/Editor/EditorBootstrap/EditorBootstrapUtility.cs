@@ -141,10 +141,8 @@ namespace BrunoMikoski.Core
         {
             [SerializeField]
             internal string ActiveSceneName = string.Empty;
-
             [SerializeField]
             internal List<string> OriginalLoadedScenesGuids = new();
-
             [SerializeField]
             internal List<string> LoadedBootstrapSceneGuids = new List<string>();
         }
@@ -164,7 +162,6 @@ namespace BrunoMikoski.Core
                     sceneSetup.OriginalLoadedScenesGuids.Add(AssetDatabase.AssetPathToGUID(scene.path));
                 }
             }
-
             return sceneSetup;
         }
 

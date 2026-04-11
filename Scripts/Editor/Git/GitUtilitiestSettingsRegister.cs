@@ -37,7 +37,7 @@ namespace BrunoMikoski.Core.Git
                     {
                         string result =
                             EditorUtility.OpenFilePanel("Git executable", Path.GetDirectoryName(GitUtility.GitExecutable), "exe");
-                        
+
                         if (!string.IsNullOrEmpty(result))
                             GitUtility.GitExecutable = result;
                     }
@@ -59,18 +59,18 @@ namespace BrunoMikoski.Core.Git
                     }
 
                     selectedObjectField = EditorGUILayout.ObjectField("File", selectedObjectField, typeof(TextAsset), false);
-                    
+
                     if (GUILayout.Button("Check file first commit", GUILayout.Width(200)))
                     {
                         displayResult = GitUtility.GetFirstCommit(AssetDatabase.GetAssetPath(selectedObjectField)).ToString();
                     }
-                    
+
                     if (GUILayout.Button("Check file last commit", GUILayout.Width(200)))
                     {
                         displayResult = GitUtility.GetFirstCommit(AssetDatabase.GetAssetPath(selectedObjectField)).ToString();
                     }
                     EditorGUILayout.EndHorizontal();
-                    
+
                     EditorGUILayout.TextArea(displayResult, new[]{GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)});
                 },
 

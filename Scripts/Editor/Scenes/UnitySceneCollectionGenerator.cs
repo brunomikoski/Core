@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using BrunoMikoski.Core.ScenesReferences;
 using BrunoMikoski.ScriptableObjectCollections;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -16,7 +17,7 @@ namespace BrunoMikoski.Core.ScenesReferences
     }
     
     [UsedImplicitly]
-    public sealed class UnityLayerCollectionGenerator : IScriptableObjectCollectionGenerator<UnityScenesCollection, UnitySceneTemplate>
+    public sealed class UnitySceneCollectionGenerator : IScriptableObjectCollectionGenerator<UnityScenesCollection, UnitySceneTemplate>
     {
         public bool ShouldRemoveNonGeneratedItems => false;
 

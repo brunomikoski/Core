@@ -1,8 +1,6 @@
 
 using System.Threading;
-#if UNITASK_AVAILABLE
 using Cysharp.Threading.Tasks;
-#endif
 
 namespace BrunoMikoski.Core.StateMachines
 {
@@ -15,7 +13,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
         }
     }
-    
+
     public class StateBase
     {
         protected StateMachineBase stateMachine;
@@ -26,7 +24,7 @@ namespace BrunoMikoski.Core.StateMachines
 
         private CancellationTokenSource exitCancellationTokenSource;
         private CancellationTokenSource enterLinkedCancellationTokenSource;
-        
+
         protected StateBase(StateID targetStateID)
         {
             stateID = targetStateID;
@@ -43,7 +41,7 @@ namespace BrunoMikoski.Core.StateMachines
             Enter_Async(enterLinkedCancellationTokenSource.Token).Forget();
             stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
-        
+
         internal void Internal_Exit()
         {
 #if UNITY_EDITOR
@@ -60,9 +58,9 @@ namespace BrunoMikoski.Core.StateMachines
                 enterLinkedCancellationTokenSource.Dispose();
                 enterLinkedCancellationTokenSource = null;
             }
-            
+
             Exit();
-            
+
             stateMachine.DispatchEvent(StateMachineEvent.StateExit, stateID);
         }
 
@@ -70,7 +68,7 @@ namespace BrunoMikoski.Core.StateMachines
         protected virtual void Enter()
         {
         }
-        
+
         protected virtual UniTask Enter_Async(CancellationToken cancellationToken)
         {
             return UniTask.CompletedTask;

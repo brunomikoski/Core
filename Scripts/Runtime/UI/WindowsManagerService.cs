@@ -1,4 +1,3 @@
-#if UI_MANAGER_AVAILABLE
 using BrunoMikoski.ServicesLocation;
 using UnityEngine;
 using BrunoMikoski.UIManager;
@@ -12,19 +11,21 @@ namespace BrunoMikoski.Core.UI
     {
         [SerializeField]
         private bool transferWindowsToMainService = true;
-        
+
+        private ServiceReference<WindowsManagerService> _windowService = new();
+
         //Hijacking the Awake to make sure we don't have multiple WindowsManager in the scene
         protected override void Awake()
         {
-            if (ServiceLocator.Instance.TryGetInstance(out WindowsManager windowsManager))
+            if (_windowService.Exists)
             {
-                if (windowsManager == this)
+                if (_windowService.Reference == this)
                     return;
-                
-                if (transferWindowsToMainService)
-                    windowsManager.InitializeHierarchyWindows(transform);
 
-                Destroy(transform.parent.gameObject);
+                if (transferWindowsToMainService)
+                    _windowService.Reference.InitializeHierarchyWindows(transform);
+
+                Destroy(this.gameObject);
             }
         }
 
@@ -33,6 +34,6 @@ namespace BrunoMikoski.Core.UI
             Initialize();
             LoadInitialWindows();
         }
+
     }
 }
-#endif

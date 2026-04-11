@@ -14,7 +14,7 @@ namespace BrunoMikoski.Core.Git
             this.dateTime = dateTime;
             this.title = title;
         }
-        
+
         public override string ToString()
         {
             return $"Author: {author}\nDate: {dateTime.ToShortDateString()} at {dateTime.ToShortTimeString()}\nTitle: {title}";

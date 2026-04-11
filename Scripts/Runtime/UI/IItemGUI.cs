@@ -5,5 +5,3 @@ namespace BrunoMikoski.Core.GUIUtils
         void Initialize(T targetItem);
     }
 }
-
-

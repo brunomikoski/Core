@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+#if USE_ORDERED_DICTIONARY
+using SoftCircuits.Collections;
+#endif
 using BrunoMikoski.Pooling;
 using UnityEngine;
 
@@ -13,22 +16,20 @@ namespace BrunoMikoski.Core.GUIUtils
         [Header("Settings")]
         [SerializeField]
         private bool usePool = true;
-
         protected bool UsePool => usePool;
-
         [SerializeField]
         protected int initialPoolSize;
 
 
         public TGUI LastClickedGUI { get; private set; }
 
-#if USE_ORDERED_DICTIONARY
+        #if USE_ORDERED_DICTIONARY
         protected readonly OrderedDictionary<T, TGUI> items = new();
         public OrderedDictionary<T, TGUI> Items => items;
-#else
+        #else
         protected readonly Dictionary<T, TGUI> items = new();
         public Dictionary<T, TGUI> Items => items;
-#endif
+        #endif
 
         private bool isInitialized;
 
@@ -54,9 +55,8 @@ namespace BrunoMikoski.Core.GUIUtils
         {
             Initialize();
 
-            if (items.TryGetValue(itemId, out TGUI resultItem))
-            {
-                DestroyItem(resultItem);
+            if (items.TryGetValue(itemId, out TGUI resultItem)) {
+	            DestroyItem(resultItem);
             }
 
             TGUI item = SpawnItem(itemId);

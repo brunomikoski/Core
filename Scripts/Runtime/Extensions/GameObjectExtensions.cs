@@ -10,6 +10,21 @@ namespace BrunoMikoski.Core
     {
         private static int INITIAL_SIZE = 100;
 
+        private static readonly List<MeshFilter> meshFilterCache = new();
+        private static readonly List<SkinnedMeshRenderer> skinnedMeshRendererCache = new(INITIAL_SIZE);
+        private static readonly List<BoxCollider> boxCollidersCache = new(INITIAL_SIZE);
+
+
+        [Flags]
+        public enum SearchType
+        {
+            Self = 1,
+            InParent = 2,
+            InChildren = 4,
+            All = Self | InParent | InChildren,
+            SelfAndParent = Self | InParent
+        }
+
         public static T GetOrAddComponent<T>(this GameObject target) where T : Component
         {
             T component = target.GetComponent<T>();
@@ -18,14 +33,42 @@ namespace BrunoMikoski.Core
 
             return component;
         }
-        
 
-        private static readonly List<MeshFilter> meshFilterCache = new();
+        public static bool TryGetComponentInContext<T>(this GameObject targetGameObject, out T result, SearchType searchType = SearchType.All) where T : Component
+        {
+            if (searchType.HasFlag(SearchType.Self))
+            {
+                if (targetGameObject.TryGetComponent(out result))
+                    return true;
+            }
 
-        private static readonly List<SkinnedMeshRenderer> skinnedMeshRendererCache = new(INITIAL_SIZE);
-        private static readonly List<BoxCollider> boxCollidersCache = new(INITIAL_SIZE);
+            if (searchType.HasFlag(SearchType.InChildren))
+            {
+                result = targetGameObject.GetComponentInChildren<T>();
+                if (result != null)
+                {
+                    return true;
+                }
+            }
 
-        
+            if (searchType.HasFlag(SearchType.InParent))
+            {
+                result = targetGameObject.GetComponentInParent<T>();
+                if (result != null)
+                {
+                    return true;
+                }
+            }
+
+            result = null;
+            return false;
+        }
+
+        public static bool TryGetComponentInContext<T>(this Component targetComponent, out T result, SearchType searchType = SearchType.All) where T : Component
+        {
+            return TryGetComponentInContext<T>(targetComponent.gameObject, out result, searchType);
+        }
+
         public static Bounds GetCompleteLocalBounds(this GameObject gameObject)
         {
             Transform transform = gameObject.transform;
@@ -40,7 +83,7 @@ namespace BrunoMikoski.Core
                 if (sharedMesh == null)
                     continue;
 
-                Bounds bounds = GetLocalBounds(sharedMesh.bounds,meshFilterCache[i].transform, transform);
+                Bounds bounds = GetLocalBounds(sharedMesh.bounds, meshFilterCache[i].transform, transform);
 
                 if (firstBoundsSet)
                 {
@@ -52,6 +95,7 @@ namespace BrunoMikoski.Core
                     firstBoundsSet = true;
                 }
             }
+
             gameObject.GetComponentsInChildren(skinnedMeshRendererCache);
             for (int i = 0; i < skinnedMeshRendererCache.Count; i++)
             {
@@ -72,7 +116,7 @@ namespace BrunoMikoski.Core
             return result;
         }
 
-        
+
         private static Bounds GetLocalBounds(Bounds bounds, Transform from, Transform to)
         {
             Vector3 position = to.InverseTransformPoint(from.TransformPoint(bounds.center));
@@ -95,7 +139,7 @@ namespace BrunoMikoski.Core
             return component;
         }
 
-        
+
         public static T[] GetComponentsInChildren<T>(this IList<GameObject> gameObjects, bool includeInactive = false)
         {
             List<T> results = new List<T>();
@@ -104,6 +148,7 @@ namespace BrunoMikoski.Core
                 GameObject gameObject = gameObjects[i];
                 results.AddRange(gameObject.GetComponentsInChildren<T>(includeInactive));
             }
+
             return results.ToArray();
         }
 
@@ -116,7 +161,6 @@ namespace BrunoMikoski.Core
         ///  (inactive parents will not be searched anyway)</param>
         /// <typeparam name="T">The type of Component to retrieve.</typeparam>
         /// <returns>Returns the component of Type T if found, null if it doesn't.</returns>
-        
         public static T GetComponentInContext<T>(this GameObject go, bool includeInactive = true)
             where T : Component
         {
@@ -200,8 +244,8 @@ namespace BrunoMikoski.Core
 #endif
             return true;
         }
-        
-         public static Bounds GetBoundsBasedOnRenderers(this GameObject gameObject,
+
+        public static Bounds GetBoundsBasedOnRenderers(this GameObject gameObject,
             bool includeParticleRenderers = true)
         {
             Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
@@ -242,6 +286,7 @@ namespace BrunoMikoski.Core
                     "Cannot add box collider to gameObject '{0}', it has no render bounds", gameObject.name);
                 return null;
             }
+
             BoxCollider collider = gameObject.AddComponent<BoxCollider>();
 
             collider.center = bounds.center;
@@ -324,6 +369,11 @@ namespace BrunoMikoski.Core
         public static bool IsPrefab(this GameObject gameObject)
         {
             return !gameObject.scene.IsValid();
+        }
+
+        public static bool IsObjectOrPartOfObject(this GameObject sourceGameObject, GameObject targetGameObject)
+        {
+            return sourceGameObject == targetGameObject || targetGameObject.transform.IsChildOf(sourceGameObject.transform);
         }
     }
 }

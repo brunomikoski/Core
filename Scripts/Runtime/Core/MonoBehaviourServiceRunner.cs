@@ -8,8 +8,9 @@ namespace BrunoMikoski.Core
             _service = monoBehaviourService;
         }
 
-        private void OnApplicationQuit() {
-            _service.OnApplicationQuit();
+        private void OnApplicationQuit()
+        {
+            _service?.OnApplicationQuit();
         }
 
         private void Update() {

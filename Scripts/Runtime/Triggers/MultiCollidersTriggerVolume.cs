@@ -81,7 +81,7 @@ namespace BrunoMikoski.Core.PhysX
                 return true;
             return false;
         }
-        
+
         private void OnDrawGizmos()
         {
             Gizmos.color = gizmoColor;

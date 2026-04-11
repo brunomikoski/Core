@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.StateMachines
 {
+
     public class StepData
     {
         public string DisplayName;
@@ -14,7 +15,6 @@ namespace BrunoMikoski.Core.StateMachines
         public DateTime EnterTime;
         public DateTime ExitTime;
     }
-
     public class StateData : StepData
     {
     }
@@ -85,6 +85,7 @@ namespace BrunoMikoski.Core.StateMachines
                 EnterStackTrace = stackTrace,
                 EnterTime = DateTime.Now
             };
+
         }
 
         public static void TrackTransitionEnd(StateMachineBase stateMachine, TransitionBase targetTransition)
@@ -123,6 +124,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             return result;
         }
+
 
 
         private static StateMachineState GetOrCreateStateMachineState(StateMachineBase stateMachine)

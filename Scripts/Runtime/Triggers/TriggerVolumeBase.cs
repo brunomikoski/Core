@@ -12,7 +12,7 @@ namespace BrunoMikoski.Core.PhysX
         [SerializeField]
         protected Color gizmoColor = new Color(0f, 1f, 0f, 0.3f);
         [Header("Trigger Volume")]
-        [SerializeField] 
+        [SerializeField]
         private bool allowKinematics = true;
 
         [SerializeField]
@@ -235,9 +235,9 @@ namespace BrunoMikoski.Core.PhysX
         private int? AddColliderToEntry(Rigidbody targetRigidbody, Collider targetCollider)
         {
             int index = objectsInTrigger.IndexOf(targetRigidbody);
-            if (index < 0) 
+            if (index < 0)
                 return null;
-            
+
             ObjectInTriggerVolumeData entry = objectsInTrigger[index];
             entry.collidersInVolume.Add(targetCollider);
             objectsInTrigger[index] = entry;
@@ -249,7 +249,7 @@ namespace BrunoMikoski.Core.PhysX
             int index = objectsInTrigger.IndexOf(targetRigidbody);
             if (index < 0)
                 return null;
-            
+
             ObjectInTriggerVolumeData entry = objectsInTrigger[index];
             entry.collidersInVolume.Remove(targetCollider);
             objectsInTrigger[index] = entry;
@@ -277,7 +277,7 @@ namespace BrunoMikoski.Core.PhysX
             // ReSharper disable once Unity.NoNullCoalescing
             if (targetRigidbody == null)
                 targetRigidbody = targetCollider.attachedRigidbody;
-            
+
             if (targetRigidbody == null)
             {
                 objectsInVolumeSet.Remove(null);
@@ -434,7 +434,7 @@ namespace BrunoMikoski.Core.PhysX
             triggerCollider.enabled = enabled;
             return result;
         }
-        
+
         protected void SetTriggerCollider(Collider targetCollider)
         {
             triggerCollider = targetCollider;

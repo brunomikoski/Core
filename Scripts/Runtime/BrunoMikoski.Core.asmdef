@@ -9,7 +9,8 @@
         "BrunoMikoski.UIManager",
         "DOTween.Modules",
         "BrunoMikoski.SimplePool",
-        "UniTask"
+        "UniTask",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,4 +1,4 @@
-﻿#if DOTWEEN
+#if DOTWEEN
 using DG.Tweening;
 
 namespace BrunoMikoski.Core.CustomEasing

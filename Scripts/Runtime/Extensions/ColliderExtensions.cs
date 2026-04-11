@@ -13,13 +13,13 @@ namespace BrunoMikoski.Core
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
         }
-        
+
         public static void SortByFurthestFrom(this Collider[] colliders, Vector3 worldPosition)
         {
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition, false);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
         }
-        
+
         public static Vector3 GetRandomPositionInVolume(this Collider collider)
         {
             if (collider is BoxCollider box)

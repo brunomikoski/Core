@@ -4,7 +4,7 @@ using UnityEngine;
 namespace BrunoMikoski.Core
 {
     public sealed class ColliderDistanceFromPointComparer : IComparer<Collider>
-    {            
+    {
         private Vector3 targetPosition;
         private bool inversed;
 
@@ -16,14 +16,14 @@ namespace BrunoMikoski.Core
 
             return inversed ? sqrMagnitudeB.CompareTo(sqrMagnitudeA) : sqrMagnitudeA.CompareTo(sqrMagnitudeB);
         }
-            
+
         public void SetOrigin(Vector3 worldPosition, bool closest = true)
         {
             targetPosition = worldPosition;
             inversed = !closest;
         }
     }
-    
+
     public sealed class RaycastHitDistanceFromPointComparer : IComparer<RaycastHit>
     {
         private Vector3 targetPosition;

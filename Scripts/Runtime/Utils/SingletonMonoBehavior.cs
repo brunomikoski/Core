@@ -1,18 +1,46 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BrunoMikoski.Core
 {
-    public abstract class SingletonMonoBehaviour<T> : MonoBehaviour where T : Component
+    /// <summary>
+    /// Helper class for singleton reset on domain reload. Must be non-generic because
+    /// [RuntimeInitializeOnLoadMethod] cannot be used on methods in generic classes.
+    /// </summary>
+    internal static class SingletonMonoBehaviourRegistry
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Init()
+        private static void ResetOnSubsystemRegistration()
         {
-            instance = null;
-            hasInstance = false;
+            foreach (var reset in _resetActions)
+            {
+                reset?.Invoke();
+            }
+            _resetActions.Clear();
         }
 
+        private static readonly List<Action> _resetActions = new();
+
+        public static void RegisterReset(Action reset)
+        {
+            _resetActions.Add(reset);
+        }
+    }
+
+    public abstract class SingletonMonoBehaviour<T> : MonoBehaviour where T : Component
+    {
         private static bool hasInstance;
         private static T instance;
+
+        static SingletonMonoBehaviour()
+        {
+            SingletonMonoBehaviourRegistry.RegisterReset(() =>
+            {
+                instance = null;
+                hasInstance = false;
+            });
+        }
         public static T Instance
         {
             get
@@ -20,7 +48,7 @@ namespace BrunoMikoski.Core
                 if (!hasInstance)
                 {
 #if UNITY_6000_0_OR_NEWER
-                    instance = FindFirstObjectByType<T>();
+                    instance = FindAnyObjectByType<T>();
 #else
                     instance = FindObjectOfType<T>();
 #endif

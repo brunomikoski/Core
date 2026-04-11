@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using BrunoMikoski.Core.CustomEasing;
 using BrunoMikoski.Pooling;
 using UnityEngine;
@@ -7,11 +7,11 @@ namespace BrunoMikoski.Core.GUIUtils
 {
     public class AnimatedLayoutItemDictionary<T, TGUI> : ItemDictionaryGUI<T, TGUI> where TGUI : Component, IItemGUI<T>
     {
-        [Header("References")] 
+        [Header("References")]
         [SerializeField]
         private RectTransform layoutElementTemplate;
 
-        [Header("Settings")] 
+        [Header("Settings")]
         [SerializeField]
         private float moveSpeed;
 
@@ -28,7 +28,7 @@ namespace BrunoMikoski.Core.GUIUtils
 
                 AddItem(itemIDType, activated);
             }
-            
+
             foreach (var item in items)
             {
                 if (collection.Contains(item.Key))
@@ -60,10 +60,10 @@ namespace BrunoMikoski.Core.GUIUtils
                 DestroyRectElement(layoutElement);
                 itemToLayoutItem.Remove(baseItem);
             }
-            
+
             layoutElement = SpawnLayoutElement();
             layoutElement.gameObject.SetActive(activated);
-            
+
             itemToLayoutItem.Add(baseItem, layoutElement);
             return baseItem;
         }
@@ -106,14 +106,14 @@ namespace BrunoMikoski.Core.GUIUtils
 
         public void SetAnimationEnabled(T itemId, bool isEnabled)
         {
-            if (!Items.ContainsKey(itemId)) 
+            if (!Items.ContainsKey(itemId))
                 return;
 
             if (isEnabled)
                 staticItems.Remove(Items[itemId]);
-            else 
+            else
                 staticItems.Add(Items[itemId]);
-                
+
         }
 
         private void Update()
@@ -127,7 +127,7 @@ namespace BrunoMikoski.Core.GUIUtils
             {
                 if (staticItems.Contains(itemToLayout.Key))
                     continue;
-                
+
                 itemToLayout.Key.transform.position = Vector3.Lerp(itemToLayout.Key.transform.position, itemToLayout.Value.position,
                     Easing.Elastic.Out(Time.deltaTime * moveSpeed));
             }

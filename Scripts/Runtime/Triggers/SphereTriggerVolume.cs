@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace BrunoMikoski.Core.PhysX
 {
-
     [AddComponentMenu("Triggers/Sphere Trigger Volume")]
     public sealed class SphereTriggerVolume : TriggerVolumeBase
     {

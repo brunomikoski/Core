@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -50,21 +50,21 @@ namespace BrunoMikoski.Core.Routines
 
         public static string GetFirstFileHyperLink(this StackTrace stackTrace)
         {
-            if (stackTrace == null) 
+            if (stackTrace == null)
                 return "";
 
             StringBuilder sb = new StringBuilder();
             int usableFrames = stackTrace.FrameCount;
-            
+
             for (int i = 0; i < usableFrames; i++)
             {
                 StackFrame sf = stackTrace.GetFrame(i);
 
                 MethodBase mb = sf.GetMethod();
 
-                if (IgnoreLine(mb)) 
+                if (IgnoreLine(mb))
                     continue;
-                
+
                 // file name
                 if (displayFilenames && (sf.GetILOffset() != -1))
                 {
@@ -95,23 +95,23 @@ namespace BrunoMikoski.Core.Routines
         }
         public static string CleanupAsyncStackTrace(this StackTrace stackTrace, int maxFrames = -1)
         {
-            if (stackTrace == null) 
+            if (stackTrace == null)
                 return "";
 
             StringBuilder sb = new StringBuilder();
             int usableFrames = stackTrace.FrameCount;
             if (maxFrames != -1)
                 usableFrames = Mathf.Min(maxFrames, usableFrames);
-            
+
             for (int i = 0; i < usableFrames; i++)
             {
                 StackFrame sf = stackTrace.GetFrame(i);
 
                 MethodBase mb = sf.GetMethod();
 
-                if (IgnoreLine(mb)) 
+                if (IgnoreLine(mb))
                     continue;
-                
+
                 if (IsAsync(mb))
                 {
                     sb.Append("async ");
@@ -293,7 +293,7 @@ namespace BrunoMikoski.Core.Routines
         static bool IgnoreLine(MethodBase methodInfo)
         {
             string declareType = methodInfo.DeclaringType.FullName;
-            
+
             if (declareType == "System.Threading.ExecutionContext")
                 return true;
             if (declareType.StartsWith("System.Runtime.CompilerServices"))
@@ -309,7 +309,7 @@ namespace BrunoMikoski.Core.Routines
             if (declareType.StartsWith("Cysharp.Threading.Tasks.AwaiterActions"))
                 return true;
             if (declareType.StartsWith("BrunoMikoski.Core.Routines"))
-                return true; 
+                return true;
             if (declareType.StartsWith("Cysharp.Threading.Tasks.UniTask+"))
                 return true;
             if (declareType.StartsWith("Cysharp.Threading.Tasks.Internal.PlayerLoopRunner"))
@@ -325,7 +325,7 @@ namespace BrunoMikoski.Core.Routines
             {
                 return fi.Name;
             }
-            
+
             return "<a href=\"" + fi.FullName + "\" line=\"" + line + "\">" + path + ":" + line + "</a>";
         }
     }

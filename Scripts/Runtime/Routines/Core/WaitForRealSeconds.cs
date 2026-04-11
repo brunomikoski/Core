@@ -1,4 +1,4 @@
-﻿namespace BrunoMikoski.Core.Routines
+namespace BrunoMikoski.Core.Routines
 {
     public class WaitForRealSeconds : IRoutineYield
     {
@@ -22,7 +22,7 @@
         {
             stopped = true;
         }
-        
-        
+
+
     }
 }

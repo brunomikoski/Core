@@ -15,6 +15,7 @@ namespace BrunoMikoski.Core.StateMachines
         }
     }
 
+
     public class TransitionBase
     {
         protected StateMachineBase stateMachine;
@@ -55,4 +56,5 @@ namespace BrunoMikoski.Core.StateMachines
             stateMachine.TransitionFinished(toState);
         }
     }
+
 }

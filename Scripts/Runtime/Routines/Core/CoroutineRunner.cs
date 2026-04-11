@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -38,7 +38,7 @@ namespace BrunoMikoski.Core.Routines
                 return;
 
 #if UNITY_6000_0_OR_NEWER
-            ROUTINE_RUNNER = Object.FindFirstObjectByType<CoroutineRunnerMonoBehaviour>();
+            ROUTINE_RUNNER = Object.FindAnyObjectByType<CoroutineRunnerMonoBehaviour>();
 #else
             ROUTINE_RUNNER = Object.FindObjectOfType<CoroutineRunnerMonoBehaviour>();
 #endif
@@ -101,7 +101,6 @@ namespace BrunoMikoski.Core.Routines
             routine.Stop();
             routine = null;
         }
-
         public static void StopAndStart(ref Routine routine, IEnumerator enumerator, MonoBehaviour ownerBehaviour = null)
         {
             if (isQuitting || tearDownInProgress)
@@ -165,8 +164,26 @@ namespace BrunoMikoski.Core.Routines
             }
         }
 
-        #region WaitForSeconds
+        public static Routine WaitForOneFrame(Action callback, MonoBehaviour owner = null)
+        {
+            return WaitForFrames(1, callback, owner);
+        }
+        public static Routine WaitForFrames(int frames, Action callback, MonoBehaviour owner = null)
+        {
+            return StartCoroutine(WaitForFramesRoutine(frames, callback), owner);
+        }
 
+        private static IEnumerator WaitForFramesRoutine(int frames, Action callback)
+        {
+            for (int i = 0; i < frames; i++)
+            {
+                yield return null;
+            }
+
+            callback.Invoke();
+        }
+
+        #region WaitForSeconds
         public static Routine WaitForSeconds(float seconds)
         {
             return StartCoroutine(WaitForSecondsRoutine(seconds, false, null));
@@ -176,17 +193,14 @@ namespace BrunoMikoski.Core.Routines
         {
             return StartCoroutine(WaitForSecondsRoutine(seconds, false, callback));
         }
-
         public static Routine WaitForSeconds(float seconds, bool useRealTime, Action callback)
         {
             return StartCoroutine(WaitForSecondsRoutine(seconds, useRealTime, callback));
         }
-
         public static Routine WaitForSeconds(MonoBehaviour owner, float seconds, Action callback)
         {
             return StartCoroutine(WaitForSecondsRoutine(seconds, false, callback), owner);
         }
-
         public static Routine WaitForSeconds(MonoBehaviour owner, float seconds, bool useRealTime, Action callback)
         {
             return StartCoroutine(WaitForSecondsRoutine(seconds, useRealTime, callback), owner);
@@ -202,8 +216,7 @@ namespace BrunoMikoski.Core.Routines
             if (callback != null)
                 callback();
         }
-
-        #endregion WaitForSeconds
+#endregion WaitForSeconds
 
         public static void StopAll()
         {

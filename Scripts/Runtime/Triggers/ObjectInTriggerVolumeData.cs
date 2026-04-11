@@ -5,6 +5,7 @@ using UnityEngine.Pool;
 
 namespace BrunoMikoski.Core.PhysX
 {
+    [Serializable]
     public struct ObjectInTriggerVolumeData : IDisposable, IEquatable<ObjectInTriggerVolumeData>
     {
         [SerializeField]
@@ -50,7 +51,7 @@ namespace BrunoMikoski.Core.PhysX
         {
             if (collidersInVolume != null)
                 ListPool<Collider>.Release(collidersInVolume);
-            
+
             collidersInVolume = null;
         }
 

@@ -12,13 +12,13 @@ namespace BrunoMikoski.Core.StateMachines
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.StateEnter, this, value);
             remove => StateMachineRegistry.UnsubscribeFromGlobalEvent(StateMachineEvent.StateEnter, this, value);
         }
-        
+
         public event Action OnExitEvent
         {
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.StateExit, this, value);
             remove => StateMachineRegistry.UnsubscribeFromGlobalEvent(StateMachineEvent.StateExit, this, value);
         }
-        
+
         public event Action OnTransitionOutEvent
         {
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.BeginTransitionFrom, this, value);
@@ -47,7 +47,7 @@ namespace BrunoMikoski.Core.StateMachines
                 return cachedStateMachine;
             }
         }
-        
+
         public bool IsOnState
         {
             get
@@ -59,9 +59,9 @@ namespace BrunoMikoski.Core.StateMachines
                 }
 
                 return false;
-            }   
+            }
         }
-        
+
 #if UNITASK_AVAILABLE
         public async UniTask WaitStateEnterAsync()
         {

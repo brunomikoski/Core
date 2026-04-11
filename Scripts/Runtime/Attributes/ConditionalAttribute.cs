@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace BrunoMikoski.Core.Attributes
 {
-    
+
     public enum ConditionOperator
     {
         And,

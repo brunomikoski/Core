@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace BrunoMikoski.Core.Attributes
 {
     public class ReadOnlyAttribute : ConditionalAttribute

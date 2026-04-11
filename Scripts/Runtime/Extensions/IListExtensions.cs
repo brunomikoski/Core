@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 
 namespace System.Collections.Generic
@@ -89,7 +89,7 @@ namespace System.Collections.Generic
         {
             if (random == null)
                 random = RANDOM;
-            
+
             int i = list.Count;
             while (i > 1)
             {
@@ -98,11 +98,17 @@ namespace System.Collections.Generic
                 (list[k], list[i]) = (list[i], list[k]);
             }
         }
-        
+
         public static T IndexOrLast<T>(this IList<T> list, int index)
         {
             index = Mathf.Clamp(index, 0, list.Count - 1);
             return list[index];
+        }
+
+        public static int RandomCount(this IList list, int maxCount)
+        {
+            maxCount = Mathf.Min(list.Count, maxCount);
+            return RANDOM.Next(0, maxCount + 1);
         }
     }
 }

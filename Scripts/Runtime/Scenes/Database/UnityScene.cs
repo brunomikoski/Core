@@ -16,32 +16,26 @@ namespace BrunoMikoski.Core.ScenesReferences
     {
         [SerializeField, HideInInspector]
         private string sceneGuid;
-
         public string SceneGuid => sceneGuid;
 
         [SerializeField, HideInInspector]
         private string sceneName;
-
         public string SceneName => sceneName;
 
         [SerializeField, HideInInspector]
         private string scenePath;
-
         public string ScenePath => scenePath;
 
         [SerializeField]
         private int buildIndex;
-
         public int BuildIndex => buildIndex;
 
         [SerializeField]
         private bool isNetworkedScene;
-
         public bool IsNetworkedScene => isNetworkedScene;
 
         [NonSerialized]
         private Scene cachedScene;
-
         public Scene Scene
         {
             get
@@ -81,6 +75,7 @@ namespace BrunoMikoski.Core.ScenesReferences
             SceneAsset sceneAsset = null;
             string resolvedPath = null;
             string resolvedGuid = null;
+            string nullateReason = null;
 
             if (!string.IsNullOrEmpty(scenePath))
             {
@@ -90,33 +85,60 @@ namespace BrunoMikoski.Core.ScenesReferences
                     resolvedPath = scenePath;
                     resolvedGuid = AssetDatabase.AssetPathToGUID(resolvedPath);
                 }
+                else
+                {
+                    nullateReason = $"Scene path '{scenePath}' did not resolve to a valid SceneAsset (file moved, renamed or deleted).";
+                }
             }
+            else if (!string.IsNullOrEmpty(sceneGuid) || !string.IsNullOrEmpty(sceneName))
+                nullateReason = "Scene path was empty.";
 
             if (sceneAsset == null && !string.IsNullOrEmpty(sceneGuid))
             {
                 string pathFromGuid = AssetDatabase.GUIDToAssetPath(sceneGuid);
-                if (!string.IsNullOrEmpty(pathFromGuid))
+                if (string.IsNullOrEmpty(pathFromGuid))
+                {
+                    if (string.IsNullOrEmpty(nullateReason))
+                        nullateReason = $"Scene GUID '{sceneGuid}' did not resolve to any asset path (asset may have been deleted or GUID changed).";
+                }
+                else
                 {
                     sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(pathFromGuid);
                     if (sceneAsset != null)
                     {
                         resolvedPath = pathFromGuid;
                         resolvedGuid = sceneGuid;
+                        nullateReason = null;
                     }
+                    else if (string.IsNullOrEmpty(nullateReason))
+                        nullateReason = $"Path from GUID '{pathFromGuid}' did not load as SceneAsset.";
                 }
             }
 
             if (sceneAsset == null && !string.IsNullOrEmpty(sceneName))
             {
                 string[] guids = AssetDatabase.FindAssets($"t:{nameof(SceneAsset)} {sceneName}");
-                if (guids.Length == 1)
+                if (guids.Length == 0)
+                {
+                    if (string.IsNullOrEmpty(nullateReason))
+                        nullateReason = $"No scene asset found with name '{sceneName}'.";
+                }
+                else if (guids.Length > 1)
+                {
+                    if (string.IsNullOrEmpty(nullateReason))
+                        nullateReason = $"Multiple scenes ({guids.Length}) match name '{sceneName}', cannot resolve uniquely.";
+                }
+                else
                 {
                     resolvedPath = AssetDatabase.GUIDToAssetPath(guids[0]);
                     sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(resolvedPath);
                     if (sceneAsset != null)
                     {
                         resolvedGuid = guids[0];
+                        nullateReason = null;
                     }
+                    else if (string.IsNullOrEmpty(nullateReason))
+                        nullateReason = $"Scene found by name '{sceneName}' at '{resolvedPath}' did not load.";
                 }
             }
 
@@ -153,30 +175,12 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
             else
             {
-                // Corrupted or missing: nullate everything
-                if (!string.IsNullOrEmpty(sceneGuid))
-                {
-                    sceneGuid = string.Empty;
-                    changed = true;
-                }
-
-                if (!string.IsNullOrEmpty(scenePath))
-                {
-                    scenePath = string.Empty;
-                    changed = true;
-                }
-
-                if (!string.IsNullOrEmpty(sceneName))
-                {
-                    sceneName = string.Empty;
-                    changed = true;
-                }
-
-                if (buildIndex != -1)
-                {
-                    buildIndex = -1;
-                    changed = true;
-                }
+                Debug.LogError($"[UnityScene] Nullating scene data on '{this.name}': {nullateReason} Re-assign the scene reference in the inspector.", this);
+                sceneGuid = string.Empty;
+                scenePath = string.Empty;
+                sceneName = string.Empty;
+                buildIndex = -1;
+                changed = true;
             }
 
             if (changed)
@@ -191,7 +195,6 @@ namespace BrunoMikoski.Core.ScenesReferences
                 if (scenes[i].path.Equals(targetPath, StringComparison.Ordinal))
                     return i;
             }
-
             return -1;
         }
 #endif
@@ -214,8 +217,7 @@ namespace BrunoMikoski.Core.ScenesReferences
 #if UNITY_EDITOR
             else
             {
-                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive
-                    ? OpenSceneMode.Additive
+                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive ? OpenSceneMode.Additive
                     : OpenSceneMode.Single;
 
                 SyncWithSceneAsset();
@@ -241,8 +243,7 @@ namespace BrunoMikoski.Core.ScenesReferences
 #if UNITY_EDITOR
             else
             {
-                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive
-                    ? OpenSceneMode.Additive
+                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive ? OpenSceneMode.Additive
                     : OpenSceneMode.Single;
 
                 SyncWithSceneAsset();
@@ -255,7 +256,6 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
 #endif
         }
-
         public void Load(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
         {
             if (Application.isPlaying)
@@ -265,8 +265,7 @@ namespace BrunoMikoski.Core.ScenesReferences
 #if UNITY_EDITOR
             else
             {
-                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive
-                    ? OpenSceneMode.Additive
+                OpenSceneMode openSceneMode = loadSceneMode == LoadSceneMode.Additive ? OpenSceneMode.Additive
                     : OpenSceneMode.Single;
 
                 SyncWithSceneAsset();
@@ -297,7 +296,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                     Scene scene = SceneManager.GetSceneAt(i);
                     if (scene.path.Equals(scenePath, StringComparison.Ordinal))
                     {
-                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] { scene });
+                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] {scene});
                         EditorSceneManager.CloseScene(scene, true);
                         yield break;
                     }
@@ -325,12 +324,11 @@ namespace BrunoMikoski.Core.ScenesReferences
                     Scene scene = SceneManager.GetSceneAt(i);
                     if (scene.path.Equals(scenePath, StringComparison.Ordinal))
                     {
-                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] { scene });
+                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] {scene});
                         EditorSceneManager.CloseScene(scene, true);
                         break;
                     }
                 }
-
                 await UniTask.CompletedTask;
             }
 #endif
@@ -350,7 +348,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                     Scene scene = SceneManager.GetSceneAt(i);
                     if (scene.path.Equals(scenePath, StringComparison.Ordinal))
                     {
-                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] { scene });
+                        EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] {scene});
                         EditorSceneManager.CloseScene(scene, true);
                         return;
                     }

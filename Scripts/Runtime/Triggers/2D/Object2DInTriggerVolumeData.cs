@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -9,7 +9,7 @@ namespace BrunoMikoski.Core.PhysX
     public struct Object2DInTriggerVolumeData : IDisposable, IEquatable<Object2DInTriggerVolumeData>
 
     {
-        [SerializeField] 
+        [SerializeField]
         private Rigidbody2D rigidbody;
 
         public List<Collider2D> collidersInVolume;

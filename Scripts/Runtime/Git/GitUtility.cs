@@ -17,6 +17,7 @@ namespace BrunoMikoski.Core.Git
     public static class GitUtility
     {
         private const string GIT_EXECUTABLE_KEY = "GitUtility/Executable";
+        private const string CurrentGitCommitKey = "CURRENT_GIT_COMMIT";
 
         private static string LAST_ERROR;
         public static string LastError => LAST_ERROR;
@@ -47,6 +48,24 @@ namespace BrunoMikoski.Core.Git
                     return;
 
                 SetGitExecutable(value);
+            }
+        }
+
+        public static string CurrentGitCommit
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return EditorPrefs.GetString(CurrentGitCommitKey, string.Empty);
+#else
+                return string.Empty;
+#endif
+            }
+            set
+            {
+#if UNITY_EDITOR
+                EditorPrefs.SetString(CurrentGitCommitKey, value);
+#endif
             }
         }
 
@@ -217,7 +236,7 @@ namespace BrunoMikoski.Core.Git
         {
             return RunGitCommand(arguments, out string _);
         }
-        
+
         public static string GetCurrentCommitID()
         {
             RunGitCommand("rev-parse HEAD", out string result);
@@ -269,7 +288,7 @@ namespace BrunoMikoski.Core.Git
 
             return GetCommit("-n 1", relativeFilePath).FirstOrDefault();
         }
-        
+
 #if UNITY_EDITOR
         public static GitCommitInfo GetFirstCommit(Object asset)
         {
@@ -294,6 +313,12 @@ namespace BrunoMikoski.Core.Git
             }
 
             return GIT_ROOT_DIRECTORY;
+        }
+
+        public static string GetLastCommitMessage()
+        {
+            RunGitCommand("log -1 --pretty=%B", out string result);
+            return result?.Trim();
         }
 
         private static string MakeRelativePath(string fromPath, string toPath)

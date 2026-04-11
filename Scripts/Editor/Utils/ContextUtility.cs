@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.Utils
@@ -17,6 +17,6 @@ namespace BrunoMikoski.Core.Utils
             Debug.Log($"[{assetPath}] -> GUID: {guid} copied to clipboard");
             EditorGUIUtility.systemCopyBuffer = guid;
         }
-        
+
     }
 }

@@ -7,6 +7,29 @@ namespace BrunoMikoski.Core.Utils
 {
     public static class ColliderUtility
     {
+        [MenuItem("GameObject/Macros/Encapsulate Object with BoxCollider (Based on Renderers)")]
+        [MenuItem("CONTEXT/Macros/Encapsulate Object with BoxCollider (Based on Renderers)")]
+        public static void EncapsulateObjectBasedOnRenderer()
+        {
+            if (Selection.objects.Length > 1)
+                return;
+
+            GameObject selection = Selection.activeGameObject;
+
+            Undo.RecordObject(selection, "Generate Collider");
+
+            BoxCollider boxCollider  = selection.GetComponent<BoxCollider>();
+            if (boxCollider == null)
+            {
+                boxCollider = Undo.AddComponent<BoxCollider>(selection);
+            }
+
+            Bounds localBounds = selection.GetCompleteLocalBounds();
+
+            boxCollider.center = localBounds.center;
+            boxCollider.size = localBounds.size;
+        }
+
         [MenuItem("GameObject/Macros/Fix Collider/BoxTriggerVolume Scale issues on Selected Items")]
         public static void FixScaleIssues()
         {

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace BrunoMikoski.Core.CustomEasing
 {

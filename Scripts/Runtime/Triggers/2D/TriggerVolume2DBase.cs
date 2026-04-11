@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,11 +8,11 @@ namespace BrunoMikoski.Core.PhysX
     {
         private const string TRIGGER_HELPER_NAME = "TriggerHelper";
 
-        [Header("Gizmos")] 
-        [SerializeField] 
+        [Header("Gizmos")]
+        [SerializeField]
         protected Color gizmoColor = new Color(0f, 1f, 0f, 0.3f);
 
-        [Header("Trigger Volume")] 
+        [Header("Trigger Volume")]
         [SerializeField]
         private bool allowKinematics = true;
 

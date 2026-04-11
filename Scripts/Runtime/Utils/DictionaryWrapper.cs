@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace RoyTheunissen.Scaffolding.Collections
+namespace BrunoMikoski.Core.Collections
 {
     [Serializable]
     public abstract class DictionaryWrapperPairBase
@@ -24,7 +24,7 @@ namespace RoyTheunissen.Scaffolding.Collections
     {
         public abstract void ClearCache();
     }
-    
+
     // NOTE:    Sometimes the value dictionary needs to be cast before we call its methods.
     //          That is because some methods are implemented explicitly, and you can only
     //          get to them when cast as the interface type. See:

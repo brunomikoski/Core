@@ -10,7 +10,7 @@ namespace BrunoMikoski.Core
         private const string IS_NATIVE_OBJECT_ALIVE = "IsNativeObjectAlive";
         private static Dictionary<string, MethodInfo> nameToMethodInfoCache = new ();
 
-        
+
         /// <summary>
         /// This method checks if the Unity Object is null. It casts it first to a generic
         /// C# object, to prevent the operator== of UnityEngine.Object to be called, which
@@ -27,7 +27,7 @@ namespace BrunoMikoski.Core
         {
             return ((object)o) != null;
         }
-        
+
         /// <summary>
         /// Expensive method that uses the normal method for checking if is destroyed, but if is still returning as alive,
         /// does the native call to the IsNativeObjectAlive, use carefully
@@ -37,12 +37,12 @@ namespace BrunoMikoski.Core
         /// <returns></returns>
         public static bool IsDestroyedOrPendingToBeDestroyed(this Object obj)
         {
-                if (object.ReferenceEquals(obj, null)) 
+                if (object.ReferenceEquals(obj, null))
                     return true;
-               
+
                 if(obj is UnityEngine.Object unityObj)
                 {
-                    if ((obj as UnityEngine.Object) == null) 
+                    if ((obj as UnityEngine.Object) == null)
                         return true;
 
                     if (!unityObj.IsNativeObjectAlive())
@@ -51,12 +51,12 @@ namespace BrunoMikoski.Core
 
                 return false;
         }
-        
+
         public static bool IsNativeObjectAlive(this UnityEngine.Object obj)
         {
             return obj.InvokeMethod<bool>(IS_NATIVE_OBJECT_ALIVE);
         }
-        
+
         public static T InvokeMethod<T>(this object obj, string methodName, params object[] list)
         {
             try
@@ -69,7 +69,7 @@ namespace BrunoMikoski.Core
                     method = type.GetInstanceMethod(methodName, list.Select(o => o.GetType()).ToArray());
                     if (method == null)
                         return default;
-                    
+
                     nameToMethodInfoCache.Add(key, method);
                 }
 

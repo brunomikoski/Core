@@ -27,7 +27,7 @@ namespace BrunoMikoski.Core.Attributes
                 return showIfMethodAttributes;
             }
         }
-        
+
         public bool CheckCondition(SerializedProperty property)
         {
             for (int i = 0; i < ShowIfMethodAttributes.Length; i++)
@@ -41,7 +41,7 @@ namespace BrunoMikoski.Core.Attributes
                                                                      BindingFlags.NonPublic |
                                                                      BindingFlags.Instance |
                                                                      BindingFlags.Static);
-                    
+
                     validationMethods.Add(property.propertyPath, validationMethod);
                 }
 
@@ -50,14 +50,14 @@ namespace BrunoMikoski.Core.Attributes
                     Debug.LogWarning($"Failed to find method {showIfMethodAttribute.MethodName} in {property.serializedObject.targetObject.GetType().Name}");
                     continue;
                 }
-                
+
                 bool result = (bool) validationMethod.Invoke(property.serializedObject.targetObject, null);
                 if (result != showIfMethodAttribute.ExpectedValue)
                     return false;
             }
             return true;
         }
-        
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             if (!CheckCondition(property))
@@ -70,9 +70,9 @@ namespace BrunoMikoski.Core.Attributes
         {
             if (!CheckCondition(property))
                 return;
-            
+
             EditorGUI.PropertyField(position, property, label, true);
         }
-        
+
     }
 }

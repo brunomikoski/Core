@@ -16,9 +16,9 @@ namespace BrunoMikoski.Core
             LateUpdate,
             FixedUpdate
         }
-        
+
         public class UpdateSubscription : IEquatable<UpdateSubscription> {
-            public IUpdateListener Listener;
+            public Action<float> Callback;
             public UpdateType UpdateType;
             public int FrameInterval;
             public bool SparseCalls;
@@ -39,8 +39,9 @@ namespace BrunoMikoski.Core
                 return InstanceID;
             }
 
-            public void Reset() {
-                Listener = null;
+            public void Reset()
+            {
+                Callback = null;
                 UpdateType = UpdateType.Update;
                 FrameInterval = 1;
                 SparseCalls = true;
@@ -50,7 +51,7 @@ namespace BrunoMikoski.Core
                 UpdateGroup = 0;
             }
         }
-        
+
 
         private static bool isQuitting;
         public static bool IsQuitting
@@ -64,16 +65,17 @@ namespace BrunoMikoski.Core
                 return isQuitting;
             }
         }
-        
-        private readonly List<UpdateSubscription> updateListeners = new(256);
+
+        private readonly List<UpdateSubscription> updateListeners = new(1024);
+
         private readonly ObjectPool<UpdateSubscription> subscriptionPool;
         private int nextSubscriptionID;
         private int updateFrameIdx;
         private int lateUpdateFrameIdx;
         private int fixedUpdateFrameIdx;
         private MonoBehaviourServiceRunner runner;
-        
-        
+
+
         public MonoBehaviourService()
         {
             isQuitting = false;
@@ -118,7 +120,7 @@ namespace BrunoMikoski.Core
             subscriptionPool.Clear();
         }
 
-        public UpdateSubscription SubscribeToUpdate(IUpdateListener listener, UpdateType targetUpdateType,
+        public UpdateSubscription SubscribeToUpdate(Action<float> targetCallback, UpdateType targetUpdateType,
             int frameInterval = 1, bool sparseCalls = true) {
             if (frameInterval < 1) {
                 throw new ArgumentOutOfRangeException(nameof(frameInterval), "Frame interval must be greater than 0.");
@@ -128,7 +130,7 @@ namespace BrunoMikoski.Core
             int updateGroup = instanceID % frameInterval;
 
             UpdateSubscription sub = subscriptionPool.Get();
-            sub.Listener = listener;
+            sub.Callback = targetCallback;
             sub.UpdateType = targetUpdateType;
             sub.FrameInterval = frameInterval;
             sub.SparseCalls = sparseCalls;
@@ -147,10 +149,10 @@ namespace BrunoMikoski.Core
             }
         }
 
-        public void UnsubscribeFromUpdate(IUpdateListener listener) {
+        public void UnsubscribeFromUpdate(Action<float> targetCallback) {
             for (int i = updateListeners.Count - 1; i >= 0; --i) {
                 UpdateSubscription sub = updateListeners[i];
-                if (sub.Listener == listener) {
+                if (sub.Callback == targetCallback) {
                     updateListeners.RemoveAt(i);
                     subscriptionPool.Release(sub);
                     break;
@@ -194,7 +196,7 @@ namespace BrunoMikoski.Core
                 }
 
                 if (shouldCall) {
-                    sub.Listener.OnUpdate(sub.CumulativeDeltaTime);
+                    sub.Callback.Invoke(sub.CumulativeDeltaTime);
                     sub.CumulativeDeltaTime = 0f;
                     sub.FrameCounter = 0;
                 }

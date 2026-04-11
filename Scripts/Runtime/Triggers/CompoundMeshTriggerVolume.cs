@@ -74,7 +74,7 @@ namespace BrunoMikoski.Core.PhysX
                 subMeshes.Add(subMesh);
             }
 
-            
+
             triggerColliders = new List<MeshCollider>();
             for (int i = 0; i < subMeshes.Count; i++)
             {
@@ -82,7 +82,7 @@ namespace BrunoMikoski.Core.PhysX
                 meshCollider.sharedMesh = subMeshes[i];
                 triggerColliders.Add(meshCollider);
             }
-            
+
             ListPool<Mesh>.Release(subMeshes);
             ListPool<int>.Release(triangles);
             ListPool<Vector3>.Release(vertices);
@@ -146,7 +146,7 @@ namespace BrunoMikoski.Core.PhysX
             this.center = center;
             UpdateMeshDimensions();
         }
-        
+
         private void OnDrawGizmos()
         {
             Gizmos.color = gizmoColor;

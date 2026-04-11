@@ -94,7 +94,7 @@ namespace BrunoMikoski.Core
         public static string[] MaskToNames(this LayerMask original)
         {
             List<string> output = ListPool<string>.Get();
-			
+
             for (int i = 0; i < 32; ++i)
             {
                 int shifted = 1 << i;
@@ -119,7 +119,7 @@ namespace BrunoMikoski.Core
         public static int[] MaskToNumbers(this LayerMask original)
         {
             List<int> output = ListPool<int>.Get();
-			
+
             for (int i = 0; i < 32; ++i)
             {
                 int shifted = 1 << i;

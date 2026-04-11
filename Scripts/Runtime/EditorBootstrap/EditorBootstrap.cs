@@ -25,7 +25,7 @@ namespace BrunoMikoski.Core
         {
 #if UNITY_EDITOR
             UnityEditor.SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
-#endif           
+#endif
         }
     }
 }
