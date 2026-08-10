@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public struct LocalBounds
     {

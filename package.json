@@ -2,7 +2,6 @@
   "name": "com.brunomikoski.core",
   "displayName": "Core",
   "version": "0.1.0",
-  "unity": "2022.4",
   "description": "Core Framework",
   "keywords": [
     "editor"
@@ -16,10 +15,5 @@
   "author": {
     "name": "Bruno Mikoski",
     "url": "https://www.brunomikoski.com"
-  },
-  "dependencies": {
-    "com.brunomikoski.scriptableobjectcollection": "2.0.4",
-    "com.brunomikoski.servicelocator": "1.0.2",
-    "com.brunomikoski.simplepool": "1.0.0"
   }
 }

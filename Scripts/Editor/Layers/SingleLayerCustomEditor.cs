@@ -1,8 +1,8 @@
-using BrunoMikoski.Core.Layers;
+using BrunoMikoski.Core.DevelopmentTools.Layers;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Editor.Layers
+namespace BrunoMikoski.Core.Layers
 {
     [CustomEditor(typeof(SingleUnityLayer), true)]
     public class SingleLayerCustomEditor : UnityEditor.Editor

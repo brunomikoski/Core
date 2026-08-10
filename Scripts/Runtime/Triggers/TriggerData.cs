@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Triggers
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     [Serializable]
     public class TriggerData

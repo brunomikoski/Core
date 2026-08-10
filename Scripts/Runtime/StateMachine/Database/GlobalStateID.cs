@@ -3,7 +3,7 @@ using System;
 using Cysharp.Threading.Tasks;
 #endif
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public abstract class GlobalStateID : StateID
     {
@@ -12,13 +12,13 @@ namespace BrunoMikoski.Core.StateMachines
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.StateEnter, this, value);
             remove => StateMachineRegistry.UnsubscribeFromGlobalEvent(StateMachineEvent.StateEnter, this, value);
         }
-
+        
         public event Action OnExitEvent
         {
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.StateExit, this, value);
             remove => StateMachineRegistry.UnsubscribeFromGlobalEvent(StateMachineEvent.StateExit, this, value);
         }
-
+        
         public event Action OnTransitionOutEvent
         {
             add => StateMachineRegistry.SubscribeToGlobalEvent(StateMachineEvent.BeginTransitionFrom, this, value);
@@ -47,21 +47,21 @@ namespace BrunoMikoski.Core.StateMachines
                 return cachedStateMachine;
             }
         }
-
+        
         public bool IsOnState
         {
             get
             {
                 if (StateMachine != null)
                 {
-                    if (StateMachine.CurrentState.StateID == this)
+                    if (StateMachine.CurrentState != null && StateMachine.CurrentState.StateID == this)
                         return true;
                 }
 
                 return false;
-            }
+            }   
         }
-
+        
 #if UNITASK_AVAILABLE
         public async UniTask WaitStateEnterAsync()
         {

@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using BrunoMikoski.Core.Layers;
+using BrunoMikoski.Core.DevelopmentTools.Layers;
 using BrunoMikoski.ScriptableObjectCollections;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Editor.Layers
+namespace BrunoMikoski.Core.Layers
 {
     public class UnityLayerTemplate : ItemTemplate<SingleUnityLayer>
     {
         public int layerIndex;
     }
-
+    
     [UsedImplicitly]
     public sealed class UnityLayerCollectionGenerator : IScriptableObjectCollectionGenerator<UnityLayerCollection, UnityLayerTemplate>
     {
@@ -25,7 +25,7 @@ namespace BrunoMikoski.Core.Editor.Layers
             {
                 if (string.IsNullOrEmpty(layers[i]))
                     continue;
-
+                
                 templates.Add(new UnityLayerTemplate { name = layers[i], layerIndex = i});
             }
         }

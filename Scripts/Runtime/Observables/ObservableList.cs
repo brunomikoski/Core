@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using BrunoMikoski.Core.Events;
+using BrunoMikoski.Core.SafeEvents;
 
 namespace BrunoMikoski.Core.Observables {
     [Serializable]
@@ -25,11 +25,11 @@ namespace BrunoMikoski.Core.Observables {
         }
 
         [NonSerialized]
-        private SafeEvent _onChanged = new();
+        private SafeEvent _onChangedEvent = new();
         public override event Action OnChangedEvent
         {
-            add => _onChanged.AddListener(value);
-            remove => _onChanged.RemoveListener(value);
+            add => _onChangedEvent.AddListener(value);
+            remove => _onChangedEvent.RemoveListener(value);
         }
 
         [SerializeField]
@@ -50,16 +50,16 @@ namespace BrunoMikoski.Core.Observables {
         public void Insert(int index, T value) {
             m_list.Insert(index, value);
             syncToPrevList();
-            _itemAdded.Dispatch(value);
-            _onChanged.Dispatch();
+            _itemAdded.Invoke(value);
+            _onChangedEvent.Invoke();
         }
 
         public void RemoveAt(int index) {
             var item = m_list[index];
             m_list.RemoveAt(index);
             syncToPrevList();
-            _itemRemoved.Dispatch(item);
-            _onChanged.Dispatch();
+            _itemRemoved.Invoke(item);
+            _onChangedEvent.Invoke();
         }
 
         public T this[int index] {
@@ -73,9 +73,9 @@ namespace BrunoMikoski.Core.Observables {
                 }
                 m_list[index] = value;
                 syncToPrevList();
-                _itemAdded.Dispatch(value);
-                _itemRemoved.Dispatch(prevItem);
-                _onChanged.Dispatch();
+                _itemAdded.Invoke(value);
+                _itemRemoved.Invoke(prevItem);
+                _onChangedEvent.Invoke();
             }
         }
         #endregion
@@ -100,8 +100,8 @@ namespace BrunoMikoski.Core.Observables {
         public void Add(T item) {
             m_list.Add(item);
             syncToPrevList();
-            _itemAdded.Dispatch(item);
-            _onChanged.Dispatch();
+            _itemAdded.Invoke(item);
+            _onChangedEvent.Invoke();
         }
 
         public void Clear() {
@@ -109,10 +109,10 @@ namespace BrunoMikoski.Core.Observables {
             tempList.AddRange(m_list);
             m_list.Clear();
             foreach (var item in tempList) {
-                _itemRemoved.Dispatch(item);
+                _itemRemoved.Invoke(item);
             }
             syncToPrevList();
-            _onChanged.Dispatch();
+            _onChangedEvent.Invoke();
             tempList.Clear();
         }
 
@@ -128,8 +128,8 @@ namespace BrunoMikoski.Core.Observables {
             var isRemoved = m_list.Remove(item);
             if (isRemoved) {
                 syncToPrevList();
-                _itemRemoved.Dispatch(item);
-                _onChanged.Dispatch();
+                _itemRemoved.Invoke(item);
+                _onChangedEvent.Invoke();
             }
             return isRemoved;
         }
@@ -199,6 +199,10 @@ namespace BrunoMikoski.Core.Observables {
             }
 
             prevListInitialized = true;
+        }
+        
+        public override void RaiseOnChangedEvent() {
+            _onChangedEvent.Invoke();
         }
     }
 }

@@ -5,7 +5,10 @@
         "BrunoMikoski.Core",
         "BrunoMikoski.ScriptableObjectCollection.Editor",
         "BrunoMikoski.ScriptableObjectCollection",
-        "Unity.EditorCoroutines.Editor"
+        "Unity.EditorCoroutines.Editor",
+        "BrunoMikoski.ServiceLocator",
+        "Unity.TextMeshPro",
+        "Unity.TextMeshPro.Editor"
     ],
     "includePlatforms": [
         "Editor"

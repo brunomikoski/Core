@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using BrunoMikoski.Core.Events;
+using BrunoMikoski.Core.SafeEvents;
 
 namespace BrunoMikoski.Core.Observables {
 
@@ -67,7 +67,7 @@ namespace BrunoMikoski.Core.Observables {
             get => value;
             set => SetValue(value);
         }
-
+        
         public void SetValue(T targetValue, bool notify = true)
         {
             if (EqualityComparer<T>.Default.Equals(value, targetValue)) {
@@ -82,7 +82,7 @@ namespace BrunoMikoski.Core.Observables {
 
             if (notify)
             {
-                _onChangedEvent.Dispatch();
+                _onChangedEvent.Invoke();
                 _onChangedValuesEvent.Invoke(previous, value);
             }
         }
@@ -128,6 +128,10 @@ namespace BrunoMikoski.Core.Observables {
 
         public override void ResetToInitialValue() {
             Value = initializationValue;
+        }
+        
+        public override void RaiseOnChangedEvent() {
+            _onChangedEvent.Invoke();
         }
     }
 }

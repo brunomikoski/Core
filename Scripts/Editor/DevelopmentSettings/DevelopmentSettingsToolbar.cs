@@ -1,11 +1,8 @@
 using UnityEditor;
 using UnityEditor.Toolbars;
 using UnityEngine;
-#if !UNITY_6000_3_OR_NEWER
-using BrunoMikoski.Core.Utils;
-#endif
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class DevelopmentSettingsToolbar
     {
@@ -13,7 +10,7 @@ namespace BrunoMikoski.Core
 
         private static class MainToolbarRegistration
         {
-            private const string ToolbarElementPath = "BrunoMikoski/DevelopmentSettings";
+            private const string ToolbarElementPath = "Tools/DevelopmentSettings";
 
             [MainToolbarElement(ToolbarElementPath, defaultDockPosition = MainToolbarDockPosition.Right)]
             public static MainToolbarElement CreateDevelopmentSettingsButton()

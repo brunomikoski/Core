@@ -1,7 +1,7 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     public static class ContextUtility
     {
@@ -17,6 +17,6 @@ namespace BrunoMikoski.Core.Utils
             Debug.Log($"[{assetPath}] -> GUID: {guid} copied to clipboard");
             EditorGUIUtility.systemCopyBuffer = guid;
         }
-
+        
     }
 }

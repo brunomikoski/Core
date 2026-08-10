@@ -1,15 +1,15 @@
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public static class StateMachineResolver
     {
         public static void RegisterStateMachine<T>(StateMachine<T> stateMachine) where T : StateID
         {
-
+            
         }
 
         public static void UnregisterStateMachine<T>(StateMachine<T> stateMachine) where T : StateID
         {
-
+            
         }
     }
 }

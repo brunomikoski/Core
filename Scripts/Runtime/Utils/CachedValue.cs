@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     /// <summary>
     /// Utility for caching values that are expensive to calculate.

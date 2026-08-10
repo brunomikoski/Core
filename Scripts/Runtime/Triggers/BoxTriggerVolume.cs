@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace BrunoMikoski.Core.PhysX
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     [AddComponentMenu("Triggers/Box Trigger Volume")]
-    public sealed class BoxTriggerVolume : TriggerVolumeBase
+    public class BoxTriggerVolume : TriggerVolumeBase
     {
         [Header("Box")]
         [SerializeField]

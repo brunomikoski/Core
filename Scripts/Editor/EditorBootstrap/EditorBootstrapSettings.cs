@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class EditorBootstrapSettingsProvider
     {
@@ -34,21 +34,21 @@ namespace BrunoMikoski.Core
                     if (reorderableList == null || reorderableList.count != requiredScenes.Length)
                     {
                         reorderableList = new ReorderableList(requiredScenes, typeof(SceneAsset), true, true, true, true)
+                        {
+                            drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Required Scenes"),
+                            drawElementCallback = (rect, index, isActive, isFocused) =>
                             {
-                                drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Required Scenes"),
-                                drawElementCallback = (rect, index, isActive, isFocused) =>
+                                if (index < requiredScenes.Length)
                                 {
-                                    if (index < requiredScenes.Length)
-                                    {
-                                        requiredScenes[index] = (SceneAsset)EditorGUI.ObjectField(
-                                            new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
-                                            requiredScenes[index],
-                                            typeof(SceneAsset),
-                                            false
-                                        );
-                                    }
+                                    requiredScenes[index] = (SceneAsset)EditorGUI.ObjectField(
+                                        new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
+                                        requiredScenes[index],
+                                        typeof(SceneAsset),
+                                        false
+                                    );
                                 }
-                            };
+                            }
+                        };
                         reorderableList.onAddCallback = list =>
                         {
                             List<SceneAsset> sceneList = new(requiredScenes) { null };
@@ -97,7 +97,6 @@ namespace BrunoMikoski.Core
             return provider;
         }
     }
-
 
 
     [Serializable]

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class TypeExtensions
     {
@@ -17,13 +17,13 @@ namespace BrunoMikoski.Core
                                   BindingFlags.FlattenHierarchy)
                 : Array.Empty<MethodInfo>();
         }
-
+        
         public static MethodInfo GetInstanceMethod(this Type type, string name, Type[] parameters)
         {
             return type.GetInstanceMethods()
                 .FirstOrDefault(mi => mi.Name == name && mi.GetParameters().HasTypes(parameters));
         }
-
+        
         public static bool HasTypes(this ParameterInfo[] parameters, Type[] types)
         {
             if (types == null)
@@ -42,12 +42,12 @@ namespace BrunoMikoski.Core
 
         public static bool IsTypeOrSubclassOfType(this Type type, Type targetType)
         {
-            return type == targetType || type.IsSubclassOf(targetType);
+            return type == targetType || type.IsSubclassOf(targetType); 
         }
-
+        
         public static bool IsNotTypeOrSubclassOfType(this Type type, Type targetType)
         {
-            return !IsTypeOrSubclassOfType(type, targetType);
+            return !IsTypeOrSubclassOfType(type, targetType); 
         }
     }
 }

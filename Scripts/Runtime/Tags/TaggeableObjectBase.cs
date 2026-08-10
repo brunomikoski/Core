@@ -4,8 +4,9 @@ using BrunoMikoski.ScriptableObjectCollections.Picker;
 using BrunoMikoski.ServicesLocation;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
+    [DisallowMultipleComponent]
     [DefaultExecutionOrder(-999)]
     public abstract class TaggeableObjectBase<T> : MonoBehaviour, ITagSource, IList<T> where T : Tag
     {
@@ -24,17 +25,20 @@ namespace BrunoMikoski.Core
         {
             Unregister();
         }
-        
+
         protected virtual void Register()
         {
-            tagRegistryService.Reference.RegisterTagController(this);
+            if (!tagRegistryService.Exists)
+            {
+                throw new System.Exception($"Missing {nameof(TagRegistryService)}. This usually means the scene was played without the services being registered — make sure the scene is set up as a gameplay scene (added to Build Settings with a valid build index) so its services reporter runs.");
+            }
+            tagRegistryService.Reference.RegisterTagSource(this);
         }
-
 
         protected virtual void Unregister()
         {
             if (tagRegistryService.HasCachedReference)
-                tagRegistryService.Reference.UnregisterTagController(this);
+                tagRegistryService.Reference.UnregisterTagSource(this);
         }
 
         public IEnumerator<T> GetEnumerator()

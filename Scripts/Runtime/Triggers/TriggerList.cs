@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using BrunoMikoski.Core.Routines;
+using BrunoMikoski.Core.DevelopmentTools.Routines;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Triggers
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     [Serializable]
     public class TriggerList

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static partial class ColliderExtensions
     {
@@ -13,13 +13,13 @@ namespace BrunoMikoski.Core
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
         }
-
+        
         public static void SortByFurthestFrom(this Collider[] colliders, Vector3 worldPosition)
         {
             COLLIDER_DISTANCE_FROM_POINT_COMPARER.SetOrigin(worldPosition, false);
             Array.Sort(colliders, 0, colliders.Length, COLLIDER_DISTANCE_FROM_POINT_COMPARER);
         }
-
+        
         public static Vector3 GetRandomPositionInVolume(this Collider collider)
         {
             if (collider is BoxCollider box)
@@ -81,6 +81,80 @@ namespace BrunoMikoski.Core
             Debug.LogError("Collider does not have valid type " + collider.GetType().Name,
                 collider.gameObject);
             return 0f;
+        }
+
+        public static float GetNormalizedDistanceFalloff(this Collider collider, Vector3 worldPosition)
+        {
+            if (collider == null)
+            {
+                return 1f;
+            }
+
+            if (collider is SphereCollider sphereCollider)
+            {
+                return GetSphereNormalizedDistanceFalloff(sphereCollider, worldPosition);
+            }
+
+            if (collider is BoxCollider boxCollider)
+            {
+                return GetBoxNormalizedDistanceFalloff(boxCollider, worldPosition);
+            }
+
+            return GetBoundsNormalizedDistanceFalloff(collider, worldPosition);
+        }
+
+        private static float GetSphereNormalizedDistanceFalloff(SphereCollider sphereCollider, Vector3 worldPosition)
+        {
+            Vector3 center = sphereCollider.transform.TransformPoint(sphereCollider.center);
+            Vector3 lossyScale = sphereCollider.transform.lossyScale;
+            float largestScale = Mathf.Max(
+                Mathf.Abs(lossyScale.x),
+                Mathf.Max(Mathf.Abs(lossyScale.y), Mathf.Abs(lossyScale.z)));
+            float radius = sphereCollider.radius * largestScale;
+
+            if (radius <= Mathf.Epsilon)
+            {
+                return 1f;
+            }
+
+            return 1f - Mathf.Clamp01(Vector3.Distance(worldPosition, center) / radius);
+        }
+
+        private static float GetBoxNormalizedDistanceFalloff(BoxCollider boxCollider, Vector3 worldPosition)
+        {
+            Vector3 extents = boxCollider.size * 0.5f;
+            Vector3 localOffset = boxCollider.transform.InverseTransformPoint(worldPosition) - boxCollider.center;
+            float normalizedDistance = 0f;
+
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, localOffset.x, extents.x);
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, localOffset.y, extents.y);
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, localOffset.z, extents.z);
+
+            return 1f - Mathf.Clamp01(normalizedDistance);
+        }
+
+        private static float GetBoundsNormalizedDistanceFalloff(Collider collider, Vector3 worldPosition)
+        {
+            Bounds bounds = collider.bounds;
+            Vector3 offset = worldPosition - bounds.center;
+            Vector3 extents = bounds.extents;
+            float normalizedDistance = 0f;
+
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, offset.x, extents.x);
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, offset.y, extents.y);
+            normalizedDistance = MaxNormalizedAxisDistance(normalizedDistance, offset.z, extents.z);
+
+            return 1f - Mathf.Clamp01(normalizedDistance);
+        }
+
+        private static float MaxNormalizedAxisDistance(float currentMax, float offset, float extent)
+        {
+            if (extent <= Mathf.Epsilon)
+            {
+                return currentMax;
+            }
+
+            return Mathf.Max(currentMax, Mathf.Abs(offset) / extent);
         }
 
         public static Bounds GetLocalBounds(this Collider collider)

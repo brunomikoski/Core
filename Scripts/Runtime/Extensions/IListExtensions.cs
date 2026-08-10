@@ -1,17 +1,15 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 
 namespace System.Collections.Generic
 {
     public static partial class IListExtensions
     {
-        private static readonly Random RANDOM = new Random();
-
         public static T Random<T>(this IList<T> list)
         {
             if (list.Count == 0)
                 throw new IndexOutOfRangeException("Cannot take random element from an empty list");
-            return list[RANDOM.Next(list.Count)];
+            return list[UnityEngine.Random.Range(0, list.Count)];
         }
 
         public static T GetRandomButNotThis<T>(this IList<T> list, T item)
@@ -26,7 +24,7 @@ namespace System.Collections.Generic
             if (list.Count == 1)
                 return list[0];
 
-            int newIndex = RANDOM.Next(list.Count - 1);
+            int newIndex = UnityEngine.Random.Range(0, list.Count - 1);
             if (newIndex >= index)
                 newIndex++;
 
@@ -85,20 +83,17 @@ namespace System.Collections.Generic
             return list[^1];
         }
 
-        public static void Shuffle<T>(this IList<T> list, Random random = null)
+        public static void Shuffle<T>(this IList<T> list)
         {
-            if (random == null)
-                random = RANDOM;
-
             int i = list.Count;
             while (i > 1)
             {
                 i--;
-                int k = random.Next(i + 1);
+                int k = UnityEngine.Random.Range(0, i + 1);
                 (list[k], list[i]) = (list[i], list[k]);
             }
         }
-
+        
         public static T IndexOrLast<T>(this IList<T> list, int index)
         {
             index = Mathf.Clamp(index, 0, list.Count - 1);
@@ -108,7 +103,7 @@ namespace System.Collections.Generic
         public static int RandomCount(this IList list, int maxCount)
         {
             maxCount = Mathf.Min(list.Count, maxCount);
-            return RANDOM.Next(0, maxCount + 1);
+            return UnityEngine.Random.Range(0, maxCount + 1);
         }
     }
 }

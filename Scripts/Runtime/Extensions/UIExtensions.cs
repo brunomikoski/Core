@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
-using BrunoMikoski.Core;
-using BrunoMikoski.Core.Routines;
+using BrunoMikoski.Core.DevelopmentTools;
+using BrunoMikoski.Core.DevelopmentTools.Routines;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace BrunoMikoski.Core.UI
+namespace BrunoMikoski.Core.DevelopmentTools.UI
 {
    public static class UiExtensions
     {

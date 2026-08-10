@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 
-namespace System
+namespace BrunoMikoski.Core.System.Reflection
 {
     public static partial class TypeExtensions
     {

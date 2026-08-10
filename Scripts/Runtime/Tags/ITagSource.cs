@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public interface ITagSource
     {

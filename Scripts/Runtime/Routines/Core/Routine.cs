@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 #if UNITASK_ENABLED
 using Cysharp.Threading.Tasks;
 #endif
 
-namespace BrunoMikoski.Core.Routines
+namespace BrunoMikoski.Core.DevelopmentTools.Routines
 {
     public class Routine : CustomYieldInstruction
     {
@@ -13,11 +13,13 @@ namespace BrunoMikoski.Core.Routines
         private readonly MonoBehaviour monoBehaviour;
         public MonoBehaviour MonoBehaviour => monoBehaviour;
 
+        internal Coroutine UnityCoroutine;
+
         private bool isRunning;
         public bool IsRunning => isRunning;
 
         private bool monoBehaviourDependent;
-
+        
         private bool isPaused;
         public bool IsPaused => isPaused;
 
@@ -28,9 +30,12 @@ namespace BrunoMikoski.Core.Routines
 
 
         public override bool keepWaiting => isRunning;
-
+        
         private DateTime finishedTime;
         public DateTime FinishedTime => finishedTime;
+
+        private DateTime stoppedTime;
+        public DateTime StoppedTime => stoppedTime;
 
         public Routine(IEnumerator enumerator, MonoBehaviour monoBehaviour, bool usingGameObjectLifetime)
         {
@@ -81,8 +86,9 @@ namespace BrunoMikoski.Core.Routines
         public void Stop()
         {
             isRunning = false;
+            stoppedTime = DateTime.UtcNow;
         }
-#if UNITASK_ENABLED
+#if UNITASK_ENABLED        
         public async UniTask ToUniTask()
         {
             await UniTask.WaitUntil(() => isCompleted);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public static class StateMachineRegistry
     {
@@ -13,10 +13,10 @@ namespace BrunoMikoski.Core.StateMachines
             public StateMachineEvent StateMachineEvent;
             public Action Callback;
         }
-
+        
         private static List<StateMachineBase> RUNNING_STATE_MACHINES = new(10);
         private static List<QueuedEvents> QUEUED_EVENTS_LIST = new(20);
-
+        
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void SupportDomainReload()
         {
@@ -36,14 +36,14 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if(!RUNNING_STATE_MACHINES.Contains(stateMachineBase))
                 return;
-
+            
             UnregisterStateMachineInstance(stateMachineBase);
         }
 
         private static void RegisterNewStateMachineInstance(StateMachineBase stateMachineBase)
         {
             EnsureSingleGlobalStateMachine(stateMachineBase);
-
+            
             RUNNING_STATE_MACHINES.Add(stateMachineBase);
             ResolveStateMachineEventsQueue(stateMachineBase);
         }
@@ -86,7 +86,7 @@ namespace BrunoMikoski.Core.StateMachines
                 });
             }
         }
-
+        
         public static void UnsubscribeFromGlobalEvent<TGlobalStateType>(StateMachineEvent targetStateEvent, TGlobalStateType targetGlobalState, Action callback)  where TGlobalStateType : GlobalStateID
         {
             if (TryGetStateMachineOfType(targetGlobalState, out StateMachineBase stateMachineBase))
@@ -98,7 +98,7 @@ namespace BrunoMikoski.Core.StateMachines
                 TryRemoveFromQueue(targetStateEvent, targetGlobalState, callback);
             }
         }
-
+        
         private static void ResolveStateMachineEventsQueue(StateMachineBase stateMachineBase)
         {
             for (int i = QUEUED_EVENTS_LIST.Count - 1; i >= 0; i--)
@@ -107,7 +107,7 @@ namespace BrunoMikoski.Core.StateMachines
 
                 if (stateMachineBase.StateIDType.IsNotTypeOrSubclassOfType(queuedEvents.GlobalStateID.GetType()))
                     continue;
-
+                
                 stateMachineBase.SubscribeToStateEvent(queuedEvents.StateMachineEvent, queuedEvents.GlobalStateID, queuedEvents.Callback);
                 QUEUED_EVENTS_LIST.RemoveAt(i);
             }
@@ -120,7 +120,7 @@ namespace BrunoMikoski.Core.StateMachines
 
                 if(stateMachineBase.StateIDType.IsNotTypeOrSubclassOfType(queuedEvents.GlobalStateID.GetType()))
                     continue;
-
+                
                 QUEUED_EVENTS_LIST.RemoveAt(i);
             }
         }
@@ -178,7 +178,7 @@ namespace BrunoMikoski.Core.StateMachines
                     return false;
                 }
             }
-
+            
             resultStateMachine = null;
             return false;
         }

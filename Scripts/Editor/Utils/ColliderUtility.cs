@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using BrunoMikoski.Core.PhysX;
+using BrunoMikoski.Core.DevelopmentTools.Triggers;
+using BrunoMikoski.Core.DevelopmentTools.PhysX;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     public static class ColliderUtility
     {

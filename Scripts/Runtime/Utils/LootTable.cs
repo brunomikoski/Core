@@ -2,16 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     /// <summary>
     /// Generic, inspector-serializable loot table that selects items based on their weight.
-    /// Works for UnityEngine.Object types, strings, and any other serializable reference type.
+    /// Works for UnityEngine.Object types, strings, and any other serializable reference or value
+    /// type. <c>default(T)</c> is treated as an empty slot (for reference types this is <c>null</c>;
+    /// for structs like Fusion's <c>NetworkPrefabRef</c> this is the <c>Empty</c> value).
     /// </summary>
     [Serializable]
-    public class LootTable<T> where T : class
+    public class LootTable<T>
     {
         private static readonly IEqualityComparer<T> ItemComparer = EqualityComparer<T>.Default;
+        private static bool IsEmpty(T item) => ItemComparer.Equals(item, default);
 
         [Serializable]
         public class Entry
@@ -49,11 +52,7 @@ namespace BrunoMikoski.Core.Utils
         [NonSerialized]
         private int[] _missStreaks;
 
-        [NonSerialized]
-        private System.Random _externalRng;
-
-        private static float UnityRandom(float max) => UnityEngine.Random.Range(0f, max);
-        private float ExternalRandom(float max) => (float)(_externalRng.NextDouble() * max);
+        private static float randomUnderMax(float max) => UnityEngine.Random.Range(0f, max);
 
         public List<Entry> Entries => _entries;
 
@@ -71,7 +70,7 @@ namespace BrunoMikoski.Core.Utils
 
         public void ResetConsecutivePickMemory()
         {
-            _lastPicked = null;
+            _lastPicked = default;
         }
 
         public void ResetPseudoRandomState()
@@ -141,7 +140,7 @@ namespace BrunoMikoski.Core.Utils
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null)
+                if (IsEmpty(e.Item))
                     continue;
 
                 if (e.Weight > 0f)
@@ -153,23 +152,12 @@ namespace BrunoMikoski.Core.Utils
 
         public T Get()
         {
-            T result = _pseudoRandom
-                ? PickPseudoRandom(UnityRandom)
-                : PickWeighted(UnityRandom);
-            RememberPick(result);
-            return result;
-        }
-
-        public T Get(System.Random rng)
-        {
-            if (rng == null)
-                return Get();
-
-            _externalRng = rng;
-            T result = _pseudoRandom
-                ? PickPseudoRandom(ExternalRandom)
-                : PickWeighted(ExternalRandom);
-            _externalRng = null;
+            T result;
+            if (_pseudoRandom)
+                result = PickPseudoRandom();
+            else
+                result = PickWeighted();
+            
             RememberPick(result);
             return result;
         }
@@ -177,7 +165,7 @@ namespace BrunoMikoski.Core.Utils
         public bool TryGet(out T result)
         {
             result = Get();
-            return result != null;
+            return !IsEmpty(result);
         }
 
         private void RememberPick(T result)
@@ -186,14 +174,14 @@ namespace BrunoMikoski.Core.Utils
                 _lastPicked = result;
         }
 
-        private T PickWeighted(Func<float, float> randomUnderMax)
+        private T PickWeighted()
         {
-            T exclude = _avoidConsecutiveDuplicate ? _lastPicked : null;
-            float totalExcluding = exclude != null ? GetTotalWeightExcluding(exclude) : 0f;
-            bool useExclude = exclude != null && totalExcluding > 0f;
+            T exclude = _avoidConsecutiveDuplicate ? _lastPicked : default;
+            float totalExcluding = !IsEmpty(exclude) ? GetTotalWeightExcluding(exclude) : 0f;
+            bool useExclude = !IsEmpty(exclude) && totalExcluding > 0f;
             float total = useExclude ? totalExcluding : GetTotalWeight();
             if (total <= 0f)
-                return null;
+                return default;
 
             float pick = randomUnderMax(total);
             return useExclude ? GetAtWeightExcluding(pick, exclude) : GetAtWeight(pick);
@@ -201,14 +189,14 @@ namespace BrunoMikoski.Core.Utils
 
         private float GetTotalWeightExcluding(T exclude)
         {
-            if (exclude == null)
+            if (IsEmpty(exclude))
                 return 0f;
 
             float sum = 0f;
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null || e.Weight <= 0f || ItemComparer.Equals(e.Item, exclude))
+                if (IsEmpty(e.Item) || e.Weight <= 0f || ItemComparer.Equals(e.Item, exclude))
                     continue;
                 sum += e.Weight;
             }
@@ -219,13 +207,13 @@ namespace BrunoMikoski.Core.Utils
         private T GetAtWeight(float target)
         {
             if (_entries.Count == 0)
-                return null;
+                return default;
 
             float cumulative = 0f;
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null || e.Weight <= 0f)
+                if (IsEmpty(e.Item) || e.Weight <= 0f)
                     continue;
 
                 cumulative += e.Weight;
@@ -236,23 +224,23 @@ namespace BrunoMikoski.Core.Utils
             for (int i = 0; i < _entries.Count; i++)
             {
                 var e = _entries[i];
-                if (e.Item != null && e.Weight > 0f)
+                if (!IsEmpty(e.Item) && e.Weight > 0f)
                     return e.Item;
             }
 
-            return null;
+            return default;
         }
 
         private T GetAtWeightExcluding(float target, T exclude)
         {
             if (_entries.Count == 0)
-                return null;
+                return default;
 
             float cumulative = 0f;
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null || e.Weight <= 0f || ItemComparer.Equals(e.Item, exclude))
+                if (IsEmpty(e.Item) || e.Weight <= 0f || ItemComparer.Equals(e.Item, exclude))
                     continue;
 
                 cumulative += e.Weight;
@@ -263,49 +251,76 @@ namespace BrunoMikoski.Core.Utils
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item != null && e.Weight > 0f && !ItemComparer.Equals(e.Item, exclude))
+                if (!IsEmpty(e.Item) && e.Weight > 0f && !ItemComparer.Equals(e.Item, exclude))
                     return e.Item;
             }
 
-            return null;
+            return default;
         }
 
-        private T PickPseudoRandom(Func<float, float> randomUnderMax)
+        private float ComputePseudoRandomTotal(T exclude)
         {
-            if (_entries.Count == 0)
-                return null;
-
-            if (_missStreaks == null || _missStreaks.Length != _entries.Count)
-                _missStreaks = new int[_entries.Count];
-
-            T exclude = _avoidConsecutiveDuplicate ? _lastPicked : null;
-
             float total = 0f;
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null || e.Weight <= 0f)
+                if (IsEmpty(e.Item) || e.Weight <= 0f)
                     continue;
-                if (exclude != null && ItemComparer.Equals(e.Item, exclude))
+                if (!IsEmpty(exclude) && ItemComparer.Equals(e.Item, exclude))
                     continue;
 
                 total += e.Weight * (1 + _missStreaks[i]);
             }
 
+            return total;
+        }
+
+        private T PickPseudoRandom()
+        {
+            if (_entries.Count == 0)
+                return default;
+
+            if (_missStreaks == null)
+            {
+                _missStreaks = new int[_entries.Count];
+            }
+            
+            if (_missStreaks.Length != _entries.Count)
+            {
+                // Only re-allocate if the list needs expanded, otherwise just zero all the counts
+                if (_missStreaks.Length < _entries.Count)
+                {
+                    _missStreaks = new int[_entries.Count];
+                }
+                else
+                {
+                    Array.Clear(_missStreaks, 0, _entries.Count);
+                }
+            }
+
+            T exclude = _avoidConsecutiveDuplicate ? _lastPicked : default;
+
+            float total = ComputePseudoRandomTotal(exclude);
+            if (total <= 0f && !IsEmpty(exclude))
+            {
+                exclude = default;
+                total = ComputePseudoRandomTotal(exclude);
+            }
+
             if (total <= 0f)
-                return null;
+                return default;
 
             float pick = randomUnderMax(total);
             float cumulative = 0f;
             int pickedIndex = -1;
-            T pickedItem = null;
+            T pickedItem = default;
 
             for (int i = 0; i < _entries.Count; i++)
             {
                 Entry e = _entries[i];
-                if (e.Item == null || e.Weight <= 0f)
+                if (IsEmpty(e.Item) || e.Weight <= 0f)
                     continue;
-                if (exclude != null && ItemComparer.Equals(e.Item, exclude))
+                if (!IsEmpty(exclude) && ItemComparer.Equals(e.Item, exclude))
                     continue;
 
                 cumulative += e.Weight * (1 + _missStreaks[i]);
@@ -317,13 +332,13 @@ namespace BrunoMikoski.Core.Utils
                 }
             }
 
-            if (pickedItem == null)
+            if (IsEmpty(pickedItem))
             {
                 for (int i = 0; i < _entries.Count; i++)
                 {
                     Entry e = _entries[i];
-                    if (e.Item != null && e.Weight > 0f &&
-                        (exclude == null || !ItemComparer.Equals(e.Item, exclude)))
+                    if (!IsEmpty(e.Item) && e.Weight > 0f &&
+                        (IsEmpty(exclude) || !ItemComparer.Equals(e.Item, exclude)))
                     {
                         pickedIndex = i;
                         pickedItem = e.Item;
@@ -338,7 +353,7 @@ namespace BrunoMikoski.Core.Utils
                 {
                     if (i == pickedIndex)
                         _missStreaks[i] = 0;
-                    else if (_entries[i].Item != null && _entries[i].Weight > 0f)
+                    else if (!IsEmpty(_entries[i].Item) && _entries[i].Weight > 0f)
                         _missStreaks[i]++;
                 }
             }

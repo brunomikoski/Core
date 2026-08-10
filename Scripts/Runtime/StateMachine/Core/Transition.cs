@@ -1,4 +1,4 @@
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public class Transition<TStateID> : TransitionBase where TStateID : StateID
     {
@@ -14,8 +14,8 @@ namespace BrunoMikoski.Core.StateMachines
             stateMachine = targetStateMachine;
         }
     }
-
-
+    
+    
     public class TransitionBase
     {
         protected StateMachineBase stateMachine;
@@ -25,20 +25,20 @@ namespace BrunoMikoski.Core.StateMachines
 
         protected readonly StateID toState;
         public StateID ToState => toState;
-
+        
         protected TransitionBase(StateID fromState, StateID toState)
         {
             this.fromState = fromState;
             this.toState = toState;
         }
-
+        
         internal void Internal_Start()
         {
 #if UNITY_EDITOR
             StateMachineTracker.TrackTransitionBegin(stateMachine, this);
 #endif
             Start();
-
+            
             stateMachine.DispatchEvent(StateMachineEvent.BeginTransitionFrom, fromState);
             stateMachine.DispatchEvent(StateMachineEvent.BeginTransitionTo, toState);
         }

@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using BrunoMikoski.Core.Routines;
-using Unity.EditorCoroutines.Editor;
+using BrunoMikoski.Core.DevelopmentTools.Routines;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     [CustomEditor(typeof(StateMachineBase), true)]
     public class StateMachineBaseCustomEditor : UnityEditor.Editor
@@ -13,7 +12,6 @@ namespace BrunoMikoski.Core.StateMachines
         private StateMachineBase stateMachine;
 
         private float changeColorAnimation;
-        private EditorCoroutine animationRoutine;
 
         private GUIStyle labelStyle;
 
@@ -23,7 +21,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if (target == null)
                 return;
-
+            
             stateMachine = (StateMachineBase) target;
 
             if (!PrefabUtility.IsPartOfAnyPrefab(target))
@@ -107,7 +105,7 @@ namespace BrunoMikoski.Core.StateMachines
                     GUILayout.Label("Current Transition");
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
-
+                    
                     DrawStepData(stateMachineState.CurrentTransition);
                 }
                 EditorGUILayout.EndVertical();
@@ -133,7 +131,7 @@ namespace BrunoMikoski.Core.StateMachines
         }
 
 
-
+        
         private void DrawStepData(StepData stepData)
         {
             string displayName;
@@ -164,7 +162,7 @@ namespace BrunoMikoski.Core.StateMachines
                 {
                     elapsed =  (DateTime.Now - stepData.EnterTime).TotalSeconds.ToString("00.00");
                 }
-
+                
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel("Duration");
@@ -179,7 +177,7 @@ namespace BrunoMikoski.Core.StateMachines
                     GUIStyle leftButtonStyle = EditorStyles.miniButtonLeft;
                     if (!hasExitData)
                         leftButtonStyle = EditorStyles.miniButton;
-
+                    
                     EditorGUI.indentLevel++;
 
                     if (GUILayout.Button("Log Enter Stack Trace", leftButtonStyle))
@@ -207,7 +205,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             if (!expandedStatus.TryGetValue(targetObject.GetHashCode(), out bool expanded))
                 return false;
-
+            
             return expanded;
         }
 

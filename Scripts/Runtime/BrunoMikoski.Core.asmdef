@@ -10,7 +10,8 @@
         "DOTween.Modules",
         "BrunoMikoski.SimplePool",
         "UniTask",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -28,7 +29,7 @@
         {
             "name": "com.brunomikoski.uimanager",
             "expression": "",
-            "define": "UI_MANAGER_AVAILABLE"
+            "define": "UIMANAGER_AVAILABLE"
         },
         {
             "name": "com.cysharp.unitask",
@@ -36,9 +37,24 @@
             "define": "UNITASK_AVAILABLE"
         },
         {
-            "name": "com.vertx.debugging",
+            "name": "com.unity.localization",
             "expression": "",
-            "define": "VERTX_DEBUG_ENABLED"
+            "define": "UNITY_LOCALIZATION_AVAILABLE"
+        },
+        {
+            "name": "com.brunomikoski.simplepool",
+            "expression": "",
+            "define": "SIMPLEPOOL_AVAILABLE"
+        },
+        {
+            "name": "com.brunomikoski.inputspritemap",
+            "expression": "",
+            "define": "INPUTSPRITEMAP_AVAILABLE"
+        },
+        {
+            "name": "com.veriorpies.parrelsync",
+            "expression": "",
+            "define": "PARRELSYNC_AVAILABLE"
         }
     ],
     "noEngineReferences": false

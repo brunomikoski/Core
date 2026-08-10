@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     /// <summary>
     /// Contains several useful math functions.

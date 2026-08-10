@@ -12,15 +12,23 @@ namespace BrunoMikoski.Core.Attributes
         {
             HelpBoxAttribute helpBoxAttribute = attribute as HelpBoxAttribute;
             string message = GetMessage(property);
+            bool hasMessage = !string.IsNullOrEmpty(message);
+            bool hasProperty = !string.IsNullOrEmpty(helpBoxAttribute.Message);
+
             float result = 0;
-            if (!string.IsNullOrEmpty(helpBoxAttribute.Message))
+            if (hasProperty)
             {
                 result += EditorGUI.GetPropertyHeight(property, label, true);
             }
 
-            if (!string.IsNullOrEmpty(message))
+            if (hasMessage)
             {
                 result += GetHelpBoxHeight();
+            }
+
+            if (hasProperty && hasMessage)
+            {
+                result += 2f;
             }
 
             return result;
@@ -70,21 +78,34 @@ namespace BrunoMikoski.Core.Attributes
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             HelpBoxAttribute helpBoxAttribute = attribute as HelpBoxAttribute;
-
-            Rect helpBoxPosition = new Rect(position.x, position.y, position.width, GetHelpBoxHeight());
-            Rect remainingPosition = new Rect(position.x, position.y + GetHelpBoxHeight(),
-                position.width, position.height - GetHelpBoxHeight());
-
             string message = GetMessage(property);
-            if (!string.IsNullOrEmpty(message))
-            {
-                EditorGUI.HelpBox(helpBoxPosition, message,
-                    (MessageType) helpBoxAttribute.MessageType);
-            }
+            bool hasMessage = !string.IsNullOrEmpty(message);
+            bool hasProperty = !string.IsNullOrEmpty(helpBoxAttribute.Message);
+            float helpBoxHeight = GetHelpBoxHeight();
 
-            if (!string.IsNullOrEmpty(helpBoxAttribute.Message))
+            if (hasProperty && hasMessage)
             {
-                EditorGUI.PropertyField(remainingPosition, property, label, true);
+
+                float innerX = position.x;
+                float innerY = position.y;
+                float innerWidth = position.width - 2f;
+
+                float propertyHeight = EditorGUI.GetPropertyHeight(property, label, true);
+                Rect propertyRect = new Rect(innerX, innerY, innerWidth, propertyHeight);
+                Rect helpBoxRect = new Rect(innerX, innerY + propertyHeight,
+                    innerWidth, helpBoxHeight);
+
+                EditorGUI.PropertyField(propertyRect, property, label, true);
+                EditorGUI.HelpBox(helpBoxRect, message, (MessageType) helpBoxAttribute.MessageType);
+            }
+            else if (hasMessage)
+            {
+                Rect helpBoxRect = new Rect(position.x, position.y, position.width, helpBoxHeight);
+                EditorGUI.HelpBox(helpBoxRect, message, (MessageType) helpBoxAttribute.MessageType);
+            }
+            else if (hasProperty)
+            {
+                EditorGUI.PropertyField(position, property, label, true);
             }
         }
     }

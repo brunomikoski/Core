@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public abstract class StateMachine<TStateID> : StateMachineBase where TStateID : StateID
     {
         private TStateID overrideInitialState;
         private TStateID defaultInitialState;
 
-
+ 
         private TStateID InitialState
         {
             get
@@ -22,12 +22,7 @@ namespace BrunoMikoski.Core.StateMachines
 
         public override Type StateIDType => typeof(TStateID);
         private Queue<TStateID> queuedTransitions = new();
-
-        protected override string GetLogPrefix()
-        {
-            return $"[StateMachine<{typeof(TStateID).Name}>:{name}]";
-        }
-
+        
         public void StartStateMachine()
         {
             if (InitialState == null)
@@ -62,7 +57,7 @@ namespace BrunoMikoski.Core.StateMachines
                 }
                 return;
             }
-
+            
             if (!CanTransitTo(targetStateID))
             {
                 if (currentState != null)
@@ -88,7 +83,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             if (currentState == null && targetStateID == InitialState)
                 return true;
-
+            
             if (currentState != null)
             {
                 for (int i = 0; i < availableTransitions.Count; i++)
@@ -116,7 +111,7 @@ namespace BrunoMikoski.Core.StateMachines
                 currentState.Internal_Exit();
                 currentTransition = GetOrCreateTransition(currentState.StateID, nextStateID);
                 currentTransition.Internal_Start();
-
+                
             }
             else
             {
@@ -136,18 +131,25 @@ namespace BrunoMikoski.Core.StateMachines
             previousState = currentState;
             currentState = newState;
             currentState.Internal_Enter();
-
+            
             TStateID previousStateID = null;
 
             if (previousState != null)
                 previousStateID = (TStateID) previousState.StateID;
 
             DispatchStateChangedEvent(previousStateID, toState);
-            if (queuedTransitions.Count > 0)
+            while (queuedTransitions.Count > 0)
             {
                 TStateID nextTransition = queuedTransitions.Dequeue();
+                if (currentState != null && currentState.StateID == nextTransition && !nextTransition.AllowSelfTransition)
+                {
+                    Log($"Skipping queued transition to {nextTransition}, already on that state");
+                    continue;
+                }
+
                 Log($"Processing queued transition to {nextTransition}");
                 TransitTo(nextTransition);
+                break;
             }
         }
 
@@ -273,13 +275,13 @@ namespace BrunoMikoski.Core.StateMachines
         {
             overrideInitialState = targetStateID;
         }
-
-
+        
+        
         public void UnsubscribeFromStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
         {
             base.UnsubscribeFromStateEvent(targetEvent, targetState, callback);
         }
-
+        
         public void SubscribeToStateEvent(StateMachineEvent targetEvent, TStateID targetState, Action callback)
         {
             base.SubscribeToStateEvent(targetEvent, targetState, callback);
@@ -290,7 +292,7 @@ namespace BrunoMikoski.Core.StateMachines
     {
         protected List<StateBase> availableStates = new();
         public List<StateBase> AvailableStates => availableStates;
-
+        
         protected List<TransitionBase> availableTransitions = new();
         public List<TransitionBase> AvailableTransitions => availableTransitions;
 
@@ -305,7 +307,7 @@ namespace BrunoMikoski.Core.StateMachines
 
 
         public virtual Type StateIDType => typeof(StateID);
-
+        
         public event Action<StateID, StateID> OnStateChangedEvent;
 
         [field: SerializeField]
@@ -331,13 +333,13 @@ namespace BrunoMikoski.Core.StateMachines
                 case LogType.Warning:
                 {
                     Debug.LogWarning($"{GetLogPrefix()} {message}", this);
-
+                    
                     break;
                 }
                 case LogType.Exception:
                 {
                     Debug.LogError($"{GetLogPrefix()} {message}", this);
-
+                    
                     break;
                 }
                 default:
@@ -352,7 +354,7 @@ namespace BrunoMikoski.Core.StateMachines
         {
             Log(message, LogType.Warning);
         }
-
+        
         public void LogError(string message)
         {
             Log(message, LogType.Error);
@@ -360,13 +362,14 @@ namespace BrunoMikoski.Core.StateMachines
 
         protected virtual string GetLogPrefix()
         {
-            return $"[StateMachine:{GetType().Name}]";
+            return $"[StateMachine<{StateIDType.Name}>:{name}]";
+
         }
 
         internal virtual void TransitionFinished(StateID toState)
         {
         }
-
+        
         protected void DispatchStateChangedEvent(StateID fromState, StateID toState)
         {
             OnStateChangedEvent?.Invoke(fromState, toState);
@@ -377,9 +380,9 @@ namespace BrunoMikoski.Core.StateMachines
             for (int i = 0; i < availableTransitions.Count; i++)
             {
                 TransitionBase availableTransition = availableTransitions[i];
-                if (availableTransition is not T transition)
+                if (availableTransition is not T transition) 
                     continue;
-
+                
                 if (from != null && to != null)
                 {
                     if (availableTransition.FromState == from && availableTransition.ToState == to)
@@ -388,11 +391,11 @@ namespace BrunoMikoski.Core.StateMachines
                         return true;
                     }
                 }
-
+                    
                 resultTransition = transition;
                 return true;
             }
-
+            
             resultTransition = null;
             return false;
         }
@@ -402,7 +405,7 @@ namespace BrunoMikoski.Core.StateMachines
             availableStates.Clear();
             availableTransitions.Clear();
         }
-
+        
         protected virtual void Awake()
         {
             StateMachineRegistry.Register(this);

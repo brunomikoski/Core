@@ -3,7 +3,7 @@ using UnityEngine;
 using Physics = Vertx.Debugging.DrawPhysics;
 #endif
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static partial class SphereColliderExtensions
     {

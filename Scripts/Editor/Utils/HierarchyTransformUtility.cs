@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     public static class HierarchyTransformUtility
     {

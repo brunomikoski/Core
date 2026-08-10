@@ -1,4 +1,4 @@
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     /// <summary>
     /// Result of a save validation. Use Success to allow save, Fail to block and show a message.

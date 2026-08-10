@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Routines
+namespace BrunoMikoski.Core.DevelopmentTools.Routines
 {
     public static class CoroutineServiceTracker
     {
@@ -31,7 +31,7 @@ namespace BrunoMikoski.Core.Routines
         {
             RUNNING_ROUTINES.Clear();
         }
-
+        
         public static void TrackRoutine(Routine targetRoutine)
         {
 #if UNITY_EDITOR
@@ -41,10 +41,24 @@ namespace BrunoMikoski.Core.Routines
 #endif
         }
 
+        public static void UntrackRoutine(Routine targetRoutine)
+        {
+#if UNITY_EDITOR
+            for (int i = RUNNING_ROUTINES.Count - 1; i >= 0; i--)
+            {
+                if (RUNNING_ROUTINES[i].Routine == targetRoutine)
+                {
+                    RUNNING_ROUTINES.RemoveAt(i);
+                    break;
+                }
+            }
+#endif
+        }
+        
         static string GetFirstLine(string str)
         {
             Match match = Regex.Match(str, @"^(.*?\))");
-
+        
             if (match.Success)
             {
                 return match.Groups[1].Value;

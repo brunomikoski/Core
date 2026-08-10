@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using BrunoMikoski.Core.Events;
+using BrunoMikoski.Core.SafeEvents;
+#if SIMPLEPOOL_AVAILABLE
+using BrunoMikoski.Pooling;
+#endif
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Triggers
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     public abstract class Trigger : MonoBehaviour, ITrigger
+#if SIMPLEPOOL_AVAILABLE
+        , IOnSpawn, IOnDespawn
+#endif
     {
         [SerializeField, HideInInspector]
         private List<Triggerable> triggerables = new List<Triggerable>();
@@ -37,7 +43,7 @@ namespace BrunoMikoski.Core.Triggers
         protected bool HasBeenTriggered;
         
 
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             if (MonoBehaviourService.IsQuitting)
                 return;
@@ -120,5 +126,19 @@ namespace BrunoMikoski.Core.Triggers
                 }
             }
         }
+
+#if SIMPLEPOOL_AVAILABLE
+        void IOnDespawn.OnDespawn()
+        {
+            if (IsTriggerActive)
+                StopTrigger();
+        }
+
+        void IOnSpawn.OnSpawn()
+        {
+            if (onlyTriggerOnce)
+                HasBeenTriggered = false;
+        }
+#endif
     }
 }

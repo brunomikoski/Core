@@ -1,26 +1,27 @@
-using System.Collections.Generic;
-#if USE_ORDERED_DICTIONARY
-using SoftCircuits.Collections;
-#endif
+﻿using System.Collections.Generic;
+#if SIMPLEPOOL_AVAILABLE
 using BrunoMikoski.Pooling;
+#endif
 using UnityEngine;
 
-namespace BrunoMikoski.Core.GUIUtils
+namespace BrunoMikoski.Core.DevelopmentTools.GUIUtils
 {
     public class ItemDictionaryGUI<T, TGUI> : MonoBehaviour where TGUI : Component, IItemGUI<T>
     {
         [Header("References")]
         [SerializeField]
         protected TGUI itemTemplate;
-
+        
         [Header("Settings")]
+#if SIMPLEPOOL_AVAILABLE
         [SerializeField]
         private bool usePool = true;
         protected bool UsePool => usePool;
-        [SerializeField]
+#endif
+        [SerializeField] 
         protected int initialPoolSize;
 
-
+        
         public TGUI LastClickedGUI { get; private set; }
 
         #if USE_ORDERED_DICTIONARY
@@ -71,11 +72,13 @@ namespace BrunoMikoski.Core.GUIUtils
         protected virtual TGUI SpawnItem(T itemId)
         {
             TGUI spawnItem;
+#if SIMPLEPOOL_AVAILABLE
             if (usePool)
                 spawnItem = SimplePool.Spawn(itemTemplate, itemTemplate.transform.parent);
             else
+#endif
                 spawnItem = Instantiate(itemTemplate, itemTemplate.transform.parent);
-
+            
             spawnItem.transform.localScale = Vector3.one;
             spawnItem.transform.localPosition = Vector3.zero;
             return spawnItem;
@@ -115,6 +118,7 @@ namespace BrunoMikoski.Core.GUIUtils
 
         protected virtual void DestroyItem(TGUI item)
         {
+#if SIMPLEPOOL_AVAILABLE
             if (usePool)
             {
                 if (item != null && item.gameObject != null)
@@ -124,8 +128,11 @@ namespace BrunoMikoski.Core.GUIUtils
             }
             else
             {
+#endif
                 Destroy(item.gameObject);
+#if SIMPLEPOOL_AVAILABLE
             }
+#endif
         }
 
         protected virtual void DisableTemplate()
@@ -146,10 +153,13 @@ namespace BrunoMikoski.Core.GUIUtils
 
         protected virtual void CreatePools()
         {
+#if SIMPLEPOOL_AVAILABLE
+            
             if (!usePool)
                 return;
 
-            SimplePool.Preload(itemTemplate, initialPoolSize);
+            SimplePool.Preload(itemTemplate, initialPoolSize, gameObject.scene);
+#endif
         }
 
         protected virtual void OnItemClick(TGUI itemGUI)
@@ -163,14 +173,16 @@ namespace BrunoMikoski.Core.GUIUtils
                 Debug.LogError("No item template assigned", this);
             }
         }
-
+        
         protected virtual void OnDestroy()
         {
             Clear();
+#if SIMPLEPOOL_AVAILABLE
             if (usePool)
             {
                 SimplePool.DestroyPool(itemTemplate);
             }
+#endif
         }
     }
 }

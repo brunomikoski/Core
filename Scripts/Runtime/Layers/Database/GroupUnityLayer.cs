@@ -1,7 +1,7 @@
 using BrunoMikoski.ScriptableObjectCollections.Picker;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Layers
+namespace BrunoMikoski.Core.DevelopmentTools.Layers
 {
     public partial class GroupUnityLayer : UnityLayer
     {

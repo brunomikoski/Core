@@ -1,4 +1,4 @@
-namespace BrunoMikoski.Core.Routines
+﻿namespace BrunoMikoski.Core.DevelopmentTools.Routines
 {
     public interface IRoutineYield
     {

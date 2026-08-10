@@ -1,7 +1,7 @@
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public partial class StateID : ScriptableObjectCollectionItem
     {
@@ -9,7 +9,7 @@ namespace BrunoMikoski.Core.StateMachines
         [SerializeField]
         private bool initialState;
         public bool InitialState => initialState;
-
+        
         [SerializeField]
         private bool fromAnyState;
         public bool FromAnyState => fromAnyState;

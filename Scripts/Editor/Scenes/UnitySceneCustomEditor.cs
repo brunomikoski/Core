@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.ScenesReferences
+namespace BrunoMikoski.Core.DevelopmentTools.ScenesReferences
 {
     [CustomEditor(typeof(UnityScene), true)]
     public class UnitySceneCustomEditor : UnityEditor.Editor
@@ -15,16 +15,16 @@ namespace BrunoMikoski.Core.ScenesReferences
             InBuildSettings,
             NotInBuildSettings
         }
-
+        
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
             serializedObject.Update();
-
+            
             SerializedProperty guidProperty = serializedObject.FindProperty("sceneGuid");
             SerializedProperty scenePathProperty = serializedObject.FindProperty("scenePath");
             SerializedProperty buildIndexProperty = serializedObject.FindProperty("buildIndex");
-
+            
             if (!string.IsNullOrEmpty(guidProperty.stringValue))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guidProperty.stringValue);
@@ -50,19 +50,19 @@ namespace BrunoMikoski.Core.ScenesReferences
                     serializedObject.ApplyModifiedProperties();
                 }
             }
-
+            
             BuildState buildState = GetBuildStateForSceneAtPath(AssetDatabase.GUIDToAssetPath(guidProperty.stringValue));
-
+            
             EditorGUILayout.BeginHorizontal();
-
-
+            
+            
             float toolboxButtonWidth = EditorGUIUtility.singleLineHeight;
             Rect rect = EditorGUILayout.GetControlRect();
             Rect selectorFieldRect = EditorGUI.PrefixLabel(rect, GUIUtility.GetControlID(FocusType.Passive), new GUIContent("Scene"));
             selectorFieldRect.x -= 14;
             selectorFieldRect.height = EditorGUIUtility.singleLineHeight;
             selectorFieldRect.width -= toolboxButtonWidth - 14;
-
+            
             string unityEditorIconName = buildState == BuildState.InBuildSettings ? "greenLight" : "d_redLight";
             GUIContent statusIcon = EditorGUIUtility.IconContent(unityEditorIconName);
 
@@ -73,11 +73,11 @@ namespace BrunoMikoski.Core.ScenesReferences
                 y = selectorFieldRect.y + 1,
                 height = selectorFieldRect.height - 1
             };
-
+            
             GUI.Label(statusButtonRect, statusIcon);
-
+            
             SceneAsset newSceneAsset = (SceneAsset)EditorGUI.ObjectField(selectorFieldRect, sceneAsset, typeof(SceneAsset), false);
-
+            
             Rect toolboxButtonRect = new Rect
             {
                 x = selectorFieldRect.x + selectorFieldRect.width + 2,
@@ -95,8 +95,6 @@ namespace BrunoMikoski.Core.ScenesReferences
                     menu.AddItem(new GUIContent("Add to Build Settings"), false, () =>
                     {
                         AddSceneToBuildSettings(scenePathProperty.stringValue);
-                        serializedObject.FindProperty("buildIndex").intValue =
-                            GetBuildIndexForSceneAtPath(scenePathProperty.stringValue);
                     });
 
                 }
@@ -106,12 +104,11 @@ namespace BrunoMikoski.Core.ScenesReferences
                     menu.AddItem(new GUIContent("Remove from Build Settings"), false, () =>
                     {
                         RemoveSceneFromBuildSettings(scenePathProperty.stringValue);
-                        serializedObject.FindProperty("buildIndex").intValue = -1;
                     });
                 }
-
+                
                 menu.ShowAsContext();
-
+                
             }
 
             EditorGUILayout.EndHorizontal();
@@ -149,7 +146,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                 }
             }
         }
-
+        
         private int GetBuildIndexForSceneAtPath(string targetPath)
         {
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
@@ -162,8 +159,8 @@ namespace BrunoMikoski.Core.ScenesReferences
 
             return -1;
         }
-
-
+        
+        
         private BuildState GetBuildStateForSceneAtPath(string targetPath)
         {
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
@@ -187,7 +184,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                 if (string.Equals(scene.path, targetPath, StringComparison.Ordinal))
                     return;
             }
-
+            
             EditorBuildSettingsScene newScene = new EditorBuildSettingsScene
             {
                 path = targetPath,

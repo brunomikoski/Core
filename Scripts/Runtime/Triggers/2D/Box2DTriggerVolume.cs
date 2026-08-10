@@ -1,6 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace BrunoMikoski.Core.PhysX
+namespace BrunoMikoski.Core.DevelopmentTools.PhysX
 {
     [AddComponentMenu("Triggers/2d/2D Box Trigger Volume")]
     public sealed class Box2DTriggerVolume : TriggerVolume2DBase
@@ -75,7 +75,7 @@ namespace BrunoMikoski.Core.PhysX
                 Rigidbody2D colliding = ObjectsInVolume[i];
                 if (colliding == null)
                     continue;
-
+                
                 Gizmos.color = Color.red;
                 Gizmos.DrawLine(transform.position, colliding.transform.position);
             }

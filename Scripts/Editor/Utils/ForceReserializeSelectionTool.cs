@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Editor
+namespace BrunoMikoski.Core.Utils.Editor
 {
     public static class ForceReserializeSelectionTool
     {

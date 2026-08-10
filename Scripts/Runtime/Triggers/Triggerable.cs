@@ -1,8 +1,8 @@
 ﻿using System;
-using BrunoMikoski.Core.Events;
+using BrunoMikoski.Core.SafeEvents;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Triggers
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     public abstract class Triggerable : MonoBehaviour
     {
@@ -95,7 +95,7 @@ namespace BrunoMikoski.Core.Triggers
 
         public virtual bool CanStartTrigger()
         {
-            return ((IsActive == invertTrigger) || CanTriggerWhileAlreadyTriggered) && CanBeTriggered;
+            return enabled && ((IsActive == invertTrigger) || CanTriggerWhileAlreadyTriggered) && CanBeTriggered;
         }
 
         protected virtual void StartTriggerInternal(object source)

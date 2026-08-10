@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace BrunoMikoski.Core.Attributes
 {
-
+    
     public enum ConditionOperator
     {
         And,
@@ -103,10 +103,14 @@ namespace BrunoMikoski.Core.Attributes
         public SerializedProperty FindDependingOnProperty(SerializedProperty property)
         {
             string currentPath = property.propertyPath;
-            string siblingPath = currentPath.Substring(0,
-                currentPath.Length - property.name.Length) + dependingOnField;
+            string parentPath = currentPath.Substring(0, currentPath.Length - property.name.Length);
 
-            return property.serializedObject.FindProperty(siblingPath);
+            SerializedProperty dependingOn = property.serializedObject.FindProperty(parentPath + dependingOnField);
+
+            if (dependingOn == null)
+                dependingOn = property.serializedObject.FindProperty($"{parentPath}<{dependingOnField}>k__BackingField");
+
+            return dependingOn;
         }
 #endif
     }

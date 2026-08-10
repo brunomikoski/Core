@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public class DevelopmentSettingsPopupWindow : EditorWindow
     {
@@ -62,24 +62,7 @@ namespace BrunoMikoski.Core
             EditorGUILayout.LabelField("Configure settings for local testing", EditorStyles.miniLabel);
             EditorGUILayout.Space(8);
             
-            FieldInfo[] fieldInfos = typeof(DevelopmentSettings).GetFields();
-
-            for (int i = 0; i < fieldInfos.Length; ++i)
-            {
-                FieldInfo info = fieldInfos[i];
-                DevelopmentSetting setting = (DevelopmentSetting)info.GetValue(null);
-
-                EditorGUI.BeginChangeCheck();
-                bool newValue = EditorGUILayout.ToggleLeft(
-                    StringUtility.GetHumanReadableText(info.Name),
-                    setting
-                );
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    setting.Value = newValue;
-                }
-            }
+            DevelopmentSettingsEditorGUI.DrawSettings();
 
             if (_exposedMethodsCache == null)
                 RefreshExposedMethods();

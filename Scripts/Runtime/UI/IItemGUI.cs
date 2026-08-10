@@ -1,4 +1,4 @@
-namespace BrunoMikoski.Core.GUIUtils
+namespace BrunoMikoski.Core.DevelopmentTools.GUIUtils
 {
     public interface IItemGUI<T>
     {

@@ -1,7 +1,7 @@
 using BrunoMikoski.ScriptableObjectCollections;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Layers
+namespace BrunoMikoski.Core.DevelopmentTools.Layers
 {
     public abstract partial class UnityLayer : ScriptableObjectCollectionItem
     {

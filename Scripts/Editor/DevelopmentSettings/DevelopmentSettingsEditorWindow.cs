@@ -1,14 +1,95 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
+    internal static class DevelopmentSettingsEditorGUI
+    {
+        public static void DrawSettings()
+        {
+            FieldInfo[] fieldInfos = typeof(DevelopmentSettings).GetFields();
+
+            for (int i = 0; i < fieldInfos.Length; ++i)
+            {
+                FieldInfo info = fieldInfos[i];
+                object setting = info.GetValue(null);
+
+                if (setting is DevelopmentSetting booleanSetting)
+                {
+                    DrawBooleanSetting(info, booleanSetting);
+                    continue;
+                }
+
+                DrawGenericSetting(info, setting);
+            }
+        }
+
+        private static void DrawBooleanSetting(FieldInfo info, DevelopmentSetting setting)
+        {
+            EditorGUI.BeginChangeCheck();
+            bool newValue = EditorGUILayout.ToggleLeft(StringUtility.GetHumanReadableText(info.Name), setting);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                setting.Value = newValue;
+            }
+        }
+
+        private static void DrawGenericSetting(FieldInfo info, object setting)
+        {
+            Type settingType = info.FieldType;
+            if (!settingType.IsGenericType ||
+                settingType.GetGenericTypeDefinition() != typeof(DevelopmentSettingGeneric<>))
+            {
+                return;
+            }
+
+            Type valueType = settingType.GetGenericArguments()[0];
+            PropertyInfo valueProperty = settingType.GetProperty(nameof(DevelopmentSettingGeneric<int>.Value));
+            string label = StringUtility.GetHumanReadableText(info.Name);
+
+            if (valueType == typeof(string))
+            {
+                string currentString = (string)valueProperty.GetValue(setting);
+
+                EditorGUI.BeginChangeCheck();
+                string newString = EditorGUILayout.DelayedTextField(label, currentString);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    valueProperty.SetValue(setting, newString);
+                }
+
+                return;
+            }
+
+            if (valueType.IsEnum)
+            {
+                Enum currentValue = (Enum)valueProperty.GetValue(setting);
+
+                EditorGUI.BeginChangeCheck();
+                Enum newValue;
+                if (valueType.IsDefined(typeof(FlagsAttribute), false))
+                    newValue = EditorGUILayout.EnumFlagsField(label, currentValue);
+                else
+                    newValue = EditorGUILayout.EnumPopup(label, currentValue);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    valueProperty.SetValue(setting, newValue);
+                }
+            }
+        }
+    }
+
     public class DevelopmentSettingsEditorWindow : EditorWindow
     {
         [SerializeField] private Vector2 _scrollPosition;
 
         [MenuItem("Window/Development Settings")]
+        [MenuItem("Tools/Git/Development Settings", priority = 60000)]
         private static void Init()
         {
             EditorWindow window = GetWindow(typeof(DevelopmentSettingsEditorWindow));
@@ -34,24 +115,7 @@ namespace BrunoMikoski.Core
             EditorGUILayout.LabelField("Development settings", EditorStyles.boldLabel);
 
             EditorGUILayout.Space();
-            FieldInfo[] fieldInfos = typeof(DevelopmentSettings).GetFields();
-
-            for (int i = 0; i < fieldInfos.Length; ++i)
-            {
-                FieldInfo info = fieldInfos[i];
-
-                DevelopmentSetting setting = (DevelopmentSetting)info.GetValue(null);
-
-                EditorGUI.BeginChangeCheck();
-                bool newValue
-                    = EditorGUILayout.ToggleLeft(StringUtility.GetHumanReadableText(info.Name),
-                        setting);
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    setting.Value = newValue;
-                }
-            }
+            DevelopmentSettingsEditorGUI.DrawSettings();
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();

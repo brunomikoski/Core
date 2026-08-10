@@ -4,6 +4,7 @@ namespace BrunoMikoski.Core.Observables {
 
     public abstract class ObservableBase {
         public abstract event Action OnChangedEvent;
+        public abstract void RaiseOnChangedEvent();
 
         public abstract void OnValidate();
 

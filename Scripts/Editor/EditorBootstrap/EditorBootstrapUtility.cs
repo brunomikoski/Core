@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
-using UnityEditor.Build.Content;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class EditorBootstrapUtility
     {
@@ -56,6 +54,13 @@ namespace BrunoMikoski.Core
                     sceneSetupSnapshot.LoadedBootstrapSceneGuids.Add(boostrapSceneGUID);
                 }
 
+                if (sceneSetupSnapshot.LoadedBootstrapSceneGuids.Count == 0)
+                {
+                    SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
+                    SessionState.EraseString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY);
+                    return;
+                }
+
                 SceneAsset lastAutomaticallyLoadedScene =
                     AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(sceneSetupSnapshot.LoadedBootstrapSceneGuids[^1]));
 
@@ -63,13 +68,6 @@ namespace BrunoMikoski.Core
                 {
                     SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(AssetDatabase.GUIDToAssetPath(originalLoadedSceneGUID));
                     EditorSceneManager.MoveSceneAfter(GetSceneByName(sceneAsset.name), GetSceneByName(lastAutomaticallyLoadedScene.name));
-                }
-
-                SessionState.EraseString(EDITOR_SCENE_SETUP_SNAPSHOT_KEY);
-
-                if (sceneSetupSnapshot.LoadedBootstrapSceneGuids.Count == 0)
-                {
-                    return;
                 }
 
                 SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, true);
@@ -141,8 +139,10 @@ namespace BrunoMikoski.Core
         {
             [SerializeField]
             internal string ActiveSceneName = string.Empty;
+
             [SerializeField]
             internal List<string> OriginalLoadedScenesGuids = new();
+
             [SerializeField]
             internal List<string> LoadedBootstrapSceneGuids = new List<string>();
         }
@@ -162,6 +162,7 @@ namespace BrunoMikoski.Core
                     sceneSetup.OriginalLoadedScenesGuids.Add(AssetDatabase.AssetPathToGUID(scene.path));
                 }
             }
+
             return sceneSetup;
         }
 

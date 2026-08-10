@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using BrunoMikoski.Core.System.Reflection;
 using UnityEditor;
-using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace BrunoMikoski.Core.Attributes
@@ -46,8 +45,6 @@ namespace BrunoMikoski.Core.Attributes
                 EditorGUI.PropertyField(position, property, label, true);
                 return;
             }
-
-            FindCustomPropertyDrawers();
 
             PropertyDrawer propertyDrawer = CreatePropertyDrawer(fieldInfo, forceFieldType, property);
 
@@ -100,7 +97,7 @@ namespace BrunoMikoski.Core.Attributes
                     BindingFlags.NonPublic | BindingFlags.Instance);
             }
 
-            if (ATTRIBUTE_FIELD_INFO != null)
+            if (ATTRIBUTE_FIELD_INFO != null) 
                 ATTRIBUTE_FIELD_INFO.SetValue(result, propertyAttribute);
 
             return result;
@@ -167,7 +164,9 @@ namespace BrunoMikoski.Core.Attributes
                 TYPES_TO_PROPERTY_DRAWER_INSTANCE[type] = new Dictionary<string, PropertyDrawer>();
             }
 
-            string key = property.serializedObject.targetObject.GetInstanceID() + property.propertyPath;
+            UnityEngine.Object targetObject = property.serializedObject.targetObject;
+            ulong id = targetObject != null ? EntityId.ToULong(targetObject.GetEntityId()) : 0;
+            string key = $"{id}{property.propertyPath}";
 
             if (!TYPES_TO_PROPERTY_DRAWER_INSTANCE[type].ContainsKey(key))
             {
@@ -198,7 +197,6 @@ namespace BrunoMikoski.Core.Attributes
                 return EditorGUI.GetPropertyHeight(property, label, true);
             }
 
-            FindCustomPropertyDrawers();
             PropertyDrawer propertyDrawer = CreatePropertyDrawer(fieldInfo, forceFieldType,
                 property);
 
@@ -219,99 +217,6 @@ namespace BrunoMikoski.Core.Attributes
                 return propertyDrawer.GetPropertyHeight(property, label);
         }
 
-
-        private static void FindCustomPropertyDrawers()
-        {
-            if (TYPES_TO_PROPERTY_DRAWERS != null)
-                return;
-
-            Selection.selectionChanged -= OnSelectionChanged;
-            Selection.selectionChanged += OnSelectionChanged;
-
-            TYPES_TO_PROPERTY_DRAWERS = new Dictionary<Type, PropertyDrawerData>();
-            TYPES_TO_PROPERTY_DRAWER_INSTANCE = new Dictionary<Type, Dictionary<string, PropertyDrawer>>();
-
-            FIELD_INFO_FIELD_INFO = typeof(PropertyDrawer).GetField("m_FieldInfo", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            IList<Type> allTypes = AppDomain.CurrentDomain.GetAllTypes(AssembliesType.Editor);
-
-            Type[] propertyDrawers
-                = allTypes.Where(t => t.GetCustomAttributes(typeof(CustomPropertyDrawer), false).Length > 0).ToArray();
-
-            Type attributeType = typeof(CustomPropertyDrawer);
-
-            FieldInfo m_Type = attributeType.GetField("m_Type", BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo m_UseForChildren = attributeType.GetField("m_UseForChildren",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-
-            for (int i = 0; i < propertyDrawers.Length; ++i)
-            {
-                Type propertyDrawerType = propertyDrawers[i];
-                if (!typeof(PropertyDrawer).IsAssignableFrom(propertyDrawerType))
-                    continue;
-
-                CustomPropertyDrawer attribute
-                    = propertyDrawerType.GetCustomAttributes(typeof(CustomPropertyDrawer), false)
-                        .FirstOrDefault() as CustomPropertyDrawer;
-
-                Type useForType = m_Type.GetValue(attribute) as Type;
-                bool useForChildren = (bool)m_UseForChildren.GetValue(attribute);
-
-                if (TYPES_TO_PROPERTY_DRAWERS.ContainsKey(useForType))
-                {
-                    PropertyDrawerData existingData = TYPES_TO_PROPERTY_DRAWERS[useForType];
-                    string existingAssemblyName = existingData.DrawerType.Assembly.FullName;
-                    if (!existingAssemblyName.Contains("UnityEditor"))
-                    {
-                        string newAssemblyName = propertyDrawerType.Assembly.FullName;
-                        if (newAssemblyName.Contains("UnityEditor"))
-                            continue;
-                    }
-                }
-
-
-                TYPES_TO_PROPERTY_DRAWERS[useForType] = new PropertyDrawerData()
-                {
-                    DrawerType = propertyDrawerType,
-                    DistanceToTarget = 0,
-                    TargetType = useForType,
-                };
-
-                if (useForChildren)
-                {
-                    foreach (Type subType in allTypes.Where(t => useForType.IsAssignableFrom(t)))
-                    {
-                        int distance = 0;
-                        Type baseType = subType;
-                        while (baseType != useForType)
-                        {
-                            if (baseType != null)
-                            {
-                                baseType = baseType.BaseType;
-                                ++distance;
-                            }
-                            else
-                            {
-                                baseType = useForType;
-                            }
-                        }
-
-                        if (TYPES_TO_PROPERTY_DRAWERS.TryGetValue(subType, out PropertyDrawerData existingData))
-                        {
-                            if (distance >= existingData.DistanceToTarget)
-                                continue;
-                        }
-
-                        TYPES_TO_PROPERTY_DRAWERS[subType] = new PropertyDrawerData()
-                        {
-                            DrawerType = propertyDrawerType,
-                            DistanceToTarget = distance,
-                            TargetType = subType
-                        };
-                    }
-                }
-            }
-        }
 
         private static void OnSelectionChanged()
         {

@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
+using System.Reflection;
 
-namespace System.Reflection
+namespace BrunoMikoski.Core.System.Reflection
 {
     public static class AssemblyExtensions
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace BrunoMikoski.Core.PhysX
+namespace BrunoMikoski.Core.DevelopmentTools.PhysX
 {
     [Serializable]
     public struct ObjectInTriggerVolumeData : IDisposable, IEquatable<ObjectInTriggerVolumeData>
@@ -49,9 +49,7 @@ namespace BrunoMikoski.Core.PhysX
 
         public void Dispose()
         {
-            if (collidersInVolume != null)
-                ListPool<Collider>.Release(collidersInVolume);
-
+            ListPool<Collider>.Release(collidersInVolume);
             collidersInVolume = null;
         }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 using Physics = Vertx.Debugging.DrawPhysics;
 #endif
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static partial class BoxColliderExtensions
     {
@@ -47,5 +47,16 @@ namespace BrunoMikoski.Core
                 center, halfExtents, direction, hits, boxColliderTransform.rotation,
                 maxDistance + size * 0.5f * insetFactor, layerMask, queryTriggerInteraction);
         }
+        
+        public static bool IsPointInsideBoxCollider(this BoxCollider boxCollider, Vector3 worldPoint)
+        {
+            Vector3 localPoint = boxCollider.transform.InverseTransformPoint(worldPoint);
+            Vector3 halfSize = boxCollider.size * 0.5f;
+            Vector3 center = boxCollider.center;
+
+            return Mathf.Abs(localPoint.x - center.x) <= halfSize.x &&
+                   Mathf.Abs(localPoint.y - center.y) <= halfSize.y &&
+                   Mathf.Abs(localPoint.z - center.z) <= halfSize.z;
+        }        
     }
 }

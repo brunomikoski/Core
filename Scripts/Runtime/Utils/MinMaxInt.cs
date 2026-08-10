@@ -3,7 +3,7 @@
 using UnityEditor;
 #endif
 
-namespace BrunoMikoski.Core.Utils
+namespace BrunoMikoski.Core.DevelopmentTools.Utils
 {
     [System.Serializable]
     public struct MinMaxInt

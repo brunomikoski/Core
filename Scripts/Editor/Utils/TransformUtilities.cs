@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace BrunoMikoski.Utils
+namespace BrunoMikoski.Core.Utils
 {
     public static class TransformUtilities
     {

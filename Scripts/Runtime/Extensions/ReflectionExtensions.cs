@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class ReflectionExtensions
     {

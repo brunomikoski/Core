@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     /// <summary>
     /// Unity doesn't normally allow Dictionaries to be serialised, this inherited class allows them to be.

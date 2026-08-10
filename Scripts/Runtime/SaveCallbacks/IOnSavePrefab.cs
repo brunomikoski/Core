@@ -1,4 +1,4 @@
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     /// <summary>
     /// Implement on a MonoBehaviour in a prefab to validate or block saving.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BrunoMikoski.Core.ScenesReferences;
+using BrunoMikoski.Core.DevelopmentTools.ScenesReferences;
 using BrunoMikoski.ScriptableObjectCollections;
 using JetBrains.Annotations;
 using UnityEditor;

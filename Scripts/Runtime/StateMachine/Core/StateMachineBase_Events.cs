@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace BrunoMikoski.Core.StateMachines
+namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 {
     public enum StateMachineEvent
     {
@@ -26,7 +26,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             stateToEventToCallbackList[targetState][targetEvent].Remove(callback);
         }
-
+        
         internal void SubscribeToStateEvent(StateMachineEvent targetEvent, StateID targetState, Action callback)
         {
             if (!stateToEventToCallbackList.ContainsKey(targetState))
@@ -40,7 +40,7 @@ namespace BrunoMikoski.Core.StateMachines
 
             stateToEventToCallbackList[targetState][targetEvent].Add(callback);
         }
-
+        
         internal void DispatchEvent(StateMachineEvent stateMachineEvent, StateID targetState)
         {
             if (!stateToEventToCallbackList.ContainsKey(targetState))

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static partial class Matrix4x4Extensions
     {

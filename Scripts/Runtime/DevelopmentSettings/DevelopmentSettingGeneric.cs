@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public class DevelopmentSettingGeneric<T>
     {
@@ -73,6 +73,11 @@ namespace BrunoMikoski.Core
             if (EditorPrefs.HasKey(editorPrefKey))
             {
                 Type type = typeof(T);
+                if (type.IsEnum)
+                {
+                    return (T) Enum.ToObject(type, EditorPrefs.GetInt(editorPrefKey));
+                }
+
                 if (type == BOOL_TYPE)
                 {
                     return (T) (object) EditorPrefs.GetBool(editorPrefKey);
@@ -103,6 +108,11 @@ namespace BrunoMikoski.Core
         private void SetValue(T value)
         {
             Type type = typeof(T);
+            if (type.IsEnum)
+            {
+                EditorPrefs.SetInt(editorPrefKey, Convert.ToInt32(value));
+            }
+
             if (type == BOOL_TYPE)
             {
                 EditorPrefs.SetBool(editorPrefKey, (bool) (object)value);

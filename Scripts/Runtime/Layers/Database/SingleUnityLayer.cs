@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BrunoMikoski.Core.Layers
+namespace BrunoMikoski.Core.DevelopmentTools.Layers
 {
     public class SingleUnityLayer : UnityLayer
     {

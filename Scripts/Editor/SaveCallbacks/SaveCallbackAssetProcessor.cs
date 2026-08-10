@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace BrunoMikoski.Core.Editor
+namespace BrunoMikoski.Core.DevelopmentTools.Editor
 {
     internal class SaveCallbackAssetProcessor : AssetModificationProcessor
     {

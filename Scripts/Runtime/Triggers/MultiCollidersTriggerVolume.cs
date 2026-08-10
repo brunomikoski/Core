@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BrunoMikoski.Core.PhysX
+namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     [RequireComponent(typeof(Rigidbody))]
     public sealed class MultiCollidersTriggerVolume : TriggerVolumeBase
@@ -81,7 +81,7 @@ namespace BrunoMikoski.Core.PhysX
                 return true;
             return false;
         }
-
+        
         private void OnDrawGizmos()
         {
             Gizmos.color = gizmoColor;

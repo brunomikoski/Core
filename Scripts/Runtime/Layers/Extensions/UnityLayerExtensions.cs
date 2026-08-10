@@ -1,8 +1,8 @@
-using BrunoMikoski.Core.Layers;
+using BrunoMikoski.Core.DevelopmentTools.Layers;
 using BrunoMikoski.ScriptableObjectCollections.Picker;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class UnityLayerExtensions
     {
@@ -12,7 +12,7 @@ namespace BrunoMikoski.Core
                 return 1 << singleUnityLayer.LayerIndex;
             if (unityLayer is GroupUnityLayer unityLayerGroup)
                 return unityLayerGroup.Layers.ToLayerMask();
-
+            
             return 0;
         }
 
@@ -22,7 +22,7 @@ namespace BrunoMikoski.Core
             {
                 value = 0
             };
-
+            
             for (int i = 0; i < layers.Count; i++)
             {
                 layerMask.value |= 1 << layers[i].LayerIndex;

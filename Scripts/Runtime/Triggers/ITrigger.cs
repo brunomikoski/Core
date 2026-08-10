@@ -1,4 +1,4 @@
-﻿namespace BrunoMikoski.Core.Triggers
+﻿namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     public interface ITrigger
     {

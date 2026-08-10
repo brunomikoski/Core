@@ -1,52 +1,101 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using BrunoMikoski.ScriptableObjectCollections.Picker;
 using BrunoMikoski.ServicesLocation;
 using UnityEngine;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     [ServiceImplementation]
     public class TagRegistryService
     {
+        private sealed class TagSourceEntry
+        {
+            public ITagSource Source;
+            public Component SourceComponent;
+            public GameObject GameObject;
+
+            public bool IsAlive => SourceComponent != null;
+            public bool IsQueryable => SourceComponent != null && GameObject.activeInHierarchy;
+            public IReadOnlyList<Tag> Tags => Source.Tags;
+        }
+
         private const int INITIAL_SIZE = 100;
 
-        private readonly Dictionary<GameObject, IReadOnlyList<Tag>> _gameObjectToTagsCache = new(INITIAL_SIZE);
+        private readonly Dictionary<GameObject, TagSourceEntry> _sourceEntries = new(INITIAL_SIZE);
 
-
-        private readonly Dictionary<Tag, List<GameObject>> _tagToGameObjectsCache = new();
-        private readonly Dictionary<(Tag tag, System.Type type), Component> _tagToComponentsCache = new();
-
-        public void RegisterTagController(ITagSource tagController)
+        public void RegisterTagSource(ITagSource tagSource)
         {
-            if (tagController is Component component)
+            if (tagSource is not Component component)
             {
-                RegisterObjectToTags(component.gameObject, tagController.Tags);
+                Debug.LogError($"[{nameof(TagRegistryService)}] {tagSource?.GetType().Name} must be a Component to be registered");
+                return;
+            }
+
+            GameObject gameObject = component.gameObject;
+            if (_sourceEntries.TryGetValue(gameObject, out TagSourceEntry existing))
+            {
+                if (existing.IsAlive)
+                    return;
+
+                _sourceEntries.Remove(gameObject);
+            }
+
+            _sourceEntries.Add(gameObject, new TagSourceEntry
+            {
+                Source = tagSource,
+                SourceComponent = component,
+                GameObject = gameObject,
+            });
+        }
+
+        public void UnregisterTagSource(ITagSource tagSource)
+        {
+            if (tagSource is not Component component)
+                return;
+
+            if (_sourceEntries.TryGetValue(component.gameObject, out TagSourceEntry entry)
+                && (ReferenceEquals(entry.Source, tagSource) || !entry.IsAlive))
+            {
+                _sourceEntries.Remove(component.gameObject);
             }
         }
 
-        public void UnregisterTagController(ITagSource tagController)
+        public bool TryGetTagsFromGameObject(GameObject targetGameObject, out IReadOnlyList<Tag> tags)
         {
-            if (tagController is Component component)
-            {
-                UnregisterObjectToTags(component.gameObject);
-            }
-        }
+            tags = Array.Empty<Tag>();
 
+            if (targetGameObject == null)
+                return false;
+
+            if (!_sourceEntries.TryGetValue(targetGameObject, out TagSourceEntry entry))
+                return false;
+
+            if (!entry.IsAlive)
+            {
+                _sourceEntries.Remove(targetGameObject);
+                return false;
+            }
+
+            IReadOnlyList<Tag> entryTags = entry.Tags;
+            if (entryTags == null || entryTags.Count == 0)
+                return false;
+
+            tags = entryTags;
+            return true;
+        }
 
         public bool TryGetGameObjectByQueryMatch(CollectionItemQuery<Tag> tagQuery, out GameObject resultGameObj)
         {
-            foreach (KeyValuePair<GameObject, IReadOnlyList<Tag>> entry in _gameObjectToTagsCache)
+            foreach (TagSourceEntry entry in _sourceEntries.Values)
             {
-                if (entry.Key == null)
-                {
+                if (!entry.IsQueryable)
                     continue;
-                }
 
-                if (tagQuery.Matches(entry.Value))
+                if (tagQuery.Matches(entry.Tags))
                 {
-                    resultGameObj = entry.Key;
-                    return resultGameObj != null;
+                    resultGameObj = entry.GameObject;
+                    return true;
                 }
             }
 
@@ -54,45 +103,48 @@ namespace BrunoMikoski.Core
             return false;
         }
 
-        public bool TryGetAllGameObjectsByTag(Tag tag, out List<GameObject> resultGameObjs)
+        public bool TryGetAllGameObjectsByQueryMatch(CollectionItemQuery<Tag> tagQuery, List<GameObject> results)
         {
-            if (_tagToGameObjectsCache.TryGetValue(tag, out resultGameObjs))
+            int countBefore = results.Count;
+            foreach (TagSourceEntry entry in _sourceEntries.Values)
             {
-                if (resultGameObjs.Count > 0)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                resultGameObjs = new List<GameObject>();
-                _tagToGameObjectsCache.Add(tag, resultGameObjs);
-            }
-
-            foreach (KeyValuePair<GameObject, IReadOnlyList<Tag>> entry in _gameObjectToTagsCache)
-            {
-                GameObject gameObject = entry.Key;
-
-                if (gameObject == null)
-                {
+                if (!entry.IsQueryable)
                     continue;
-                }
 
-                if (entry.Value != null && entry.Value.Contains(tag))
-                {
-                    resultGameObjs.Add(gameObject);
-                }
+                if (tagQuery.Matches(entry.Tags))
+                    results.Add(entry.GameObject);
             }
 
-            return resultGameObjs.Count > 0;
+            return results.Count > countBefore;
+        }
+
+        public bool TryGetAllGameObjectsByTag(Tag tag, List<GameObject> results)
+        {
+            int countBefore = results.Count;
+            foreach (TagSourceEntry entry in _sourceEntries.Values)
+            {
+                if (!entry.IsQueryable)
+                    continue;
+
+                if (ContainsTag(entry.Tags, tag))
+                    results.Add(entry.GameObject);
+            }
+
+            return results.Count > countBefore;
         }
 
         public bool TryGetFirstGameObjectByTag(Tag tag, out GameObject resultGameObj)
         {
-            if (TryGetAllGameObjectsByTag(tag, out List<GameObject> gameObjects))
+            foreach (TagSourceEntry entry in _sourceEntries.Values)
             {
-                resultGameObj = gameObjects[0];
-                return true;
+                if (!entry.IsQueryable)
+                    continue;
+
+                if (ContainsTag(entry.Tags, tag))
+                {
+                    resultGameObj = entry.GameObject;
+                    return true;
+                }
             }
 
             resultGameObj = null;
@@ -101,70 +153,34 @@ namespace BrunoMikoski.Core
 
         public bool TryGetComponentByTag<T>(Tag targetTag, out T resultComponent) where T : Component
         {
-            if (_tagToComponentsCache.TryGetValue((targetTag, typeof(T)), out Component component))
+            foreach (TagSourceEntry entry in _sourceEntries.Values)
             {
-                resultComponent = (T)component;
-                if (resultComponent != null)
-                {
-                    return true;
-                }
-                _tagToComponentsCache.Remove((targetTag, typeof(T)));
-            }
+                if (!entry.IsQueryable)
+                    continue;
 
-            if (TryGetFirstGameObjectByTag(targetTag, out GameObject resultGameObj))
-            {
-                resultComponent = resultGameObj.GetComponent<T>();
-                if (resultComponent != null)
-                {
-                    _tagToComponentsCache.Add((targetTag, typeof(T)), resultComponent);
-                    return true;
-                }
+                if (!ContainsTag(entry.Tags, targetTag))
+                    continue;
 
-                return false;
+                if (entry.GameObject.TryGetComponent(out resultComponent))
+                    return true;
             }
 
             resultComponent = null;
             return false;
         }
 
-        public void RegisterObjectToTags(GameObject gameObject, IReadOnlyList<Tag> targetTag)
+        private static bool ContainsTag(IReadOnlyList<Tag> tags, Tag tag)
         {
-            _gameObjectToTagsCache.TryAdd(gameObject, targetTag);
-        }
+            if (tags == null)
+                return false;
 
-        public void UnregisterObjectToTags(GameObject gameObject)
-        {
-            _gameObjectToTagsCache.Remove(gameObject);
-
-            foreach (KeyValuePair<Tag, List<GameObject>> pair in _tagToGameObjectsCache)
+            for (int i = 0; i < tags.Count; i++)
             {
-                pair.Value.Remove(gameObject);
+                if (tags[i] == tag)
+                    return true;
             }
 
-            List<Tag> emptyKeys = new List<Tag>();
-            foreach (KeyValuePair<Tag, List<GameObject>> pair in _tagToGameObjectsCache)
-            {
-                if (pair.Value.Count == 0)
-                    emptyKeys.Add(pair.Key);
-            }
-            for (int i = 0; i < emptyKeys.Count; i++)
-            {
-                _tagToGameObjectsCache.Remove(emptyKeys[i]);
-            }
-
-            List<(Tag tag, System.Type type)> componentCacheKeysToRemove = new();
-            foreach (KeyValuePair<(Tag tag, System.Type type), Component> kvp in _tagToComponentsCache)
-            {
-                if (kvp.Value != null && kvp.Value.gameObject == gameObject)
-                {
-                    componentCacheKeysToRemove.Add(kvp.Key);
-                }
-            }
-
-            for (int i = 0; i < componentCacheKeysToRemove.Count; i++)
-            {
-                _tagToComponentsCache.Remove(componentCacheKeysToRemove[i]);
-            }
+            return false;
         }
     }
 }

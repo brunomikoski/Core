@@ -1,21 +1,24 @@
 using System;
 using System.Collections.Generic;
 using BrunoMikoski.Core.Observables;
+using BrunoMikoski.Core.Utils.Localization;
 using BrunoMikoski.ScriptableObjectCollections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-#if LOCALIZATION_ENABLED
+#if UNITY_LOCALIZATION_AVAILABLE
 using UnityEngine.Localization;
 #endif
 using UnityEngine.UI;
 
-namespace BrunoMikoski.Extensions.Observables
+namespace BrunoMikoski.Core.Utils.Extensions.Observables
 {
     public readonly struct UIBinding : IDisposable
     {
         private readonly Action _dispose;
-        public UIBinding(Action dispose) { _dispose = dispose; }
+        private readonly Action _refresh;
+        public UIBinding(Action dispose, Action refresh = null) { _dispose = dispose; _refresh = refresh; }
+        public void Refresh() { _refresh?.Invoke(); }
         public void Dispose() { _dispose?.Invoke(); }
     }
     public static class ObservablesUIExtensions
@@ -424,7 +427,7 @@ namespace BrunoMikoski.Extensions.Observables
             });
         }
 
-#if LOCALIZATION_ENABLED
+#if UNITY_LOCALIZATION_AVAILABLE
         public static UIBinding Bind<T>(this Observable<T> observable, TMP_Dropdown dropDown, LocalizedString[] displayValues, Action onValueChanged = null) where T : Enum
         {
             string[] stringDisplayValues = null;
@@ -508,7 +511,7 @@ namespace BrunoMikoski.Extensions.Observables
             });
         }
 
-        public static UIBinding Bind<TRef, TItem>(this Observable<TRef> observable, TMP_Dropdown dropDown, Action onValueChanged = null)
+        public static UIBinding Bind<TRef, TItem>(this Observable<TRef> observable, TMP_Dropdown dropDown, Action onValueChanged = null, Func<TItem, bool> itemValidation = null)
             where TRef : CollectionItemIndirectReference<TItem>, new()
             where TItem : ScriptableObjectCollectionItem
         {
@@ -520,8 +523,7 @@ namespace BrunoMikoski.Extensions.Observables
 
             TItem currentItem = observable.Value;
 
-            ScriptableObjectCollection collection = currentItem != null
-                ? currentItem.Collection
+            ScriptableObjectCollection collection = currentItem != null ? currentItem.Collection
                 : CollectionsRegistry.Instance.TryGetCollectionFromItemType(typeof(TItem), out ScriptableObjectCollection c) ? c : null;
 
             if (collection == null)
@@ -530,28 +532,59 @@ namespace BrunoMikoski.Extensions.Observables
                 return new UIBinding(null);
             }
 
-            dropDown.ClearOptions();
-            foreach (ScriptableObject so in collection)
-            {
-                string text = so.name;
-#if LOCALIZATION_ENABLED
-                if (so is ILocalizedDisplayValue ldv && !ldv.DisplayValue.IsEmpty)
-                    text = ldv.DisplayValue.GetLocalizedString();
-#endif
+            List<TItem> visibleItems = new List<TItem>();
 
-                dropDown.options.Add(new TMP_Dropdown.OptionData(text));
+            void SyncShownValue(TItem item)
+            {
+                int index = item != null ? visibleItems.IndexOf(item) : -1;
+                index = Mathf.Clamp(index, 0, Mathf.Max(0, dropDown.options.Count - 1));
+
+                if (dropDown.value != index)
+                    dropDown.SetValueWithoutNotify(index);
+
+                dropDown.RefreshShownValue();
             }
 
-            int currentIndex = currentItem != null ? currentItem.Index : 0;
-            currentIndex = Mathf.Clamp(currentIndex, 0, Mathf.Max(0, dropDown.options.Count - 1));
-            dropDown.SetValueWithoutNotify(currentIndex);
-            dropDown.RefreshShownValue();
+            void Populate()
+            {
+                visibleItems.Clear();
+                dropDown.ClearOptions();
+
+                foreach (ScriptableObject so in collection)
+                {
+                    if (so is not TItem item || (itemValidation != null && !itemValidation(item)))
+                        continue;
+
+                    string text;
+                    switch (so)
+                    {
+#if UNITY_LOCALIZATION_AVAILABLE
+                        case ILocalizedDisplayValue ldv when !ldv.DisplayValue.IsEmpty:
+                            text = ldv.DisplayValue.GetLocalizedString();
+                            break;
+#endif
+                        default:
+                            text = so.name;
+                            break;
+                    }
+
+                    visibleItems.Add(item);
+                    dropDown.options.Add(new TMP_Dropdown.OptionData(text));
+                }
+
+                TItem selectedItem = observable.Value;
+                SyncShownValue(selectedItem);
+            }
+
+            Populate();
 
             UnityAction<int> dropdownChanged = newValue =>
             {
-                TItem newItem = (TItem)collection[newValue];
+                if (newValue < 0 || newValue >= visibleItems.Count)
+                    return;
+
                 TRef newRef = new TRef();
-                newRef.FromCollectionItem(newItem);
+                newRef.FromCollectionItem(visibleItems[newValue]);
 
                 observable.Value = newRef;
             };
@@ -560,10 +593,8 @@ namespace BrunoMikoski.Extensions.Observables
 
             Action<TRef, TRef> observableValueChanged = (_, current) =>
             {
-                TItem curItem = current; 
-                int idx = curItem != null ? curItem.Index : 0;
-                if (dropDown.value != idx)
-                    dropDown.SetValueWithoutNotify(idx);
+                TItem curItem = current;
+                SyncShownValue(curItem);
             };
 
             observable.OnChangedValuesEvent += observableValueChanged;
@@ -579,7 +610,7 @@ namespace BrunoMikoski.Extensions.Observables
                 observable.OnChangedValuesEvent -= observableValueChanged;
                 if (onValueChanged != null)
                     observable.OnChangedEvent -= onValueChanged;
-            });
+            }, Populate);
         }
         
         public static UIBinding Bind<T>(this Observable<T> observable, TMP_Dropdown dropDown, Action onValueChanged = null) where T : ScriptableObjectCollectionItem
@@ -595,12 +626,10 @@ namespace BrunoMikoski.Extensions.Observables
             foreach (ScriptableObject scriptableObject in observable.Value.Collection)
             {
                 string displayValue = scriptableObject.name;
-#if LOCALIZATION_ENABLED                
                 if (scriptableObject is ILocalizedDisplayValue localizedDisplayValue)
                 {
                     displayValue = localizedDisplayValue.DisplayValue.GetLocalizedString();
                 }
-#endif
                 dropDown.options.Add(new TMP_Dropdown.OptionData(displayValue));
             }
             

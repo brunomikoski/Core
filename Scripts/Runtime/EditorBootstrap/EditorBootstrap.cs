@@ -1,6 +1,6 @@
 using System;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class EditorBootstrap
     {
@@ -25,7 +25,7 @@ namespace BrunoMikoski.Core
         {
 #if UNITY_EDITOR
             UnityEditor.SessionState.SetBool(EDITOR_BOOT_SKIP_KEY, false);
-#endif
+#endif           
         }
     }
 }

@@ -1,10 +1,10 @@
 //  Automatically generated
 //
 
-using BrunoMikoski.ScriptableObjectCollections;
 using System;
+using BrunoMikoski.ScriptableObjectCollections;
 
-namespace BrunoMikoski.Core.ScenesReferences
+namespace BrunoMikoski.Core.DevelopmentTools.ScenesReferences
 {
     [Serializable]
     public sealed class UnitySceneIndirectReference : CollectionItemIndirectReference<UnityScene>

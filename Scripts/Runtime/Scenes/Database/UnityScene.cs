@@ -2,15 +2,18 @@ using System;
 using System.Collections;
 using System.Threading;
 using BrunoMikoski.ScriptableObjectCollections;
+#if UNITASK_AVAILABLE
 using Cysharp.Threading.Tasks;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Utils;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-namespace BrunoMikoski.Core.ScenesReferences
+namespace BrunoMikoski.Core.DevelopmentTools.ScenesReferences
 {
     public partial class UnityScene : ScriptableObjectCollectionItem
     {
@@ -45,7 +48,7 @@ namespace BrunoMikoski.Core.ScenesReferences
                     Debug.LogError("Can't access Scene asset during Editor Time");
                     return default;
                 }
-
+                
                 if (!cachedScene.IsValid())
                 {
                     for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -62,10 +65,10 @@ namespace BrunoMikoski.Core.ScenesReferences
                 return cachedScene;
             }
         }
-
-
+        
+        
 #if UNITY_EDITOR
-        private void OnValidate()
+        protected virtual void OnValidate()
         {
             SyncWithSceneAsset();
         }
@@ -230,6 +233,7 @@ namespace BrunoMikoski.Core.ScenesReferences
 #endif
         }
 
+#if UNITASK_AVAILABLE
         public async UniTask Load_Async(LoadSceneMode loadSceneMode = LoadSceneMode.Additive, bool makeActive = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -256,6 +260,7 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
 #endif
         }
+#endif
         public void Load(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
         {
             if (Application.isPlaying)
@@ -304,13 +309,14 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
 #endif
         }
-
+        
+#if UNITASK_AVAILABLE
         public async UniTask Unload_Async(CancellationToken cancellationToken = default)
         {
             if (!IsLoaded())
                 return;
-
-
+            
+            
             cancellationToken.ThrowIfCancellationRequested();
             if (Application.isPlaying)
             {
@@ -333,6 +339,7 @@ namespace BrunoMikoski.Core.ScenesReferences
             }
 #endif
         }
+#endif
 
         public void Unload()
         {
@@ -367,11 +374,21 @@ namespace BrunoMikoski.Core.ScenesReferences
             return SceneManager.GetActiveScene() == Scene;
         }
 
-#if PHOTON_AVAILABLE
-        public SceneRef AsSceneRef()
+        public int GetBuildIndexInCurrentBuild()
         {
-            return SceneRef.FromIndex(BuildIndex);
+            if (!string.IsNullOrEmpty(scenePath))
+            {
+                int byPath = UnitySceneManagerUtils.GetSceneBuildIndex(scenePath);
+                if (byPath >= 0)
+                    return byPath;
+            }
+
+            if (!string.IsNullOrEmpty(sceneName))
+                return UnitySceneManagerUtils.GetSceneBuildIndex(sceneName);
+
+            return -1;
         }
-#endif
+
+        public bool IsInBuild => GetBuildIndexInCurrentBuild() >= 0;
     }
 }

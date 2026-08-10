@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class GameObjectExtensions
     {
@@ -370,7 +370,7 @@ namespace BrunoMikoski.Core
         {
             return !gameObject.scene.IsValid();
         }
-
+        
         public static bool IsObjectOrPartOfObject(this GameObject sourceGameObject, GameObject targetGameObject)
         {
             return sourceGameObject == targetGameObject || targetGameObject.transform.IsChildOf(sourceGameObject.transform);

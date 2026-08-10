@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Pool;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public static class PerformanceTester
     {
@@ -18,7 +18,7 @@ namespace BrunoMikoski.Core
             public double TotalTime;
             public int NumberOfRuns;
         }
-
+        
         public struct PerformanceComparison
         {
             public double MedianTimeDifference;
@@ -28,13 +28,13 @@ namespace BrunoMikoski.Core
             public double RangeDifference;
             public double TotalTimeDifference;
         }
-
+        
 
         public static PerformanceResult RunTest(Action action, int runs)
         {
             // Warm up
             action();
-
+            
             Stopwatch stopwatch = Stopwatch.StartNew();
             List<double> durations = ListPool<double>.Get();
 
@@ -43,11 +43,11 @@ namespace BrunoMikoski.Core
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
-
+            
             for (int i = 0; i < runs; i++)
             {
                 stopwatch.Restart();
-
+                
                 action();
 
                 stopwatch.Stop();
@@ -88,7 +88,7 @@ namespace BrunoMikoski.Core
             ListPool<double>.Release(durations);
             return result;
         }
-
+        
         public static PerformanceComparison ComparePerformance(PerformanceResult first, PerformanceResult second)
         {
             PerformanceComparison comparison = new PerformanceComparison

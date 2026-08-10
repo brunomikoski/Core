@@ -1,7 +1,7 @@
-using System.Reflection;
+﻿using System.Reflection;
 using UnityEditor;
 
-namespace BrunoMikoski.Core
+namespace BrunoMikoski.Core.DevelopmentTools
 {
     public class DevelopmentSetting
     {
