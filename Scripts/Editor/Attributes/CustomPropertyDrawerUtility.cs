@@ -46,6 +46,8 @@ namespace BrunoMikoski.Core.Attributes
                 return;
             }
 
+            FindCustomPropertyDrawers();
+
             PropertyDrawer propertyDrawer = CreatePropertyDrawer(fieldInfo, forceFieldType, property);
 
             if (propertyDrawer == null)
@@ -197,6 +199,8 @@ namespace BrunoMikoski.Core.Attributes
                 return EditorGUI.GetPropertyHeight(property, label, true);
             }
 
+            FindCustomPropertyDrawers();
+
             PropertyDrawer propertyDrawer = CreatePropertyDrawer(fieldInfo, forceFieldType,
                 property);
 
@@ -217,6 +221,94 @@ namespace BrunoMikoski.Core.Attributes
                 return propertyDrawer.GetPropertyHeight(property, label);
         }
 
+
+        private static void FindCustomPropertyDrawers()
+        {
+            if (TYPES_TO_PROPERTY_DRAWERS != null)
+                return;
+
+            Selection.selectionChanged -= OnSelectionChanged;
+            Selection.selectionChanged += OnSelectionChanged;
+
+            TYPES_TO_PROPERTY_DRAWERS = new Dictionary<Type, PropertyDrawerData>();
+            TYPES_TO_PROPERTY_DRAWER_INSTANCE = new Dictionary<Type, Dictionary<string, PropertyDrawer>>();
+
+            FIELD_INFO_FIELD_INFO = typeof(PropertyDrawer).GetField("m_FieldInfo",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            Type attributeType = typeof(CustomPropertyDrawer);
+            FieldInfo typeField = attributeType.GetField("m_Type",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo useForChildrenField = attributeType.GetField("m_UseForChildren",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (Type propertyDrawerType in TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>())
+            {
+                if (!typeof(PropertyDrawer).IsAssignableFrom(propertyDrawerType))
+                    continue;
+
+                object[] drawerAttributes = propertyDrawerType.GetCustomAttributes(attributeType, false);
+                for (int i = 0; i < drawerAttributes.Length; i++)
+                {
+                    CustomPropertyDrawer drawerAttribute = (CustomPropertyDrawer)drawerAttributes[i];
+
+                    Type useForType = typeField.GetValue(drawerAttribute) as Type;
+                    if (useForType == null)
+                        continue;
+
+                    if (TYPES_TO_PROPERTY_DRAWERS.TryGetValue(useForType, out PropertyDrawerData existingData))
+                    {
+                        // Project drawers override the UnityEditor built-in ones.
+                        if (!existingData.DrawerType.Assembly.FullName.Contains("UnityEditor")
+                            && propertyDrawerType.Assembly.FullName.Contains("UnityEditor"))
+                        {
+                            continue;
+                        }
+                    }
+
+                    TYPES_TO_PROPERTY_DRAWERS[useForType] = new PropertyDrawerData
+                    {
+                        DrawerType = propertyDrawerType,
+                        DistanceToTarget = 0,
+                        TargetType = useForType,
+                    };
+
+                    if (!(bool)useForChildrenField.GetValue(drawerAttribute))
+                        continue;
+
+                    foreach (Type subType in TypeCache.GetTypesDerivedFrom(useForType))
+                    {
+                        int distance = GetInheritanceDistance(subType, useForType);
+
+                        if (TYPES_TO_PROPERTY_DRAWERS.TryGetValue(subType, out PropertyDrawerData existingSubTypeData)
+                            && distance >= existingSubTypeData.DistanceToTarget)
+                        {
+                            continue;
+                        }
+
+                        TYPES_TO_PROPERTY_DRAWERS[subType] = new PropertyDrawerData
+                        {
+                            DrawerType = propertyDrawerType,
+                            DistanceToTarget = distance,
+                            TargetType = subType,
+                        };
+                    }
+                }
+            }
+        }
+
+        private static int GetInheritanceDistance(Type type, Type baseType)
+        {
+            int distance = 0;
+            Type current = type;
+            while (current != null && current != baseType)
+            {
+                current = current.BaseType;
+                distance++;
+            }
+
+            return distance;
+        }
 
         private static void OnSelectionChanged()
         {
