@@ -74,8 +74,8 @@ namespace BrunoMikoski.Core.Observables {
                 return;
             }
 
-            T previous = targetValue;
-            prevValue = previous;
+            T previous = value;
+            prevValue = targetValue;
             prevValueInitialized = true;
 
             value = targetValue;
