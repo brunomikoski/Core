@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BrunoMikoski.Core.DevelopmentTools.Utils
+namespace BrunoMikoski.Core.Utils
 {
     /// <summary>
     /// Generic, inspector-serializable loot table that selects items based on their weight.

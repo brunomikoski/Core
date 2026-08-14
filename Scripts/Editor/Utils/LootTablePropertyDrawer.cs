@@ -1,11 +1,14 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using BrunoMikoski.Core.DevelopmentTools.Utils;
+using BrunoMikoski.Core.Utils;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
-namespace BrunoMikoski.Core.LootTables
+namespace BrunoMikoski.Core.Utils
 {
     [CustomPropertyDrawer(typeof(LootTable<>), true)]
     public class LootTablePropertyDrawer : PropertyDrawer
@@ -213,6 +216,119 @@ namespace BrunoMikoski.Core.LootTables
                 Rect listRect = new Rect(position.x, y, position.width, listHeight);
                 listToDraw.DoList(listRect);
             }
+
+            HandleDragAndDrop(position, property, entriesProp);
+        }
+
+        // Runs after the list is drawn so a drop on a row's own object field still replaces that row;
+        // a drop anywhere else on the drawer appends every valid unique dragged item.
+        private void HandleDragAndDrop(Rect position, SerializedProperty property, SerializedProperty entriesProp)
+        {
+            Event evt = Event.current;
+            if (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform)
+                return;
+
+            if (!position.Contains(evt.mousePosition))
+                return;
+
+            Type itemType = GetItemType();
+            if (itemType == null || !typeof(Object).IsAssignableFrom(itemType))
+                return;
+
+            List<Object> items = GetDroppableItems(itemType, property, entriesProp);
+            if (items.Count == 0)
+                return;
+
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+            if (evt.type == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
+
+                foreach (Object item in items)
+                {
+                    entriesProp.arraySize++;
+                    SerializedProperty element = entriesProp.GetArrayElementAtIndex(entriesProp.arraySize - 1);
+                    element.FindPropertyRelative("Item").objectReferenceValue = item;
+                    element.FindPropertyRelative("Weight").floatValue = 1f;
+                }
+
+                property.isExpanded = true;
+                property.serializedObject.ApplyModifiedProperties();
+            }
+
+            evt.Use();
+        }
+
+        private Type GetItemType()
+        {
+            Type type = fieldInfo?.FieldType;
+            if (type == null)
+                return null;
+
+            if (type.IsArray)
+                type = type.GetElementType();
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+                type = type.GetGenericArguments()[0];
+
+            for (; type != null; type = type.BaseType)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(LootTable<>))
+                    return type.GetGenericArguments()[0];
+            }
+
+            return null;
+        }
+
+        private static List<Object> GetDroppableItems(Type itemType, SerializedProperty property, SerializedProperty entriesProp)
+        {
+            List<Object> result = new List<Object>();
+            Object[] draggedObjects = DragAndDrop.objectReferences;
+            if (draggedObjects == null || draggedObjects.Length == 0)
+                return result;
+
+            // A persistent asset cannot reference scene objects — Unity nulls them on apply
+            bool targetIsAsset = EditorUtility.IsPersistent(property.serializedObject.targetObject);
+
+            HashSet<Object> seen = new HashSet<Object>();
+            for (int i = 0; i < entriesProp.arraySize; i++)
+            {
+                SerializedProperty itemProp = entriesProp.GetArrayElementAtIndex(i).FindPropertyRelative("Item");
+                if (itemProp != null && itemProp.propertyType == SerializedPropertyType.ObjectReference && itemProp.objectReferenceValue != null)
+                    seen.Add(itemProp.objectReferenceValue);
+            }
+
+            foreach (Object draggedObject in draggedObjects)
+            {
+                Object item = ResolveDraggedItem(draggedObject, itemType);
+                if (item == null)
+                    continue;
+
+                if (targetIsAsset && !EditorUtility.IsPersistent(item))
+                    continue;
+
+                if (!seen.Add(item))
+                    continue;
+
+                result.Add(item);
+            }
+
+            return result;
+        }
+
+        private static Object ResolveDraggedItem(Object draggedObject, Type itemType)
+        {
+            if (draggedObject == null)
+                return null;
+
+            if (itemType.IsInstanceOfType(draggedObject))
+                return draggedObject;
+
+            // Same convenience as ObjectField: a dragged GameObject satisfies a Component-typed table
+            if (draggedObject is GameObject gameObject && typeof(Component).IsAssignableFrom(itemType))
+                return gameObject.GetComponent(itemType);
+
+            return null;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
