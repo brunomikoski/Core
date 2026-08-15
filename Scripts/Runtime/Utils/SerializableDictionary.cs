@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace BrunoMikoski.Core.DevelopmentTools
     /// <summary>
     /// Unity doesn't normally allow Dictionaries to be serialised, this inherited class allows them to be.
     /// </summary>
+    [Serializable]
     public abstract class SerializableDictionaryBase<TKey, TValue, TValueStorage> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField] private TKey[] _keys;
@@ -72,6 +74,7 @@ namespace BrunoMikoski.Core.DevelopmentTools
         }
     }
 
+    [Serializable]
     public class SerializableDictionary<TKey, TValue> : SerializableDictionaryBase<TKey, TValue, TValue>
     {
         public SerializableDictionary()
@@ -98,12 +101,14 @@ namespace BrunoMikoski.Core.DevelopmentTools
     }
 
     public static class SerializableDictionary {
-        public class Storage<T> 
+        [Serializable]
+        public class Storage<T>
         {
             public T data;
         }
     }
 
+    [Serializable]
     public class SerializableDictionary<TKey, TValue, TValueStorage> : SerializableDictionaryBase<TKey, TValue, TValueStorage>
         where TValueStorage : SerializableDictionary.Storage<TValue>, new()
     {

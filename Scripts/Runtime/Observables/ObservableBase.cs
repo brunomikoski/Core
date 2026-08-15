@@ -2,6 +2,7 @@
 
 namespace BrunoMikoski.Core.Observables {
 
+    [Serializable]
     public abstract class ObservableBase {
         public abstract event Action OnChangedEvent;
         public abstract void RaiseOnChangedEvent();

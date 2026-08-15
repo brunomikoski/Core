@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 namespace BrunoMikoski.Core.DevelopmentTools
 {
     [ServiceImplementation]
-    public sealed class MonoBehaviourService
+    public sealed class MonoBehaviourService : IOnServiceUnregistered
     {
         public enum UpdateType {
             Update,
@@ -399,7 +399,16 @@ namespace BrunoMikoski.Core.DevelopmentTools
         internal void OnApplicationQuit()
         {
             isQuitting = true;
+            Teardown();
+        }
 
+        void IOnServiceUnregistered.OnUnregisteredFromServiceLocator(ServiceLocator serviceLocator)
+        {
+            Teardown();
+        }
+
+        private void Teardown()
+        {
             pendingRemovals.Clear();
             ReleaseAllSubscriptions(_updateListeners);
             ReleaseAllSubscriptions(_lateUpdateListeners);
@@ -408,7 +417,10 @@ namespace BrunoMikoski.Core.DevelopmentTools
 
             if (runner)
             {
-                Object.Destroy(runner.gameObject);
+                if (Application.isPlaying)
+                    Object.Destroy(runner.gameObject);
+                else
+                    Object.DestroyImmediate(runner.gameObject);
                 runner = null;
             }
 
