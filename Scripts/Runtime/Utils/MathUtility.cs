@@ -322,6 +322,13 @@ namespace BrunoMikoski.Core.DevelopmentTools
                    boundsMinZ1 <= boundsMaxZ2 && boundsMaxZ1 >= boundsMinZ2;
         }
 
+        public static float PlanarDistanceSqr(Vector3 a, Vector3 b)
+        {
+            float dx = a.x - b.x;
+            float dz = a.z - b.z;
+            return dx * dx + dz * dz;
+        }
+
         public static float GetChebyshevDistance(Vector3 from, Vector3 to)
         {
             float x = to.x - from.x;
