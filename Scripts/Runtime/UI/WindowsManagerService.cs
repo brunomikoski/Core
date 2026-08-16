@@ -1,5 +1,6 @@
 using UnityEngine;
 #if UIMANAGER_AVAILABLE
+using BrunoMikoski.ServicesLocation;
 using BrunoMikoski.UIManager;
 #endif
 
