@@ -8,7 +8,10 @@
         "Unity.EditorCoroutines.Editor",
         "BrunoMikoski.ServiceLocator",
         "Unity.TextMeshPro",
-        "Unity.TextMeshPro.Editor"
+        "Unity.TextMeshPro.Editor",
+        "Unity.Localization",
+        "Unity.Localization.Editor",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,6 +22,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.localization",
+            "expression": "",
+            "define": "UNITY_LOCALIZATION_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }
