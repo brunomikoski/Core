@@ -17,7 +17,6 @@ namespace BrunoMikoski.Core.DevelopmentTools
             {
                 reset?.Invoke();
             }
-            _resetActions.Clear();
         }
 
         private static readonly List<Action> _resetActions = new();
