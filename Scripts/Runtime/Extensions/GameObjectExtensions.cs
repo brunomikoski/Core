@@ -241,6 +241,9 @@ namespace BrunoMikoski.Core.DevelopmentTools
             if (UnityEditor.SceneManagement.PrefabStageUtility.GetPrefabStage(gameObject) != null)
                 return false;
 
+            if (UnityEditor.SceneManagement.EditorSceneManager.IsPreviewSceneObject(gameObject))
+                return false;
+
 #endif
             return true;
         }

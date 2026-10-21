@@ -315,7 +315,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 
         public void Log(string message, LogType logType = LogType.Log)
         {
-            if (!ShowLogs)
+            if (!ShowLogs && logType == LogType.Log)
                 return;
 
             switch (logType)

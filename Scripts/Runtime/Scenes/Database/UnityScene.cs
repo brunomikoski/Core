@@ -283,12 +283,13 @@ namespace BrunoMikoski.Core.DevelopmentTools.ScenesReferences
 
         public IEnumerator UnloadEnumerator()
         {
-            bool sceneUnloaded = false;
             if (Application.isPlaying)
             {
-                SceneManager.UnloadSceneAsync(sceneName).completed += _ => sceneUnloaded = true;
+                AsyncOperation unloadOperation = SceneManager.UnloadSceneAsync(sceneName);
+                if (unloadOperation == null)
+                    yield break;
 
-                while (!sceneUnloaded)
+                while (!unloadOperation.isDone)
                 {
                     yield return null;
                 }
@@ -320,7 +321,11 @@ namespace BrunoMikoski.Core.DevelopmentTools.ScenesReferences
             cancellationToken.ThrowIfCancellationRequested();
             if (Application.isPlaying)
             {
-                await SceneManager.UnloadSceneAsync(Scene).ToUniTask(cancellationToken: cancellationToken);
+                AsyncOperation unloadOperation = SceneManager.UnloadSceneAsync(Scene);
+                if (unloadOperation == null)
+                    return;
+
+                await unloadOperation.ToUniTask(cancellationToken: cancellationToken);
             }
 #if UNITY_EDITOR
             else

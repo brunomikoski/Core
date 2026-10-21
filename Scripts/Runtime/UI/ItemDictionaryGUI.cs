@@ -168,7 +168,10 @@ namespace BrunoMikoski.Core.DevelopmentTools.GUIUtils
 
         protected virtual void OnValidate()
         {
-            if (this.gameObject.scene.IsValid() && itemTemplate == null)
+            if (!gameObject.IsInScene())
+                return;
+
+            if (itemTemplate == null)
             {
                 Debug.LogError("No item template assigned", this);
             }

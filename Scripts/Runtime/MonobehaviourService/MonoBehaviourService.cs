@@ -86,6 +86,7 @@ namespace BrunoMikoski.Core.DevelopmentTools
         private readonly Dictionary<long, int[]> sparseGroupCounts = new();
         private List<UpdateSubscription> currentlyIterating;
         private readonly List<UpdateSubscription> pendingRemovals = new(16);
+        private const int DESTROYED_TARGET_SWEEP_FRAME_INTERVAL = 600;
 
 
         public MonoBehaviourService()
@@ -293,6 +294,35 @@ namespace BrunoMikoski.Core.DevelopmentTools
         {
             HandleUpdate(_updateListeners, updateFrameIdx, Time.deltaTime);
             updateFrameIdx++;
+
+            if (updateFrameIdx % DESTROYED_TARGET_SWEEP_FRAME_INTERVAL != 0)
+                return;
+
+            ClearDestroyedTargets(_updateListeners);
+            ClearDestroyedTargets(_lateUpdateListeners);
+            ClearDestroyedTargets(_fixedUpdateListeners);
+        }
+
+        private void ClearDestroyedTargets(List<UpdateSubscription> listeners)
+        {
+            if (listeners == currentlyIterating)
+                return;
+
+            for (int i = listeners.Count - 1; i >= 0; --i)
+            {
+                UpdateSubscription sub = listeners[i];
+                if (sub.PendingRemoval)
+                    continue;
+
+                if (!(sub.Callback.Target is Object unityTarget) || unityTarget != null)
+                    continue;
+
+                Debug.LogError(
+                    $"MonoBehaviourService: {sub.Callback.Method.DeclaringType?.Name}.{sub.Callback.Method.Name} is subscribed but its target is destroyed; removing leaked subscription.");
+
+                listeners.RemoveAt(i);
+                ReleaseSubscription(sub);
+            }
         }
 
         internal void FixedUpdate()
