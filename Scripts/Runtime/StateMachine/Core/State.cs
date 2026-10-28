@@ -36,12 +36,11 @@ namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
 #if UNITY_EDITOR
             StateMachineTracker.TrackEnterState(stateMachine, this);
 #endif
+            Enter();
 #if UNITASK_AVAILABLE
             exitCancellationTokenSource = new CancellationTokenSource();
             enterLinkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(exitCancellationTokenSource.Token, stateMachine.GetCancellationTokenOnDestroy());
             Enter_Async(enterLinkedCancellationTokenSource.Token).Forget();
-#else
-            Enter();
 #endif
             stateMachine.DispatchEvent(StateMachineEvent.StateEnter, stateID);
         }
