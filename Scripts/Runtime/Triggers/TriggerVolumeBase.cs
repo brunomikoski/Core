@@ -111,7 +111,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             remove => onObjectExitVolume.RemoveListener(value);
         }
         
-        private readonly ServiceReference<RigidbodyService> _rigidbodyService = new();
         private readonly ServiceReference<TagRegistryService> _tagRegistryService = new();
 
         /// <summary>
@@ -319,9 +318,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             if (!IsColliderValid(collider))
                 return;
             
-            if(!_rigidbodyService.Exists)
-                return;
-
             Rigidbody rootRigidbodyWrapper = collider.attachedRigidbody;
             if (rootRigidbodyWrapper == null)
                 return;
@@ -398,9 +394,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         private void OnColliderExit(Collider targetCollider, Rigidbody targetRigidbody = null)
         {
-            if (!_rigidbodyService.Exists)
-                return;
-            
             targetRigidbody ??= targetCollider.attachedRigidbody;
             if (targetRigidbody == null)
             {
@@ -514,7 +507,8 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             if (!targetRigidbody.IsNull())
                 onObjectExitVolume?.Invoke(targetRigidbody);
 
-            SetTriggerActivation(false);
+            if (objectsInVolume.Count == 0)
+                SetTriggerActivation(false);
 
 #if DEBUG
             if (debug)

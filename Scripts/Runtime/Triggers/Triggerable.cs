@@ -28,6 +28,17 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
         /// </summary>
         public bool IsActive { get; private set; }
 
+        public bool IsStarted
+        {
+            get
+            {
+                Initialize();
+                return IsActive != invertTrigger;
+            }
+        }
+
+        private ITriggerRelay _relay;
+
         private readonly SafeEvent<Triggerable> _onStartTriggerEvent = new();
         public event Action<Triggerable> OnStartTriggerEvent
         {
@@ -63,7 +74,23 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             Initialize();
         }
 
+        public void SetRelay(ITriggerRelay relay)
+        {
+            _relay = relay;
+        }
+
         public void StartTrigger(object source)
+        {
+            if (_relay != null)
+            {
+                _relay.RequestStart(source);
+                return;
+            }
+
+            ApplyStartTrigger(source);
+        }
+
+        public void ApplyStartTrigger(object source)
         {
             Initialize();
 
@@ -107,6 +134,17 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             if (source == null)
                 source = this;
 
+            if (_relay != null)
+            {
+                _relay.RequestStop(source);
+                return;
+            }
+
+            ApplyStopTrigger(source);
+        }
+
+        public void ApplyStopTrigger(object source)
+        {
             Initialize();
             if (!CanStopTrigger())
                 return;

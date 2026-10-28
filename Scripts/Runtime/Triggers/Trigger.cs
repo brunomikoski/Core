@@ -41,7 +41,15 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
         protected bool IsTriggerActive;
 
         protected bool HasBeenTriggered;
-        
+
+        public bool IsActive => IsTriggerActive;
+
+        private ITriggerRelay _relay;
+
+        public void SetRelay(ITriggerRelay relay)
+        {
+            _relay = relay;
+        }
 
         protected virtual void OnDestroy()
         {
@@ -58,6 +66,17 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         protected void StartTrigger(object source)
         {
+            if (_relay != null)
+            {
+                _relay.RequestStart(source);
+                return;
+            }
+
+            ApplyStartTrigger(source);
+        }
+
+        public void ApplyStartTrigger(object source)
+        {
             if (onlyTriggerOnce && HasBeenTriggered)
                 return;
 
@@ -70,6 +89,17 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
 
         protected void StopTrigger()
+        {
+            if (_relay != null)
+            {
+                _relay.RequestStop(this);
+                return;
+            }
+
+            ApplyStopTrigger();
+        }
+
+        public void ApplyStopTrigger()
         {
             IsTriggerActive = false;
             triggerList.StopTriggers();
@@ -131,7 +161,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
         void IOnDespawn.OnDespawn()
         {
             if (IsTriggerActive)
-                StopTrigger();
+                ApplyStopTrigger();
         }
 
         void IOnSpawn.OnSpawn()
