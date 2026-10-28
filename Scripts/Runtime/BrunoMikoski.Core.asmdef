@@ -47,11 +47,6 @@
             "define": "SIMPLEPOOL_AVAILABLE"
         },
         {
-            "name": "com.brunomikoski.inputspritemap",
-            "expression": "",
-            "define": "INPUTSPRITEMAP_AVAILABLE"
-        },
-        {
             "name": "com.veriorpies.parrelsync",
             "expression": "",
             "define": "PARRELSYNC_AVAILABLE"

@@ -1,8 +1,4 @@
 using System;
-
-#if INPUTSPRITEMAP_AVAILABLE
-using BrunoMikoski.InputSpriteMap;
-#endif
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -41,27 +37,6 @@ namespace BrunoMikoski.Core.DevelopmentTools
     
     public static class RuntimePlatformUtils
     {
-        private const RuntimePlatformFlag PLAYSTATION_FLAGS = RuntimePlatformFlag.PS4 | RuntimePlatformFlag.PS5;
-        private const RuntimePlatformFlag XBOX_FLAGS = RuntimePlatformFlag.XboxOne | RuntimePlatformFlag.XboxSeriesXS;
-#if INPUTSPRITEMAP_AVAILABLE
-        public static InputDisplayDevice ToInputDisplayDevice(this RuntimePlatformFlag platformType)
-        {
-            if (platformType.HasAnyFlagFast(PLAYSTATION_FLAGS))
-                return InputDisplayDevice.PlayStation;
-
-            if (platformType.HasAnyFlagFast(XBOX_FLAGS))
-                return InputDisplayDevice.Xbox;
-
-            if (platformType.HasAnyFlagFast(RuntimePlatformFlag.Switch2))
-                return InputDisplayDevice.Switch;
-
-            if (platformType.HasAnyFlagFast(RuntimePlatformFlag.Steam_Deck))
-                return InputDisplayDevice.SteamDeck;
-
-            return InputDisplayDevice.MouseAndKeyboard;
-        }
-#endif
-
         public static bool HasFlagFast(this RuntimePlatformFlag platformType, RuntimePlatformFlag flag)
         {
             return (platformType & flag) == flag;
