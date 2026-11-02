@@ -9,7 +9,23 @@ namespace BrunoMikoski.Core.DevelopmentTools
     {
         public static void DrawSettings()
         {
-            FieldInfo[] fieldInfos = typeof(DevelopmentSettings).GetFields();
+            DrawSettings(typeof(DevelopmentSettings));
+
+            foreach (Type groupType in TypeCache.GetTypesWithAttribute<DevelopmentSettingsGroupAttribute>())
+            {
+                string label = groupType.GetCustomAttribute<DevelopmentSettingsGroupAttribute>().DisplayName;
+                if (string.IsNullOrEmpty(label))
+                    label = StringUtility.GetHumanReadableText(groupType.Name);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                DrawSettings(groupType);
+            }
+        }
+
+        private static void DrawSettings(Type settingsType)
+        {
+            FieldInfo[] fieldInfos = settingsType.GetFields(BindingFlags.Public | BindingFlags.Static);
 
             for (int i = 0; i < fieldInfos.Length; ++i)
             {
@@ -49,6 +65,21 @@ namespace BrunoMikoski.Core.DevelopmentTools
             Type valueType = settingType.GetGenericArguments()[0];
             PropertyInfo valueProperty = settingType.GetProperty(nameof(DevelopmentSettingGeneric<int>.Value));
             string label = StringUtility.GetHumanReadableText(info.Name);
+
+            if (valueType == typeof(bool))
+            {
+                bool currentBool = (bool)valueProperty.GetValue(setting);
+
+                EditorGUI.BeginChangeCheck();
+                bool newBool = EditorGUILayout.ToggleLeft(label, currentBool);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    valueProperty.SetValue(setting, newBool);
+                }
+
+                return;
+            }
 
             if (valueType == typeof(string))
             {
