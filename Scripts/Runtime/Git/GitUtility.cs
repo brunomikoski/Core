@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,6 +18,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Git
         private const string GIT_EXECUTABLE_KEY = "GitUtility/Executable";
         private const string DefaultGitExecutable = "git";
         private const string CurrentGitCommitKey = "CURRENT_GIT_COMMIT";
+        private const int GitCommandTimeoutMilliseconds = 20000;
 
         private static string LAST_ERROR;
         public static string LastError => LAST_ERROR;
@@ -356,7 +357,11 @@ namespace BrunoMikoski.Core.DevelopmentTools.Git
                     return null;
                 }
 
-                if (!process.WaitForExit(20000)) // Wait for 20 seconds
+                // Read both pipes before waiting. Git stops when a pipe is full, so waiting first can hang.
+                Task<string> standardOutputTask = Task.Run(() => process.StandardOutput.ReadToEnd());
+                Task<string> standardErrorTask = Task.Run(() => process.StandardError.ReadToEnd());
+
+                if (!process.WaitForExit(GitCommandTimeoutMilliseconds))
                 {
                     process.Kill();
                     LAST_ERROR = "Timeout reached";
@@ -364,17 +369,15 @@ namespace BrunoMikoski.Core.DevelopmentTools.Git
                     return null;
                 }
 
-                // Read error first, if any.
                 if (process.ExitCode != 0)
                 {
-                    LAST_ERROR = process.StandardError.ReadToEnd();
+                    LAST_ERROR = standardErrorTask.Result;
                     Debug.LogError("Git Error: " + LAST_ERROR);
                     result = null;
                     return null;
                 }
 
-                // If no errors, get the standard output.
-                result = process.StandardOutput.ReadToEnd();
+                result = standardOutputTask.Result;
                 return process.ExitCode;
             }
             catch (Exception ex)
@@ -405,33 +408,22 @@ namespace BrunoMikoski.Core.DevelopmentTools.Git
             return RunGitCommand(arguments, out string _);
         }
 
+        public static bool TryGetCurrentBranch(out string branch)
+        {
+            branch = null;
+
+            RunGitCommand("branch --show-current", out string result);
+            if (string.IsNullOrWhiteSpace(result))
+                return false;
+
+            branch = result.Trim();
+            return true;
+        }
+
         public static string GetCurrentBranch()
         {
-            // Command: git rev-parse --abbrev-ref HEAD
-            RunGitCommand("rev-parse --abbrev-ref HEAD", out string result);
-
-            if (string.IsNullOrEmpty(result))
-                return string.Empty;
-
-            result = result.Trim();
-
-            // If the result is "HEAD", then it means the repository is in a detached state.
-            // We need to find out the branch it's tracking.
-            if (result == "HEAD")
-            {
-                RunGitCommand("log -n 1 --pretty=%d HEAD", out result);
-                if (string.IsNullOrEmpty(result))
-                    return string.Empty;
-            }
-
-            // Use regex to extract the branch name.
-            // This regex will match both direct branch names and names prefixed with 'origin/'
-            var match = Regex.Match(result, @"(?:origin\/)?([a-zA-Z0-9_-]+)");
-
-            if (match.Success)
-            {
-                return match.Groups[1].Value;
-            }
+            if (TryGetCurrentBranch(out string branch))
+                return branch;
 
             return string.Empty;
         }
