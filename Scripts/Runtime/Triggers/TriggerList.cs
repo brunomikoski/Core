@@ -14,7 +14,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         public List<TriggerData> TriggerDatas => triggerDatas;
         private Routine triggerDelayedTriggerables;
-        private int currentDelayedTriggerIndex;
+        private int currentDelayedTriggerIndex = -1;
 
         public void CancelScheduledTriggers()
         {
@@ -72,7 +72,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                 {
                     for (int i = 0; i < currentDelayedTriggerIndex + 1; i++)
                     {
-                        if (triggerDatas[i] == null)
+                        if (triggerDatas[i].Triggerable == null)
                             continue;
 
                         triggerDatas[i].Triggerable.StopTrigger();
@@ -89,8 +89,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         private IEnumerator TriggerTriggerablesDelayedEnumerator(object source)
         {
-            currentDelayedTriggerIndex = -1;
-
             for (int i = 0; i < triggerDatas.Count; i++)
             {
                 TriggerData trigger = triggerDatas[i];
@@ -102,7 +100,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                     yield return new WaitForSeconds(trigger.Delay);
 
                 triggerDatas[i].Triggerable.StartTrigger(source);
-                currentDelayedTriggerIndex++;
+                currentDelayedTriggerIndex = Mathf.Max(currentDelayedTriggerIndex, i);
             }
         }
 
