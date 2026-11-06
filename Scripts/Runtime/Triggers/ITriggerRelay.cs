@@ -2,7 +2,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 {
     public interface ITriggerRelay
     {
-        void RequestStart(object source);
-        void RequestStop(object source);
+        void RequestStart(TriggerContext context);
+        void RequestStop(TriggerContext context);
     }
 }

@@ -61,7 +61,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             isInitialized = true;
             if (startsActive)
             {
-                ForceStartTrigger(this);
+                ForceStartTrigger(default);
             }
             else
             {
@@ -79,35 +79,35 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             _relay = relay;
         }
 
-        public void StartTrigger(object source)
+        public void StartTrigger(TriggerContext context)
         {
             if (_relay != null)
             {
-                _relay.RequestStart(source);
+                _relay.RequestStart(context);
                 return;
             }
 
-            ApplyStartTrigger(source);
+            ApplyStartTrigger(context);
         }
 
-        public void ApplyStartTrigger(object source)
+        public void ApplyStartTrigger(TriggerContext context)
         {
             Initialize();
 
             if (!CanStartTrigger())
                 return;
 
-            ForceStartTrigger(source);
+            ForceStartTrigger(context);
         }
 
-        private void ForceStartTrigger(object source)
+        private void ForceStartTrigger(TriggerContext context)
         {
             if (!invertTrigger)
             {
                 // Set to true before sending the event is
                 // important for ordering reasons
                 IsActive = true;
-                StartTriggerInternal(source);
+                StartTriggerInternal(context);
                 _onStartTriggerEvent.Invoke(this);
             }
             else
@@ -115,7 +115,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                 // Set to false before sending the event is
                 // important for ordering reasons
                 IsActive = false;
-                StopTriggerInternal(source);
+                StopTriggerInternal(context);
                 _onStopTriggerEvent.Invoke(this);
             }
         }
@@ -125,43 +125,38 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             return enabled && ((IsActive == invertTrigger) || CanTriggerWhileAlreadyTriggered) && CanBeTriggered;
         }
 
-        protected virtual void StartTriggerInternal(object source)
+        protected virtual void StartTriggerInternal(TriggerContext context)
         {
         }
 
-        public void StopTrigger(object source = null)
+        public void StopTrigger(TriggerContext context = default)
         {
-            if (source == null)
-                source = this;
-
             if (_relay != null)
             {
-                _relay.RequestStop(source);
+                _relay.RequestStop(context);
                 return;
             }
 
-            ApplyStopTrigger(source);
+            ApplyStopTrigger(context);
         }
 
-        public void ApplyStopTrigger(object source)
+        public void ApplyStopTrigger(TriggerContext context)
         {
             Initialize();
             if (!CanStopTrigger())
                 return;
 
-            ForceStopTrigger(source);
+            ForceStopTrigger(context);
         }
 
-        protected void ForceStopTrigger(object source = null)
+        protected void ForceStopTrigger(TriggerContext context = default)
         {
-            if (source == null)
-                source = this;
             if (!invertTrigger)
             {
                 // Set to false before sending the event is
                 // important for ordering reasons
                 IsActive = false;
-                StopTriggerInternal(source);
+                StopTriggerInternal(context);
                 _onStopTriggerEvent.Invoke(this);
             }
             else
@@ -169,7 +164,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                 // Set to true before sending the event is
                 // important for ordering reasons
                 IsActive = true;
-                StartTriggerInternal(source);
+                StartTriggerInternal(context);
                 _onStartTriggerEvent.Invoke(this);
             }
         }
@@ -179,23 +174,23 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             return (IsActive != invertTrigger) || CanTriggerWhileAlreadyTriggered;
         }
 
-        protected virtual void StopTriggerInternal(object source)
+        protected virtual void StopTriggerInternal(TriggerContext context)
         {
         }
 
-        public void ToggleTrigger(object source)
+        public void ToggleTrigger(TriggerContext context)
         {
             Initialize();
             if (IsActive != invertTrigger)
-                StopTrigger(source);
+                StopTrigger(context);
             else
-                StartTrigger(source);
+                StartTrigger(context);
         }
 
         [ContextMenu("Start Trigger")]
         private void ContextMenuStartTrigger()
         {
-            StartTrigger(this);
+            StartTrigger(default);
         }
 
         [ContextMenu("Start Trigger", true)]

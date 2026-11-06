@@ -12,14 +12,14 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         public List<TriggerData> TriggerDatas => triggerDatas;
 
-        public void StartTriggers(object source)
+        public void StartTriggers(TriggerContext context)
         {
             for (int i = 0; i < triggerDatas.Count; i++)
             {
                 if (triggerDatas[i].Triggerable == null)
                     continue;
 
-                triggerDatas[i].Triggerable.StartTrigger(source);
+                triggerDatas[i].Triggerable.StartTrigger(context);
             }
         }
 

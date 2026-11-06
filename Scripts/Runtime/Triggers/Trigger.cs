@@ -57,27 +57,27 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         protected void StartTrigger()
         {
-            StartTrigger(this);
+            StartTrigger(default);
         }
 
-        protected void StartTrigger(object source)
+        protected void StartTrigger(TriggerContext context)
         {
             if (_relay != null)
             {
-                _relay.RequestStart(source);
+                _relay.RequestStart(context);
                 return;
             }
 
-            ApplyStartTrigger(source);
+            ApplyStartTrigger(context);
         }
 
-        public void ApplyStartTrigger(object source)
+        public void ApplyStartTrigger(TriggerContext context)
         {
             if (onlyTriggerOnce && HasBeenTriggered)
                 return;
 
             IsTriggerActive = true;
-            triggerList.StartTriggers(source);
+            triggerList.StartTriggers(context);
 
             HasBeenTriggered = true;
             _triggerStart.Invoke(this);
@@ -88,7 +88,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
         {
             if (_relay != null)
             {
-                _relay.RequestStop(this);
+                _relay.RequestStop(default);
                 return;
             }
 
