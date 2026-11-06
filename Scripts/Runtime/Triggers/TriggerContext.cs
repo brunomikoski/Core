@@ -11,6 +11,11 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
         private readonly bool hasPoint;
         private readonly bool hasStrength;
 
+        public TriggerContext(Component instigator) : this()
+        {
+            this.instigator = instigator;
+        }
+
         public TriggerContext(Component instigator, Vector3 point, Vector3 normal, float strength)
         {
             this.instigator = instigator;

@@ -233,7 +233,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                     objectsInVolumeSet.Remove(wrapper);
 
                     if (objectsInVolume.Count == 0)
-                        SetTriggerActivation(false);
+                        StopTrigger();
 
                     continue;
                 }
@@ -478,7 +478,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             onObjectEnterVolume?.Invoke(targetRigidbody);
 
             if (objectsInVolume.Count >= 1)
-                SetTriggerActivation(true);
+                StartTrigger(new TriggerContext(targetRigidbody));
 
 #if DEBUG
             if (debug)
@@ -486,14 +486,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                 LogEvent("Enter Volume", targetRigidbody, null);
             }
 #endif
-        }
-
-        private void SetTriggerActivation(bool activate)
-        {
-            if (activate)
-                StartTrigger();
-            else
-                StopTrigger();
         }
 
         private void ExitVolume(Rigidbody targetRigidbody)
@@ -508,7 +500,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
                 onObjectExitVolume?.Invoke(targetRigidbody);
 
             if (objectsInVolume.Count == 0)
-                SetTriggerActivation(false);
+                StopTrigger();
 
 #if DEBUG
             if (debug)
