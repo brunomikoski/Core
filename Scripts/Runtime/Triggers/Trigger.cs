@@ -53,10 +53,6 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
 
         protected virtual void OnDestroy()
         {
-            if (MonoBehaviourService.IsQuitting)
-                return;
-
-            triggerList.CancelScheduledTriggers();
         }
 
         protected void StartTrigger()
@@ -107,9 +103,9 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
             _triggerStop.Invoke(this);
         }
 
-        public void AddTriggerable(Triggerable triggerable, float delay = 0.0f)
+        public void AddTriggerable(Triggerable triggerable)
         {
-            triggerList.AddTriggerable(triggerable, delay);
+            triggerList.AddTriggerable(triggerable);
         }
 
         public void RemoveTriggerable(Triggerable triggerable)

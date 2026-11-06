@@ -6,16 +6,13 @@ namespace BrunoMikoski.Core.DevelopmentTools.Triggers
     [Serializable]
     public class TriggerData
     {
-        [SerializeField] private float delay;
         [SerializeField] private Triggerable triggerable;
 
-        public float Delay => delay;
         public Triggerable Triggerable => triggerable;
 
-        public TriggerData(Triggerable triggerable, float delay)
+        public TriggerData(Triggerable triggerable)
         {
             this.triggerable = triggerable;
-            this.delay = delay;
         }
     }
 }
