@@ -11,7 +11,8 @@
         "Unity.TextMeshPro.Editor",
         "Unity.Localization",
         "Unity.Localization.Editor",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "ParrelSync"
     ],
     "includePlatforms": [
         "Editor"
@@ -27,6 +28,11 @@
             "name": "com.unity.localization",
             "expression": "",
             "define": "UNITY_LOCALIZATION_AVAILABLE"
+        },
+        {
+            "name": "com.veriorpies.parrelsync",
+            "expression": "",
+            "define": "PARRELSYNC_AVAILABLE"
         }
     ],
     "noEngineReferences": false

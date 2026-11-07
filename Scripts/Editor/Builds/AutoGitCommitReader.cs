@@ -65,13 +65,16 @@ namespace BrunoMikoski.Core.Builds
                 return true;
 
 #if PARRELSYNC_AVAILABLE
-
             if (!ClonesManager.IsClone())
                 return false;
-            return GitUtility.TryResolveGitDirectory(ClonesManager.GetOriginalProjectPath(), out string gitDirectory)
-                   && GitUtility.TryReadHeadSha(gitDirectory, out sha, out _);
-#endif
+
+            if (!GitUtility.TryResolveGitDirectory(ClonesManager.GetOriginalProjectPath(), out string gitDirectory))
+                return false;
+
+            return GitUtility.TryReadHeadSha(gitDirectory, out sha, out _);
+#else
             return false;
+#endif
         }
     }
 }
