@@ -40,7 +40,7 @@ namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
         {
             get
             {
-                if (!hasCachedStateMachine)
+                if (!hasCachedStateMachine || !StateMachineRegistry.IsRegistered(cachedStateMachine))
                 {
                     hasCachedStateMachine = StateMachineRegistry.TryGetStateMachineByStateType(this.GetType(), out cachedStateMachine);
                 }

@@ -32,6 +32,11 @@ namespace BrunoMikoski.Core.DevelopmentTools.StateMachines
             RegisterNewStateMachineInstance(stateMachineBase);
         }
 
+        public static bool IsRegistered(StateMachineBase stateMachineBase)
+        {
+            return RUNNING_STATE_MACHINES.Contains(stateMachineBase);
+        }
+
         public static void Unregister(StateMachineBase stateMachineBase)
         {
             if(!RUNNING_STATE_MACHINES.Contains(stateMachineBase))
