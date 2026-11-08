@@ -61,6 +61,28 @@ namespace BrunoMikoski.Core.DevelopmentTools.UI
         public float flexibleWidth => m_FlexibleWidth;
         public float flexibleHeight => m_FlexibleHeight;
 
+        public float maxWidth
+        {
+            get
+            {
+                if (_enforceMaxWidth)
+                    return _maxWidth;
+
+                return -1;
+            }
+        }
+
+        public float maxHeight
+        {
+            get
+            {
+                if (_enforceMaxHeight)
+                    return _maxHeight;
+
+                return -1;
+            }
+        }
+
         public int layoutPriority => _layoutPriority;
 
         private bool HasChild => transform.childCount > 0;
