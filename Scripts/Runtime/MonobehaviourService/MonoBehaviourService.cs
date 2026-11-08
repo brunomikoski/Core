@@ -106,11 +106,7 @@ namespace BrunoMikoski.Core.DevelopmentTools
                 _ => { },
                 sub => sub.Reset(),
                 _ => { },
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                true,
-#else
-                false,
-#endif
+                Debug.isDebugBuild,
                 256,
                 4096);
         }
