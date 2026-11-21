@@ -223,21 +223,7 @@ namespace BrunoMikoski.Core.Utils.Extensions.Observables
                 return new UIBinding(null);
             }
 
-            UIBinding sliderBinding = observable.Bind(slider, null, onValueChanged);
-
-            void TextUpdated()
-            {
-                text.SetText(observable.Value.ToString(format));
-            }
-
-            TextUpdated();
-            observable.OnChangedEvent += TextUpdated;
-
-            return new UIBinding(() =>
-            {
-                observable.OnChangedEvent -= TextUpdated;
-                sliderBinding.Dispose();
-            });
+            return BindValueText(observable, text, format, observable.Bind(slider, null, onValueChanged));
         }
 
         public static UIBinding Bind(this Observable<float> observable, Slider slider, TMP_Text text, float[] availableSteps, string format = "", Action onValueChanged = null)
@@ -248,21 +234,7 @@ namespace BrunoMikoski.Core.Utils.Extensions.Observables
                 return new UIBinding(null);
             }
 
-            UIBinding sliderBinding = observable.Bind(slider, availableSteps, onValueChanged);
-
-            void TextUpdated()
-            {
-                text.SetText(observable.Value.ToString(format));
-            }
-
-            TextUpdated();
-            observable.OnChangedEvent += TextUpdated;
-
-            return new UIBinding(() =>
-            {
-                observable.OnChangedEvent -= TextUpdated;
-                sliderBinding.Dispose();
-            });
+            return BindValueText(observable, text, format, observable.Bind(slider, availableSteps, onValueChanged));
         }
 
         public static UIBinding Bind(this Observable<int> observable, Slider slider, TMP_Text text, int[] availableSteps, string format = "", Action onValueChanged = null)
@@ -273,21 +245,7 @@ namespace BrunoMikoski.Core.Utils.Extensions.Observables
                 return new UIBinding(null);
             }
 
-            UIBinding sliderBinding = observable.Bind(slider, availableSteps, onValueChanged);
-
-            void TextUpdated()
-            {
-                text.SetText(observable.Value.ToString(format));
-            }
-
-            TextUpdated();
-            observable.OnChangedEvent += TextUpdated;
-
-            return new UIBinding(() =>
-            {
-                observable.OnChangedEvent -= TextUpdated;
-                sliderBinding.Dispose();
-            });
+            return BindValueText(observable, text, format, observable.Bind(slider, availableSteps, onValueChanged));
         }
 
         public static UIBinding Bind(this Observable<int> observable, Slider slider, TMP_Text text, string format = "", Action onValueChanged = null)
@@ -298,37 +256,14 @@ namespace BrunoMikoski.Core.Utils.Extensions.Observables
                 return new UIBinding(null);
             }
 
-            slider.SetValueWithoutNotify(observable.Value);
+            return BindValueText(observable, text, format, observable.Bind(slider, null, onValueChanged));
+        }
 
-            UnityAction<float> valueChanged = newValue =>
-            {
-                int newInt = Mathf.RoundToInt(newValue);
-                if (newInt != observable.Value)
-                {
-                    observable.Value = newInt;
-                }
-            };
-
-            slider.onValueChanged.AddListener(valueChanged);
-
-            Action<int, int> observableValueChanged = (_, current) =>
-            {
-                if (Mathf.RoundToInt(slider.value) == current)
-                    return;
-
-                slider.SetValueWithoutNotify(current);
-            };
-
-            observable.OnChangedValuesEvent += observableValueChanged;
-
-            if (onValueChanged != null)
-            {
-                observable.OnChangedEvent += onValueChanged;
-            }
-
+        private static UIBinding BindValueText<T>(Observable<T> observable, TMP_Text text, string format, UIBinding sliderBinding) where T : IFormattable
+        {
             void TextUpdated()
             {
-                text.SetText(observable.Value.ToString(format));
+                text.SetText(observable.Value.ToString(format, null));
             }
 
             TextUpdated();
@@ -336,11 +271,8 @@ namespace BrunoMikoski.Core.Utils.Extensions.Observables
 
             return new UIBinding(() =>
             {
-                slider.onValueChanged.RemoveListener(valueChanged);
-                observable.OnChangedValuesEvent -= observableValueChanged;
-                if (onValueChanged != null)
-                    observable.OnChangedEvent -= onValueChanged;
                 observable.OnChangedEvent -= TextUpdated;
+                sliderBinding.Dispose();
             });
         }
 
